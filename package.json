@@ -1,0 +1,47 @@
+{
+  "name": "ajax-tools",
+  "version": "1.0.0",
+  "description": "A set of tools allowing to use ajax in server-side rendered web-sites in simple declarative manner.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint .",
+    "serve": "node test/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nleipi/ajax-tools.git"
+  },
+  "keywords": [
+    "ajax"
+  ],
+  "author": "Nikolay Leipi",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/nleipi/ajax-tools/issues"
+  },
+  "homepage": "https://github.com/nleipi/ajax-tools#readme",
+  "devDependencies": {
+    "eslint": "^7.22.0",
+    "eslint-config-standard": "^16.0.2",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.3.1",
+    "eslint-plugin-standard": "^5.0.0",
+    "express": "^4.17.1",
+    "jest": "^26.6.3",
+    "jest-puppeteer": "^4.4.0",
+    "puppeteer": "^8.0.0",
+    "webpack": "^5.27.1",
+    "webpack-dev-middleware": "^4.1.0"
+  },
+  "jest": {
+    "preset": "jest-puppeteer",
+    "globals": {
+      "PATH": "http://localhost:4444"
+    },
+    "testMatch": [
+      "**/test/**/*.test.js"
+    ]
+  }
+}

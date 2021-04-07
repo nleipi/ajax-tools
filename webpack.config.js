@@ -2,7 +2,7 @@ module.exports = {
   entry: './index.js',
   output: {
     filename: 'index.min.js',
-    library: 'ajt'
+    library: 'ajtools'
   },
   mode: 'production'
 }

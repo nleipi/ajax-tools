@@ -5,7 +5,7 @@ describe('initial', () => {
 
   test('test', async () => {
     const res = await page.evaluate(() => {
-      return window.ajt.submit()
+      return window.ajtools.submit()
     })
     expect(res).toBe(42)
   })

@@ -3,14 +3,17 @@ const webpack = require('webpack')
 const middleware = require('webpack-dev-middleware')
 const compiler = webpack(require('../webpack.config.js'))
 
-const port = 4444
+module.exports = function (port) {
+  return new Promise((resolve, reject) => {
+    const app = express()
 
-const app = express()
+    const instance = middleware(compiler, {
+      stats: false
+    })
+    app.use(instance)
 
-app.use(middleware(compiler, {}))
-
-app.get('/', (req, res) => {
-  res.send(
+    app.get('/', (req, res) => {
+      res.send(
 `
 <!DOCTYPE html>
 <html>
@@ -22,8 +25,25 @@ app.get('/', (req, res) => {
   </body>
 </html>
 `)
-})
+    })
 
-app.listen(port, () => {
-  console.log(`Server started at http://localhost:${port}/`)
-})
+    const server = app.listen(port, () => {
+      app.close = function () {
+        return new Promise((resolve, reject) => {
+          instance.close(err => {
+            if (err) {
+              return reject(err)
+            }
+            server.close(err => {
+              if (err) {
+                return reject(err)
+              }
+              resolve()
+            })
+          })
+        })
+      }
+      resolve(app)
+    })
+  })
+}

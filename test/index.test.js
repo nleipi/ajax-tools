@@ -1,4 +1,5 @@
 const { Builder, By, Key, until } = require('selenium-webdriver')
+const firefox = require('selenium-webdriver/firefox')
 
 const startServer = require('./server.js')
 
@@ -9,7 +10,11 @@ describe('initial', () => {
   let server
   beforeAll(async () => {
     server = await startServer(port)
-    driver = await new Builder().forBrowser('firefox').build()
+    driver = await new Builder()
+      .setFirefoxOptions(new firefox.Options()
+        .headless()
+      )
+      .forBrowser('firefox').build()
   })
 
   afterAll(async () => {

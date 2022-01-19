@@ -12,21 +12,6 @@ module.exports = function (port) {
     })
     app.use(instance)
 
-    app.get('/', (req, res) => {
-      res.send(
-`
-<!DOCTYPE html>
-<html>
-  <head>
-    <script src="index.min.js"></script>
-  </head>
-  <body>
-    <main>Hallo, Welt!</main>
-  </body>
-</html>
-`)
-    })
-
     const server = app.listen(port, () => {
       app.close = function () {
         return new Promise((resolve, reject) => {
@@ -42,6 +27,10 @@ module.exports = function (port) {
             })
           })
         })
+      }
+      const stack = app._router.stack.concat([])
+      app.reset = function () {
+        app._router.stack = stack.concat([])
       }
       resolve(app)
     })

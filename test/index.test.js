@@ -8,6 +8,7 @@ describe('initial', () => {
   const root = `http://localhost:${port}`
   let driver
   let server
+  let router
   beforeAll(async () => {
     server = await startServer(port)
     driver = await new Builder()
@@ -20,6 +21,45 @@ describe('initial', () => {
   afterAll(async () => {
     await driver.close()
     await server.close()
+  })
+
+  afterEach(() => {
+    server.reset()
+  })
+
+  test('routeA', async () => {
+    server.get('/a', (req, res) => {
+      res.send(
+`
+<!DOCTYPE html>
+<html>
+  <body>
+    <main>Hallo, Welt!</main>
+  </body>
+</html>
+`)
+    })
+
+    await driver.get(root + '/a')
+    const message = await driver.findElement(By.css('main')).getText()
+    expect(message).toEqual('Hallo, Welt!')
+  })
+
+  test('routeA2', async () => {
+    server.get('/a', (req, res) => {
+      res.send(
+`
+<!DOCTYPE html>
+<html>
+  <body>
+    <main>Hallo, world!</main>
+  </body>
+</html>
+`)
+    })
+    await driver.get(root + '/a')
+    const message = await driver.findElement(By.css('main')).getText()
+    expect(message).toEqual('Hallo, world!')
   })
 
   test('open page', async () => {

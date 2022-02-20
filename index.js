@@ -1,5 +1,5 @@
-import './lib/submitter_polyfill'
+import { submitHandler, submitterPolyfil } from './lib/forms'
 
-import submit from './lib/submit'
+export { submitHandler }
 
-export { submit }
+submitterPolyfil()

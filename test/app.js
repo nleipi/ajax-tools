@@ -9,7 +9,6 @@ const port = 4444
 const app = express()
 
 app.use(middleware(compiler, {
-  onInfo: true
 }))
 app.use(bodyParser.urlencoded({ extended: true }))
 
@@ -23,7 +22,7 @@ app.get('/a', (req, res) => {
   </head>
   <body>
     <main>
-      <form action="submit" method="post" onsubmit="ajtools.submit(event).then(res => parse(res).then(res => ajtools.updateDom(res))">
+      <form action="submit?test=42" method="get" onsubmit="event.preventDefault(); ajtools.submitHandler(event)">
         <input type="hidden" name="hidden_input" value="13">
         <input type="checkbox" name="ckb1" checked disabled>
         <input type="text" name="text_input" value="test">
@@ -37,17 +36,10 @@ app.get('/a', (req, res) => {
 `)
 })
 
-app.post('/submit', (req, res) => {
-  submitReceived = true
-  res.send(
-`
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>response</title>
-  </head>
-</html>
-`)
+app.all('/submit', (req, res) => {
+  console.log(req.query)
+  console.log(req.is('application/x-www-form-urlencoded'))
+  res.sendStatus(200)
 })
 
 app.listen(port, () => {

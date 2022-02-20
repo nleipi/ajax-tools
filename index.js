@@ -1,1 +1,5 @@
-export { default as submit } from './lib/submit'
+import './lib/submitter_polyfill'
+
+import submit from './lib/submit'
+
+export { submit }

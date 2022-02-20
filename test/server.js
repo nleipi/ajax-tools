@@ -8,7 +8,6 @@ module.exports = function (port) {
     const app = express()
 
     const instance = middleware(compiler, {
-      stats: false
     })
     app.use(instance)
 

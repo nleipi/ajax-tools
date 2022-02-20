@@ -1,4 +1,4 @@
-const { Builder, By, Key, until } = require('selenium-webdriver')
+const { Builder, By, until } = require('selenium-webdriver')
 const firefox = require('selenium-webdriver/firefox')
 
 const startServer = require('./server.js')
@@ -15,7 +15,8 @@ describe('initial', () => {
       .setFirefoxOptions(new firefox.Options()
         .headless()
       )
-      .forBrowser('firefox').build()
+      .forBrowser('firefox')
+      .build()
   })
 
   afterAll(async () => {
@@ -27,7 +28,7 @@ describe('initial', () => {
     server.reset()
   })
 
-  test('routeA', async () => {
+  test('empty page', async () => {
     server.get('/a', (req, res) => {
       res.send(
 `
@@ -45,27 +46,46 @@ describe('initial', () => {
     expect(message).toEqual('Hallo, Welt!')
   })
 
-  test('routeA2', async () => {
+  test('submit via button', async () => {
     server.get('/a', (req, res) => {
       res.send(
 `
 <!DOCTYPE html>
 <html>
+  <head>
+    <script src="index.min.js"></script>
+  </head>
   <body>
-    <main>Hallo, world!</main>
+    <main>
+      <form action="submit" method="post">
+        <input type="hidden" name="hidden_input" value="13">
+        <input type="text" name="text_input" value="test">
+        <button id="submitBtn" name="btn1" value="btn1_value">Submit!</btn>
+      </form>
+    </main>
   </body>
 </html>
 `)
     })
-    await driver.get(root + '/a')
-    const message = await driver.findElement(By.css('main')).getText()
-    expect(message).toEqual('Hallo, world!')
-  })
 
-  test('open page', async () => {
-    await driver.get(root)
-    const main = await driver.findElement(By.css('main'))
-    const isDisplayed = await main.isDisplayed()
-    expect(isDisplayed).toBe(true)
+    let submitReceived = false
+
+    server.post('/submit', (req, res) => {
+      submitReceived = true
+      res.send(
+`
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>response</title>
+  </head>
+</html>
+`)
+    })
+    await driver.get(root + '/a')
+    const button = await driver.findElement(By.css('#submitBtn'))
+    await button.click()
+    await driver.wait(until.titleIs('response'))
+    expect(submitReceived).toEqual(true)
   })
 })

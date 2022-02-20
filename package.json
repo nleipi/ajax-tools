@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/nleipi/ajax-tools#readme",
   "devDependencies": {
+    "body-parser": "^1.19.1",
     "eslint-config-standard": "^16.0.3",
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-node": "^11.1.0",

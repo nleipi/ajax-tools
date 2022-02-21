@@ -6,7 +6,8 @@
   "scripts": {
     "test": "jest",
     "lint": "eslint .",
-    "serve": "node test/server.js"
+    "serve": "node test/server.js",
+    "karma": "karma start"
   },
   "repository": {
     "type": "git",
@@ -29,10 +30,9 @@
     "eslint-plugin-promise": "^5.2.0",
     "express": "^4.17.2",
     "geckodriver": "^3.0.1",
+    "jasmine-core": "^4.0.0",
     "jest": "^27.4.7",
-    "selenium-webdriver": "^4.0.0-beta.2",
-    "webpack": "^5.27.1",
-    "webpack-dev-middleware": "^4.1.0"
+    "selenium-webdriver": "^4.0.0-beta.2"
   },
   "jest": {
     "globals": {

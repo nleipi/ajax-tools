@@ -1,15 +1,19 @@
+const express = require('express')
 const { Builder, By } = require('selenium-webdriver')
 const { promiseSettled } = require('./selenium-utils.js')
 const firefox = require('selenium-webdriver/firefox')
 
-const startServer = require('./server.js')
+const app = express()
+app.use(express.static('lib'))
+
+const stack = app._router.stack.concat([])
 
 const port = 4444
 const root = `http://localhost:${port}`
 let driver
 let server
 beforeAll(async () => {
-  server = await startServer(port)
+  server = app.listen(port)
   driver = await new Builder()
     .setFirefoxOptions(new firefox.Options()
       .headless()
@@ -24,22 +28,25 @@ afterAll(async () => {
 })
 
 afterEach(() => {
-  server.reset()
+  app._router.stack = stack.concat([])
 })
 
 describe('compare content-type, query string and body', () => {
   describe.each(['get', 'post'])('when submitted with method: %s', (method) => {
-    test.each(['btn1', 'btn2', 'btn3'])('and submitter: %s', async (btnId) => {
+    test.each(['btn2', 'btn2', 'btn3'])('and submitter: %s', async (btnId) => {
       function createFormRoute (path, useAjax) {
-        server.get(path, (req, res) => {
+        app.get(path, (req, res) => {
           const html = `
   <!DOCTYPE html>
   <html>
     <head>
-      <script src="index.min.js"></script>
+      <script type="module">
+        import s from './submit-form.js'
+        window.submitHandler = s
+      </script>
     </head>
     <body>
-        <form action="submit?param1=42" method="${method}" ${useAjax ? 'onsubmit="event.preventDefault(); window.promise = ajtools.submitHandler(event)"' : ''}>
+        <form action="submit?param1=42" method="${method}" ${useAjax ? 'onsubmit="event.preventDefault(); window.promise = submitHandler(event)"' : ''}>
           <input type="hidden" name="hidden_input" value="test">
           <input type="text" name="text_input" value="Lorem ipsum">
           <input id="btn1" type="submit" name="submit_input" value="42">
@@ -53,7 +60,7 @@ describe('compare content-type, query string and body', () => {
         })
       }
       const results = []
-      server.all('/submit', (req, res) => {
+      app.all('/submit', (req, res) => {
         results.push(req)
         res.sendStatus(200)
       })

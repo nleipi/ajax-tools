@@ -1,7 +1,7 @@
 const { Condition } = require('selenium-webdriver')
 
 module.exports.promiseSettled = function (varName) {
-  return new Condition(`for promise ${varName} to resolve`, function (driver) {
+  return new Condition(`for promise window.${varName} to resolve`, function (driver) {
     return driver.executeAsyncScript(`
 var callback = arguments[arguments.length - 1]
 var promiseName = arguments[0]

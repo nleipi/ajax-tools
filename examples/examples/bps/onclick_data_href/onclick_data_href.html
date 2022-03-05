@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+
+{% block main %}
+  <div id="greeting" data-ajt-mode="replace">Hello, {{ name }}!</div>
+  <a href="#test" data-href="{{ url_for('onclick_href.index', name='Test') }}" onclick="ajt(event)">replace</a>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block main %}
+  <ul>
+    {% for example in examples %}
+      <li><a href="{{ url_for(example.name + '.index') }}">{{ example.display_name }}</a></li>
+    {% endfor %}
+  </ul>
+{% endblock %}
+

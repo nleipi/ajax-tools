@@ -3,7 +3,7 @@ from importlib import import_module
 from flask import Flask, render_template, send_from_directory
 
 app = Flask(__name__)
-app.debug = True
+app.secret_key = 'developer'
 
 blueprints_path = path.join(path.dirname(__file__), 'examples', 'bps')
 

@@ -1,0 +1,8 @@
+{% include 'todo_form.html' %}
+{% if state != 'completed' %}
+  <ul id="todoList" data-ajt-mode="appendContent">
+    {% include 'todo_item.html' %}
+  </ul>
+{% endif %}
+{% include 'todo_count.html' %}
+

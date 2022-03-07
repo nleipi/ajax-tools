@@ -1,0 +1,17 @@
+<ul id="filters" class="filters" data-ajt-mode="replaceContent">
+  <li>
+    <a class="{% if not state %}selected{% endif %}"
+       onclick="ajt(event)"
+       href="{{ url_for('.index') }}">All</a>
+  </li>
+  <li>
+    <a class="{% if state == 'active' %}selected{% endif %}"
+       onclick="ajt(event)"
+       href="{{ url_for('.index', state='active') }}">Active</a>
+  </li>
+  <li>
+    <a class="{% if state == 'completed' %}selected{% endif %}"
+       onclick="ajt(event)"
+       href="{{ url_for('.index', state='completed') }}">Completed</a>
+  </li>
+</ul>

@@ -1,0 +1,22 @@
+{% with formaction = url_for('.update', id=todo.id, state=state) %}
+  <li id="todo_{{ todo.id }}"
+      class="{% if todo.completed %}completed{% endif %}"
+      data-ajt-mode="replace">
+    <div class="view">
+      <input type="submit"
+             name="toggle"
+             style="display: none;"
+             formaction="{{ formaction }}">
+      <input class="toggle"
+             type="checkbox"
+             value="{{ todo.id }}"
+             {% if todo.completed %}checked{% endif %}
+             onclick="event.preventDefault(); this.previousElementSibling.click()">
+      <label>{{ todo.text }}</label>
+      <button class="destroy"
+              name="delete"
+              formaction="{{ formaction }}"></button>
+    </div>
+    <input class="edit" value="Create a TodoMVC template">
+  </li>
+{% endwith %}

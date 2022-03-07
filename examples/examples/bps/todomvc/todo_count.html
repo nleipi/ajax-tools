@@ -1,0 +1,5 @@
+<span id="todoCount"
+      class="todo-count"
+      data-ajt-mode="replace">
+  <strong>{{ todos|selectattr('completed', 'false')|list|length }}</strong> item left
+</span>

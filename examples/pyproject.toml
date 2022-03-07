@@ -5,8 +5,10 @@ description = ""
 authors = ["Nikolay Leipi <nikolay.semykin@googlemail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7"
 Flask = "^2.0.3"
+WTForms = "^3.0.1"
+Flask-WTF = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

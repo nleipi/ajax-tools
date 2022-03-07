@@ -1,0 +1,22 @@
+<footer id="todoFooter" class="footer" data-ajt-mode="replaceContent">
+  {% include 'todo_mvc_footer_count.html' %}
+  <ul class="filters">
+    <li>
+      <a class="{% if not state %}selected{% endif %}"
+         onclick="ajt(event)"
+         href="{{ url_for('.filter') }}">All</a>
+    </li>
+    <li>
+      <a class="{% if state == 'active' %}selected{% endif %}"
+         onclick="ajt(event)"
+         href="{{ url_for('.filter', state='active') }}">Active</a>
+    </li>
+    <li>
+      <a class="{% if state == 'completed' %}selected{% endif %}"
+         onclick="ajt(event)"
+         href="{{ url_for('.filter', state='completed') }}">Completed</a>
+    </li>
+  </ul>
+  <!-- Hidden if no completed items are left ↓ -->
+  <button class="clear-completed">Clear completed</button>
+</footer>

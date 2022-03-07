@@ -1,2 +1,9 @@
-{% include 'todo_list.html' %}
-{% include 'filters.html' %}
+{% include 'todo_mvc_form.html' %}
+{% if todos %}
+  {% include 'todo_mvc_main.html' %}
+  {% include 'todo_mvc_footer.html' %}
+{% endif %}
+
+<script data-ajt-mode="script">
+  window.history.replaceState(null, null, '{{ url_for('.index', state=state, _external=True) }}')
+</script>

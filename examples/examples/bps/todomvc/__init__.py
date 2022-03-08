@@ -29,6 +29,21 @@ setattr(bp, 'display_name', 'TodoMVC')
 todo_map = OrderedDict()
 
 
+@bp.app_template_filter()
+def todo_state(todos, state):
+    print(todos, state)
+    if state == 'active':
+        return [todo for todo in todos if not todo.completed]
+    elif state == 'completed':
+        return [todo for todo in todos if todo.completed]
+    return todos
+
+
+@bp.app_context_processor
+def state_processor():
+    return dict(state=request.args.get('state'))
+
+
 @bp.route('/', methods=['GET', 'POST'])
 def index():
     todo_form = TodoForm()
@@ -63,16 +78,10 @@ def update(id):
                            todos=todo_map.values(),)
 
 
-@bp.app_template_filter()
-def todo_state(todos, state):
-    print(todos, state)
-    if state == 'active':
-        return [todo for todo in todos if not todo.completed]
-    elif state == 'completed':
-        return [todo for todo in todos if todo.completed]
-    return todos
+@bp.post('/clear')
+def clear():
+    completed_ids = [k for k, v in todo_map.items() if v.completed]
+    for id in completed_ids:
+        del todo_map[id]
 
-
-@bp.app_context_processor
-def state_processor():
-    return dict(state=request.args.get('state'))
+    return redirect(url_for('.index', state=request.args.get('state')))

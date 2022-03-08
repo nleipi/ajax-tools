@@ -17,6 +17,9 @@
          href="{{ url_for('.filter', state='completed') }}">Completed</a>
     </li>
   </ul>
-  <!-- Hidden if no completed items are left ↓ -->
-  <button class="clear-completed">Clear completed</button>
+  {% if todos|selectattr('completed', 'true')|list|length > 0 %}
+    <form action="{{ url_for('.clear', state=state) }}" method="post" onsubmit="ajt(event)">
+      <button class="clear-completed">Clear completed</button>
+    </form>
+  {% endif %}
 </footer>

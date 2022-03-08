@@ -78,6 +78,17 @@ def update(id):
                            todos=todo_map.values(),)
 
 
+@bp.post('/toggle')
+def toggle():
+    completed = request.form.get('toggle') == 'on'
+    for todo in todo_map.values():
+        todo.completed = completed
+
+    return render_template('resp_update.html',
+                           todos=todo_map.values(),
+                           toggle=completed)
+
+
 @bp.post('/clear')
 def clear():
     completed_ids = [k for k, v in todo_map.items() if v.completed]

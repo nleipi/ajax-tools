@@ -1,6 +1,14 @@
 <section id="todoMain" class="main" data-ajt-mode="replaceContent">
-  <form method="post" onsubmit="ajt(event)">
-    <input id="toggle-all" class="toggle-all" type="checkbox">
+  <form method="post"
+        onsubmit="ajt(event)"
+        action="{{ url_for('.toggle', state=state) }}">
+    <input type="submit" style="display: none;">
+    <input id="toggle-all"
+           class="toggle-all"
+           type="checkbox"
+           name="toggle"
+           onchange="this.previousElementSibling.click()"
+           {% if toggle %}checked{% endif %}>
     <label for="toggle-all">Mark all as complete</label>
     <ul id="todoList" class="todo-list" data-ajt-mode="replaceContent">
       <!-- These are here just to show the structure of the list items -->

@@ -5,5 +5,5 @@
 {% endif %}
 
 <script data-ajt-mode="script">
-  window.history.replaceState(null, null, '{{ url_for('.index', state=state, _external=True) }}')
+  window.history.pushState(null, null, '{{ url_for('.index', state=state, _external=True) }}')
 </script>

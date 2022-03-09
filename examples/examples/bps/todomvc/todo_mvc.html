@@ -29,4 +29,9 @@
   <footer class="info">
     <p>Double-click to edit a todo</p>
   </footer>
+  <script>
+    window.addEventListener('popstate', (event) => {
+          window.ajt(document.location.href)
+        })
+  </script>
 {% endblock %}

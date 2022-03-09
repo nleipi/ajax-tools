@@ -2,14 +2,19 @@ from dataclasses import dataclass
 from collections import OrderedDict
 from uuid import uuid4, UUID
 from flask import Blueprint, render_template, request, redirect, url_for
-from wtforms import StringField
+from wtforms import StringField, BooleanField, ValidationError
 from wtforms.validators import InputRequired, Length
 from flask_wtf import FlaskForm
 
 
 class TodoForm(FlaskForm):
+    completed = BooleanField('completed')
     text = StringField('text', validators=[InputRequired(),
                                            Length(min=2, max=20)])
+
+    def validate_text(form, field):
+        if field.data == '-1':
+            raise ValidationError('Test error')
 
 
 @dataclass
@@ -31,12 +36,17 @@ todo_map = OrderedDict()
 
 @bp.app_template_filter()
 def todo_state(todos, state):
-    print(todos, state)
     if state == 'active':
         return [todo for todo in todos if not todo.completed]
     elif state == 'completed':
         return [todo for todo in todos if todo.completed]
     return todos
+
+
+@bp.app_template_filter()
+def todo_form(todo):
+    form = TodoForm(formdata=None, prefix=str(todo.id), obj=todo)
+    return form
 
 
 @bp.app_context_processor
@@ -46,12 +56,16 @@ def state_processor():
 
 @bp.route('/', methods=['GET', 'POST'])
 def index():
-    todo_form = TodoForm()
+    todo_form = TodoForm(prefix='new_todo')
     if todo_form.validate_on_submit():
         id = uuid4()
         item = Todo(id=id, text=todo_form.text.data)
         todo_map[id] = item
         return redirect(url_for('.index', state=request.args.get('state')))
+    if todo_form.errors:
+        print(todo_form.errors)
+        return render_template('todo_mvc_new_todo_input.html',
+                               todo_form=todo_form,)
 
     return render_template('todo_mvc.html',
                            todos=todo_map.values(),
@@ -60,26 +74,33 @@ def index():
 
 @bp.get('/filter')
 def filter():
-    todo_form = TodoForm()
+    todo_form = TodoForm(prefix='new_todo')
     return render_template('resp_filter.html',
                            todos=todo_map.values(),
                            todo_form=todo_form,)
 
 
 @bp.post('/todo/<uuid:id>')
-def update(id):
-    item = todo_map[id]
-    if 'delete' in request.form:
-        del todo_map[id]
-    if 'toggle' in request.form:
-        item.completed = not item.completed
+def update_item(id):
+    form = TodoForm(prefix=str(id))
+    if form.validate_on_submit():
+        item = todo_map[id]
+        form.populate_obj(item)
+        return render_template('resp_update.html',
+                               todos=todo_map.values(),)
+    return render_template('todo_mvc_item.html',
+                           todo=item,)
 
+
+@bp.post('/todo/<uuid:id>/delete')
+def delete_item(id):
+    del todo_map[id]
     return render_template('resp_update.html',
                            todos=todo_map.values(),)
 
 
 @bp.post('/toggle')
-def toggle():
+def toggle_all():
     completed = request.form.get('toggle') == 'on'
     for todo in todo_map.values():
         todo.completed = completed

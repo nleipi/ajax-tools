@@ -3,14 +3,23 @@
 {% block head %}
   <link rel="stylesheet" href="{{ url_for('todo_mvc.static', filename='todomvc-common/base.css') }}">
   <link rel="stylesheet" href="{{ url_for('todo_mvc.static', filename='todomvc-app-css/index.css') }}">
+  <style>
+.todo-form[data-ajt-status="loading"] {
+  pointer-events: none;
+}
+.new-todo.error {
+  border: 1px red;
+  color: red;
+}
+  </style>
 {% endblock %}
 
 {% block main %}
   <section id="todoapp" class="todoapp" data-ajt-mode="replaceContent">
     <header class="header">
       <h1>todos</h1>
-      {% include 'todo_mvc_form.html' %}
-      {{ todo_form.text(class='new-todo', autofocus=True, placeholder='What needs to be done?', form='todoForm') }}
+      {% include 'todo_mvc_new_todo_form.html' %}
+      {% include 'todo_mvc_new_todo_input.html' %}
     </header>
     {% if todos %}
       {% include 'todo_mvc_main.html' %}

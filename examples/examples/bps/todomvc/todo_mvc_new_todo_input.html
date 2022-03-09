@@ -1,0 +1,8 @@
+{% with attrs = {'autofocus':True, 'placeholder':'What needs to be done?', 'form':'todoForm', 'data-ajt-mode':'replace', 'autocomplete':'off'} %}
+  {% if todo_form.text.errors %}
+    {{ todo_form.text(class='new-todo error', **attrs) }}
+  {% else %}
+    {{ todo_form.text(class='new-todo', **attrs) }}
+  {% endif %}
+{% endwith %}
+

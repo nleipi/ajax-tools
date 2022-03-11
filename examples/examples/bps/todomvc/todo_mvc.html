@@ -11,6 +11,9 @@
   border: 1px red;
   color: red;
 }
+.main form > input[type="submit"] {
+  display: none;
+}
   </style>
 {% endblock %}
 
@@ -29,7 +32,7 @@
   <footer class="info">
     <p>Double-click to edit a todo</p>
   </footer>
-  <script>
+  <script nonce="{{nonce}}">
     window.addEventListener('popstate', (event) => {
           window.ajt(document.location.href)
         })

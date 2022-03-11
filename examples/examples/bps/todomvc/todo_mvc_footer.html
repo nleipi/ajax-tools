@@ -3,22 +3,22 @@
   <ul class="filters">
     <li>
       <a class="{% if not state %}selected{% endif %}"
-         onclick="ajt(event)"
+         data-ajt-event="click"
          href="{{ url_for('.filter') }}">All</a>
     </li>
     <li>
       <a class="{% if state == 'active' %}selected{% endif %}"
-         onclick="ajt(event)"
+         data-ajt-event="click"
          href="{{ url_for('.filter', state='active') }}">Active</a>
     </li>
     <li>
       <a class="{% if state == 'completed' %}selected{% endif %}"
-         onclick="ajt(event)"
+         data-ajt-event="click"
          href="{{ url_for('.filter', state='completed') }}">Completed</a>
     </li>
   </ul>
   {% if todos|selectattr('completed', 'true')|list|length > 0 %}
-    <form action="{{ url_for('.clear', state=state) }}" method="post" onsubmit="ajt(event)">
+    <form action="{{ url_for('.clear', state=state) }}" method="post" data-ajt-event="submit">
       <button class="clear-completed">Clear completed</button>
     </form>
   {% endif %}

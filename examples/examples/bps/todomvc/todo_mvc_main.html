@@ -1,13 +1,16 @@
-<section id="todoMain" class="main" data-ajt-mode="replaceContent">
+<section id="todoMain"
+         class="main"
+         data-ajt-mode="replaceContent"
+         data-init="{{ url_for('.components', filename='todo-list.js') }}"
+  >
   <form method="post"
-        onsubmit="ajt(event)"
+        data-ajt-event="submit"
         action="{{ url_for('.toggle_all', state=state) }}">
-    <input type="submit" style="display: none;">
+    <input type="submit">
     <input id="toggle-all"
            class="toggle-all"
            type="checkbox"
            name="toggle"
-           onchange="this.previousElementSibling.click()"
            {% if toggle %}checked{% endif %}>
     <label for="toggle-all">Mark all as complete</label>
   </form>

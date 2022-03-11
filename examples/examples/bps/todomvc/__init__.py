@@ -1,7 +1,15 @@
+from os import path
 from dataclasses import dataclass
 from collections import OrderedDict
 from uuid import uuid4, UUID
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    send_from_directory
+)
 from wtforms import StringField, BooleanField, ValidationError
 from wtforms.validators import InputRequired, Length
 from flask_wtf import FlaskForm
@@ -63,7 +71,6 @@ def index():
         todo_map[id] = item
         return redirect(url_for('.index', state=request.args.get('state')))
     if todo_form.errors:
-        print(todo_form.errors)
         return render_template('todo_mvc_new_todo_input.html',
                                todo_form=todo_form,)
 
@@ -117,3 +124,9 @@ def clear():
         del todo_map[id]
 
     return redirect(url_for('.index', state=request.args.get('state')))
+
+
+@bp.route('/components/<path:filename>')
+def components(filename):
+    return send_from_directory(path.join(path.dirname(__file__), 'components'),
+                               filename)

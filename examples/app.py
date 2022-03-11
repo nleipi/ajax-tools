@@ -1,6 +1,14 @@
 from os import listdir, path
+from secrets import token_urlsafe
 from importlib import import_module
-from flask import Flask, render_template, send_from_directory
+from flask import (
+    Flask,
+    render_template,
+    send_from_directory,
+    g,
+    session,
+    request
+)
 
 app = Flask(__name__)
 app.secret_key = 'developer'
@@ -12,9 +20,17 @@ bps = listdir(blueprints_path)
 examples = []
 for bp_name in bps:
     module = import_module(f'examples.bps.{bp_name}')
-    print(module.bp)
     app.register_blueprint(module.bp, url_prefix=f'/{bp_name}')
     examples.append(module.bp)
+
+
+@app.context_processor
+def nonce():
+    if 'nonce' in request.args:
+        return dict(nonce=request.args.get('nonce'))
+    if 'nonce' not in g:
+        g.nonce = token_urlsafe(16)
+    return dict(nonce=g.get('nonce'))
 
 
 @app.get('/')

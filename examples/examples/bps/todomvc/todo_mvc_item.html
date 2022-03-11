@@ -5,18 +5,17 @@
       data-ajt-mode="replace">
     <form class="todo-form"
           action="{{ url_for('.update_item', id=todo.id, state=state) }}"
-          method="post"
-          onsubmit="ajt(event)">
+          data-ajt-event="submit"
+          method="post">
       {{ form.csrf_token }}
-      <input type="submit"
-             style="display: none;">
-      <div class="view" ondblclick="this.closest('li').classList.add('editing'); this.nextElementSibling.focus()">
-        {{ form.completed(class="toggle", onchange="this.closest('form').querySelector('input[type=submit]').click()") }}
+      <input type="submit">
+      <div class="view">
+        {{ form.completed(class="toggle") }}
         <label>{{ todo.text }}</label>
         <button class="destroy"
                 formaction="{{ url_for('.delete_item', id=todo.id, state=state) }}"></button>
       </div>
-      {{ form.text(class="edit", onfocus="this.select()", onblur="this.closest('form').querySelector('input[type=submit]').click()") }}
+      {{ form.text(class="edit") }}
     </form>
   </li>
 {% endwith %}

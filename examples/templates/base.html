@@ -1,10 +1,15 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta http-equiv="Content-Security-Policy"
+          content="script-src 'nonce-{{nonce}}'">
     <title>{{ title }}</title>
     {% block head %}
     {% endblock %}
-    <script>
+    <script nonce="{{nonce}}">
+      window.nonce = '{{nonce}}'
+    </script>
+    <script nonce="{{nonce}}">
       if (!window.SubmitEvent.prototype.hasOwnProperty('submitter')) { // eslint-disable-line no-prototype-builtins
         let lastClicked
         document.addEventListener('click', function (event) {
@@ -28,7 +33,7 @@
         }, true)
       }
     </script>
-    <script type="module">
+    <script type="module" nonce="{{nonce}}">
       window.ajt = function (urlOrEvent) {
         if (typeof urlOrEvent.preventDefault === 'function') {
           urlOrEvent.preventDefault()
@@ -38,6 +43,53 @@
           .catch(err => {
             console.error(err)
           })
+      }
+      function ajtListener (event) {
+        const selector = `[data-ajt-event="${event.type}"]`
+        const ajtElement = event.target.matches(selector)
+          ? event.target
+          : event.target.closest(selector)
+        if (ajtElement) {
+          ajt(event)
+        }
+      }
+      window.addEventListener('submit', ajtListener)
+      window.addEventListener('click', ajtListener)
+    </script>
+    <script type="module" nonce="{{nonce}}">
+      function initNodes () {
+        var nodes = document.querySelectorAll('*[data-init]')
+        for (var i = 0, len = nodes.length; i < len; i++) {
+          var node = nodes[i]
+          var dataset = node.dataset
+          if (dataset && dataset.init) {
+            const moduleUrl = dataset.init
+            delete dataset.init
+            import(moduleUrl).then(module => module.default(node))
+          }
+        }
+      }
+
+      function start () {
+        var observer = new MutationObserver(function (mutations, observer) {
+          for (var i = 0, len = mutations.length; i < len; i++) {
+            if (mutations[i].type === 'childList') {
+              initNodes()
+              break
+            }
+          }
+        })
+        observer.observe(document, { childList: true, subtree: true })
+
+        initNodes()
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function (event) {
+          setTimeout(start, 0)
+        })
+      } else {
+        setTimeout(start, 0)
       }
     </script>
   </head>

@@ -1,97 +1,27 @@
 {% extends "base.html" %}
 
 {% block main %}
-  <script type="module">
-    function isMergable (node, target) {
-      if (node.id || target.id) {
-        return node.id === target.id
-      }
-      const attrNames = node.getAttributeNames()
-      for (let i = 0, len = attrNames.length; i < len; i++) {
-        const name = attrNames[i]
-        if (target.getAttribute(name) !== node.getAttribute(name)) {
-          return false
-        }
-      }
-      return node.tagName === target.tagName
-    }
-    function merge (node, target, handleRemoveContent, handleAddContent) {
-      const attrNames = node.getAttributeNames()
-      for (let i = 0, len = attrNames.length; i < len; i++) {
-        const name = attrNames[i]
-        target.setAttribute(name, node.getAttribute(name))
-      }
-      const nodeChildren = Array.from(node.children)
-      if (nodeChildren.length === 0) {
-        target.textContent = node.textContent
-        return
-      }
-      const targetChildren = Array.from(target.children)
-      if (targetChildren.length === 0) {
-        target.textContent = ''
-      }
-      let j = 0
-      outerLoop:
-      for (let i = 0, len = nodeChildren.length; i < len; i++) {
-        const newEl = nodeChildren[i]
-        for (const len2 = targetChildren.length; j < len2; j++) {
-          const oldEl = targetChildren[j]
-          if (newEl.isEqualNode(oldEl)) {
-            j += 1
-          } else if (isMergable(newEl, oldEl)) {
-            merge(newEl, oldEl, handleRemoveContent, handleAddContent)
-            j += 1
-          } else if (j + 1 < len2 ) {
-            const nextOld = targetChildren[j + 1]
-            if (newEl.isEqualNode(nextOld)) {
-              oldEl.parentNode.removeChild(oldEl)
-              j += 2
-            } else if (isMergable(newEl, nextOld)) {
-              oldEl.parentNode.removeChild(oldEl)
-              merge(newEl, nextOld, handleRemoveContent, handleAddContent)
-              j += 2
-            } else {
-              oldEl.parentNode.insertBefore(newEl, oldEl)
-            }
-          } else {
-            break;
-          }
-          continue outerLoop;
-        }
-        target.appendChild(newEl)
-      }
-      for (const len2 = targetChildren.length; j < len2; j++) {
-        const oldEl = targetChildren[j]
-        oldEl.parentNode.removeChild(oldEl)
-      }
-    }
-  </script>
-  <form id="target"
-        data-ajt-mode="update"
-        method="post"
+  <form method="post"
         action="{{ url_for('diff.index') }}"
         onsubmit="ajt(event)"
         >
-      {% if param %}
-        <div>1</div>
-        <div id="test">
-          <input id="paramInput" name="param" value="{{ param }}"/>
-          <div>{{ param }}</div>
-        </div>
-        <div class="a">C</div>
-        <div>d</div>
-        <div>e</div>
-        <div>f</div>
-      {% else %}
-        <div>a</div>
-        <div id="test">
-          <input id="paramInput" name="param" value="{{ param }}"/>
-        </div>
-        <div>c</div>
-        <div>d</div>
-        <div>e</div>
-        <div>f</div>
-      {% endif %}
-    <button name="param" value="true">replace</button>
+    <div id="target" data-ajt-mode="update">
+    {% if param %}
+      <div>b</div>
+      <div>{{ param }}</div>
+      <div id="test">
+        <input id="input1" type="text" name="param" value="{{ param }}"/>
+        <div>{{ param }}</div>
+      </div>
+      <div>b</div>
+    {% else %}
+      <div>a</div>
+      <div id="test">
+        <input id="input1" type="text" name="param" value=""/>
+      </div>
+      <div>c</div>
+    {% endif %}
+    </div>
+    <button>replace</button>
   </form>
 {% endblock %}

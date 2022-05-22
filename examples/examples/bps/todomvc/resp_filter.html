@@ -4,6 +4,8 @@
   {% include 'todo_mvc_footer.html' %}
 {% endif %}
 
-<script data-ajt-mode="script">
-  window.history.pushState(null, null, '{{ url_for('.index', state=state, _external=True) }}')
-</script>
+<div data-ajt-target="body" data-ajt-mode="appendContent">
+  <script>
+    window.history.pushState(null, null, '{{ url_for('.index', state=state, _external=True) }}')
+  </script>
+</div>

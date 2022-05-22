@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block main %}
+  <form method="post"
+        action="{{ url_for('diff.index') }}"
+        onsubmit="ajt(event)"
+        >
+    <div id="target" data-ajt-mode="update">
+    {% if param %}
+      <div>b</div>
+      <div>{{ param }}</div>
+      <div id="test">
+        <input id="input1" type="text" name="param" value="{{ param }}"/>
+        <div>{{ param }}</div>
+      </div>
+      <div>b</div>
+    {% else %}
+      <div>a</div>
+      <div id="test">
+        <input id="input1" type="text" name="param" value=""/>
+      </div>
+      <div>c</div>
+    {% endif %}
+    </div>
+    <button>replace</button>
+  </form>
+{% endblock %}

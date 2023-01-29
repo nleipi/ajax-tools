@@ -1,3 +1,26 @@
-site_name: Ajax Tools
+site_name: Ajax tools
+site_author: Nikolay Leipi
+site_description: Simplify ajax calls
+site_url: https://nleipi.github.io/ajax-tools/
+
+copyright: Copyright &copy; 2022 - 2023 Nikolay Leipi
+
+repo_url: https://github.com/nleipi/ajax-tools
+repo_name: ajax-tools
+
 theme:
   name: material
+  features:
+    - content.code.annotate 
+    - content.code.copy
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+nav:
+  - Overview: index.md
+  - Getting Started: getting-started.md

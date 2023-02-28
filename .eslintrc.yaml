@@ -2,3 +2,5 @@ extends: standard
 env:
   es6: yes
   browser: yes
+ignorePatterns:
+  - examples/

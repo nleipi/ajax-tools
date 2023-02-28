@@ -46,7 +46,7 @@ describe('compare content-type, query string and body', () => {
       </script>
     </head>
     <body>
-        <form action="submit?param1=42" method="${method}" ${useAjax ? 'onsubmit="event.preventDefault(); window.promise = submitHandler(event)"' : ''}>
+        <form action="submit?param1=42" method="${method}" ${useAjax ? 'onsubmit="event.preventDefault(); window.promise = submitHandler(event.target, event.submitter)"' : ''}>
           <input type="hidden" name="hidden_input" value="test">
           <input type="text" name="text_input" value="Lorem ipsum">
           <input id="btn1" type="submit" name="submit_input" value="42">

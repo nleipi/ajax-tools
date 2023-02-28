@@ -15,7 +15,7 @@ app.get('/a', (req, res) => {
 <html>
   <body>
     <main>
-      <form action="submit?test=42" method="get" onsubmit="event.preventDefault(); import('./submit-form.js').then(module => { module.default(event) })">
+      <form action="submit?test=42" method="get" onsubmit="event.preventDefault(); import('./submit-form.js').then(module => { module.default(event.target, event.submitter) })">
         <input type="hidden" name="hidden_input" value="13">
         <input type="checkbox" name="ckb1" checked disabled>
         <input type="text" name="text_input" value="test">

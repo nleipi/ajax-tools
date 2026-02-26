@@ -2,7 +2,7 @@
   "name": "ajax-tools",
   "version": "1.0.0",
   "description": "A set of tools allowing to use ajax in server-side rendered web-sites in simple declarative manner.",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
     "test": "jest",
     "lint": "eslint ."

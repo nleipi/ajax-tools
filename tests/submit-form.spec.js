@@ -28,7 +28,10 @@ const test = base.extend({
   },
   baseURL: async ({ server }, use) => {
     const addr = server.address()
-    use(`http://hostmachine:${addr.port}`)
+    const host = process.env.PW_BASE_HOST
+      ? process.env.PW_BASE_HOST
+      : 'localhost'
+    use(`http://${host}:${addr.port}`)
   }
 })
 

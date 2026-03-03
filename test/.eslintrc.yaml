@@ -1,5 +1,0 @@
-env:
-  jest: yes
-globals:
-  page: readonly
-  PATH: readonly

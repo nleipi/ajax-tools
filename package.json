@@ -5,6 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "test": "dotenv -- npx playwright test",
+    "test:ui": "npm run test -- --ui",
     "lint": "eslint .",
     "start-pw-remote": "docker run --add-host=hostmachine:host-gateway -p 3000:3000 --rm --init -it --workdir /home/pwuser --user pwuser mcr.microsoft.com/playwright:v1.58.2-noble /bin/sh -c \"npx -y playwright@1.58.2 run-server --port 3000 --host 0.0.0.0\""
   },
@@ -24,6 +25,7 @@
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@types/node": "^25.3.3",
-    "dotenv-cli": "^11.0.0"
+    "dotenv-cli": "^11.0.0",
+    "express": "^5.2.1"
   }
 }

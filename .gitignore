@@ -1,3 +1,16 @@
+# Node.js
 node_modules/
+
+# Python
 __pycache__/
 site/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Project
+.env

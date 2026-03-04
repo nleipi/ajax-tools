@@ -15,6 +15,7 @@ export const test = base.extend({
   app: async ({}, use) => {
     const app = express()
     app.use(express.static('lib'))
+    app.use(express.urlencoded())
     app.get('/', (req, res) => {
       res.send('Hello, world!')
     })

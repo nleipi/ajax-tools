@@ -30,7 +30,7 @@ test('url', async ({ page, app }) => {
   await expect(page.getByText('Div after ajt call')).toBeAttached()
 })
 
-test.describe('click', () => {
+test.describe('click event', () => {
   ['href', 'data-href'].forEach((attr) => {
     test(attr, async ({ page, app }) => {
       app.get('/test', (req, res) => {
@@ -65,7 +65,7 @@ test.describe('click', () => {
   })
 })
 
-test.describe('submit', () => {
+test.describe('submit event', () => {
   ['get', 'post'].forEach((method) => {
     test.describe(method, () => {
       ['submit', 'image', 'btn', 'with_formmethod', 'with_formenctype', 'with_formaction'].forEach((btnId) => {
@@ -126,6 +126,58 @@ test.describe('submit', () => {
           expect(ajaxReq.body).toEqual(origReq.body)
         })
       })
+    })
+  })
+})
+
+test.describe('input event', () => {
+  [
+    { testId: 'no_method', expectedMethod: 'POST' },
+    { testId: 'get', expectedMethod: 'GET' },
+    { testId: 'post', expectedMethod: 'POST' },
+    { testId: 'data_name', expectedMethod: 'POST' },
+  ].forEach(({ testId, expectedMethod }) => {
+    test(testId, async ({ page, app }) => {
+      app.get('/test', (req, res) => {
+        const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module">
+      import ajt from './index.js'
+      window.ajt = ajt
+    </script>
+  </head>
+  <body>
+    <form>
+      <input data-testid="no_method" data-ajt-action="/submit?q=test" oninput="ajt(event)" name="txt" value="Lorem ipsum">
+      <input data-testid="get" data-ajt-action="/submit?q=test" data-ajt-method="GET" oninput="ajt(event)" name="txt" value="Lorem ipsum">
+      <input data-testid="post" data-ajt-action="/submit?q=test" data-ajt-method="POST" oninput="ajt(event)" name="txt" value="Lorem ipsum">
+      <input data-testid="data_name" data-ajt-action="/submit?q=test" oninput="ajt(event)" data-ajt-name="txt" name="txt2" value="Lorem ipsum">
+    </form>
+    <div id="test">Div before ajt call</div>
+  </body>
+</html>
+`
+        res.send(html)
+      })
+      let actualReq
+      app.all('/submit', (req, res) => {
+        actualReq = req
+        const txt = req.method === 'GET' ? req.query.txt : req.body.txt
+        const html = `
+<!DOCTYPE html>
+<div id="test" data-ajt-mode="replace">${txt}</div>
+`
+        res.send(html)
+      })
+      await page.goto('/test')
+      const responsePromise = page.waitForResponse('**/submit*')
+      await page.getByTestId(testId).fill('Div after ajt call')
+      await responsePromise
+
+      await expect(page.getByText('Div after ajt call')).toBeAttached()
+      expect(actualReq.method).toEqual(expectedMethod)
     })
   })
 })

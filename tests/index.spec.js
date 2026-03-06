@@ -36,27 +36,27 @@ test.describe('builtin event handlers', () => {
       test(attr, async ({ page, app }) => {
         app.get('/test', (req, res) => {
           const html = `
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <script type="module">
-        import ajt from './index.js'
-        window.ajt = ajt
-      </script>
-    </head>
-    <body>
-      <a data-testid="btn" ${attr}="/test2" onclick="event.preventDefault(); ajt(event)">Update</a>
-      <div id="test">Div before ajt call</div>
-    </body>
-  </html>
-  `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module">
+      import ajt from './index.js'
+      window.ajt = ajt
+    </script>
+  </head>
+  <body>
+    <a data-testid="btn" ${attr}="/test2" onclick="event.preventDefault(); ajt(event)">Update</a>
+    <div id="test">Div before ajt call</div>
+  </body>
+</html>
+`
           res.send(html)
         })
         app.get('/test2', (req, res) => {
           const html = `
-  <!DOCTYPE html>
-  <div id="test" data-ajt-mode="replace">Div after ajt call</div>
-  `
+<!DOCTYPE html>
+<div id="test" data-ajt-mode="replace">Div after ajt call</div>
+`
           res.send(html)
         })
         await page.goto('/test')

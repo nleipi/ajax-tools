@@ -2,16 +2,16 @@ const express = require('express')
 import { test as base } from '@playwright/test';
 
 export const test = base.extend({
-  page: async ({ page }, use) => {
-    page.on('console', async msg => {
-      const args = await Promise.all(
-        msg.args().map(a => a.jsonValue())
-      );
-      console.log(`[browser:${msg.type()}]`, ...args);
-    });
+  // page: async ({ page }, use) => {
+  //   page.on('console', async msg => {
+  //     const args = await Promise.all(
+  //       msg.args().map(a => a.jsonValue())
+  //     );
+  //     console.log(`[browser:${msg.type()}]`, ...args);
+  //   });
 
-    await use(page);
-  },
+  //   await use(page);
+  // },
   // eslint-disable-next-line no-empty-pattern
   app: async ({}, use) => {
     const app = express()

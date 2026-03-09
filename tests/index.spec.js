@@ -7,10 +7,7 @@ test('url', async ({ page, app }) => {
 <!DOCTYPE html>
 <html>
   <head>
-    <script type="module">
-      import ajt from './index.js'
-      window.ajt = ajt
-    </script>
+    <script type="module" src="./index.js"></script>
   </head>
   <body>
     <div id="test">Div before ajt call</div>
@@ -19,14 +16,14 @@ test('url', async ({ page, app }) => {
 `
     res.send(html)
   })
-  app.get('/test2', (req, res) => {
+  app.get('/submit', (req, res) => {
     const html = `
 <div id="test" data-ajt-mode="replace">Div after ajt call</div>
 `
     res.send(html)
   })
   await page.goto('/test')
-  await page.evaluate(() => window.ajt('/test2'))
+  await page.evaluate(() => window.ajt('/submit'))
   await expect(page.getByText('Div after ajt call')).toBeAttached()
 })
 
@@ -39,15 +36,7 @@ test.describe('builtin event handlers', () => {
 <!DOCTYPE html>
 <html>
   <head>
-    <script type="module">
-      import ajt from './index.js'
-      window.ajt = ajt
-      document.addEventListener('click', (event) => {
-        if (event.target.closest('[data-ajt-trigger~=click]')) {
-          ajt(event)
-        }
-      })
-    </script>
+    <script type="module" src="./index.js"></script>
   </head>
   <body>
     <a data-testid="inline" href="/submit" onclick="ajt(event)">Update</a>
@@ -90,16 +79,7 @@ test.describe('builtin event handlers', () => {
   <!DOCTYPE html>
   <html>
     <head>
-      ${useAjax ? 
-`      <script type="module">
-        import ajt from './index.js'
-        document.addEventListener('submit', (event) => {
-          if (event.target.closest('[data-ajt-trigger~=submit]')) {
-            ajt(event)
-          }
-        })
-      </script>
-` : ''}
+      ${useAjax ? '<script type="module" src="./index.js"></script>' : ''}
     </head>
     <body>
         <form action="submit?param1=42" method="${method}" data-ajt-trigger="submit">
@@ -159,14 +139,7 @@ test.describe('builtin event handlers', () => {
   <!DOCTYPE html>
   <html>
     <head>
-      <script type="module">
-        import ajt from './index.js'
-        document.addEventListener('input', (event) => {
-          if (event.target.closest('[data-ajt-trigger~=input]')) {
-            ajt(event)
-          }
-        })
-      </script>
+      <script type="module" src="./index.js"></script>
     </head>
     <body>
       <form>
@@ -221,17 +194,10 @@ test.describe('ajtEventHandlers', () => {
       }
     }, window.ajtEventHandlers)
   </script>
-  <script type="module">
-    import ajt from './index.js'
-    document.addEventListener('focusin', (event) => {
-      if (event.target.closest('[data-ajt-trigger~=focusin]')) {
-        ajt(event)
-      }
-    })
-  </script>
+  <script type="module" src="./index.js"></script>
 </head>
 <body>
-  <div tabindex="1" data-testid="btn" data-ajt-trigger="focusin" data-url="/test2">Update</div>
+  <div tabindex="1" data-testid="btn" data-ajt-trigger="focusin" data-url="/submit">Update</div>
   <div>Original page</div>
   <div id="test">Div to be replaced</div>
 </body>
@@ -239,7 +205,7 @@ test.describe('ajtEventHandlers', () => {
 `
       res.send(html)
     })
-    app.get('/test2', (req, res) => {
+    app.get('/submit', (req, res) => {
       const html = `
 <!DOCTYPE html>
 <div id="test" data-ajt-mode="replace">Div after ajt call</div>
@@ -252,5 +218,123 @@ test.describe('ajtEventHandlers', () => {
     await expect(page.getByText('Original page')).toBeAttached()
     await expect(page.getByText('Div to be replaced')).not.toBeAttached()
     await expect(page.getByText('Div after ajt call')).toBeAttached()
+  })
+})
+
+test.describe('data-ajt-triggers', () => {
+  test('mutation observer', async ({ page, app }) => {
+    app.get('/test', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module" src="./index.js"></script>
+  </head>
+  <body>
+    <a data-testid="btn" data-ajt-trigger="click" href="/submit">Update</a>
+    <div>Original page</div>
+    <div id="test">Div to be replaced</div>
+  </body>
+</html>
+`
+      res.send(html)
+    })
+    app.get('/submit', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<form id="test" data-ajt-mode="replace" data-ajt-trigger="submit" action="/submit-form" method="POST">
+  <input type="submit" data-testid="btn2" name="foo" value="bar">
+</form>
+`
+      res.send(html)
+    })
+    app.post('/submit-form', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<div id="test" data-ajt-mode="replace">Div after ajt call</div>
+`
+      res.send(html)
+    })
+    await page.goto('/test')
+    await page.getByTestId('btn').click()
+    await page.getByTestId('btn2').click()
+
+    await expect(page.getByText('Original page')).toBeAttached()
+    await expect(page.getByText('Div to be replaced')).not.toBeAttached()
+    await expect(page.getByText('Div after ajt call')).toBeAttached()
+  })
+
+  test('ajtNoTriggers', async ({ page, app }) => {
+    app.get('/test', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      window.ajtNoTriggers = true
+    </script>
+    <script type="module" src="./index.js"></script>
+  </head>
+  <body>
+    <a data-testid="btn" data-ajt-trigger="click" href="/submit">Update</a>
+    <div>Original page</div>
+    <div id="test">Div to be replaced</div>
+  </body>
+</html>
+`
+      res.send(html)
+    })
+    app.get('/submit', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<div id="test" data-ajt-mode="replace">Div after ajt call</div>
+`
+      res.send(html)
+    })
+    await page.goto('/test')
+    await page.getByTestId('btn').click()
+
+    await expect(page.getByText('Original page')).not.toBeAttached()
+    await expect(page.getByText('Div to be replaced')).not.toBeAttached()
+    await expect(page.getByText('Div after ajt call')).toBeAttached()
+  });
+
+  ['wrong_trigger', 'no_trigger'].forEach((testId) => {
+    test(testId, async ({ page, app }) => {
+      app.get('/test', (req, res) => {
+        const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      window.ajtNoTriggers = true
+    </script>
+    <script type="module" src="./index.js"></script>
+  </head>
+  <body>
+    <a data-ajt-trigger="click" href="/submit">Update</a>
+    <a data-testid="wrong_trigger" data-ajt-trigger="submit" href="/submit">Update</a>
+    <a data-testid="no_trigger" href="/submit">Update</a>
+    <div>Original page</div>
+    <div id="test">Div to be replaced</div>
+  </body>
+</html>
+`
+        res.send(html)
+      })
+      app.get('/submit', (req, res) => {
+        const html = `
+<!DOCTYPE html>
+<div id="test" data-ajt-mode="replace">Div after ajt call</div>
+`
+        res.send(html)
+      })
+      await page.goto('/test')
+      await page.getByTestId(testId).click()
+
+      await expect(page.getByText('Original page')).not.toBeAttached()
+      await expect(page.getByText('Div to be replaced')).not.toBeAttached()
+      await expect(page.getByText('Div after ajt call')).toBeAttached()
+    })
   })
 })

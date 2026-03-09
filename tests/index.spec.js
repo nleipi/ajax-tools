@@ -79,24 +79,30 @@ test.describe('builtin event handlers', () => {
     })
   })
 
-  test.describe('submit event', () => {
+  test.describe('submit event parity', () => {
     ['get', 'post'].forEach((method) => {
       test.describe(method, () => {
         ['submit', 'image', 'btn', 'with_formmethod', 'with_formenctype', 'with_formaction'].forEach((btnId) => {
           test(btnId, async ({ page, app }) => {
-            function createFormRoute (path, useAjax) {
-              app.get(path, (req, res) => {
-                const html = `
+            app.get('/test', (req, res) => {
+              const useAjax = typeof req.query.ajax !== 'undefined'
+              const html = `
   <!DOCTYPE html>
   <html>
     <head>
-      <script type="module">
+      ${useAjax ? 
+`      <script type="module">
         import ajt from './index.js'
-        window.ajt = ajt
+        document.addEventListener('submit', (event) => {
+          if (event.target.closest('[data-ajt-trigger~=submit]')) {
+            ajt(event)
+          }
+        })
       </script>
+` : ''}
     </head>
     <body>
-        <form action="submit?param1=42" method="${method}" ${useAjax ? 'onsubmit="event.preventDefault(); ajt(event)"' : ''}>
+        <form action="submit?param1=42" method="${method}" data-ajt-trigger="submit">
           <input type="hidden" name="hidden_input" value="test">
           <input type="text" name="text_input" value="Lorem ipsum">
           <input data-testid="submit" type="submit" name="submit_input" value="42">
@@ -109,9 +115,8 @@ test.describe('builtin event handlers', () => {
     </body>
   </html>
   `
-                res.send(html)
-              })
-            }
+              res.send(html)
+            })
             const results = []
             function submitHandler (req, res) {
               results.push(req)
@@ -120,17 +125,14 @@ test.describe('builtin event handlers', () => {
             app.all('/submit', submitHandler)
             app.all('/submit2', submitHandler)
 
-            createFormRoute('/get-form', false)
-            createFormRoute('/get-form-ajax', true)
-
-            await page.goto('/get-form')
+            await page.goto('/test')
             await page.getByTestId(btnId).click()
             await page.waitForURL('**/submit*')
 
-            await page.goto('/get-form-ajax')
+            await page.goto('/test?ajax')
             const responsePromise = page.waitForResponse('**/submit*')
             await page.getByTestId(btnId).click()
-            const response = await responsePromise
+            await responsePromise
             
             const [origReq, ajaxReq] = results
             expect(ajaxReq.method).toEqual(origReq.method)
@@ -159,17 +161,22 @@ test.describe('builtin event handlers', () => {
     <head>
       <script type="module">
         import ajt from './index.js'
-        window.ajt = ajt
+        document.addEventListener('input', (event) => {
+          if (event.target.closest('[data-ajt-trigger~=input]')) {
+            ajt(event)
+          }
+        })
       </script>
     </head>
     <body>
       <form>
-        <input data-testid="no_method" data-ajt-action="/submit?q=test" oninput="ajt(event)" name="txt" value="Lorem ipsum">
-        <input data-testid="get" data-ajt-action="/submit?q=test" data-ajt-method="GET" oninput="ajt(event)" name="txt" value="Lorem ipsum">
-        <input data-testid="post" data-ajt-action="/submit?q=test" data-ajt-method="POST" oninput="ajt(event)" name="txt" value="Lorem ipsum">
-        <input data-testid="data_name" data-ajt-action="/submit?q=test" oninput="ajt(event)" data-ajt-name="txt" name="txt2" value="Lorem ipsum">
+        <input data-testid="no_method" data-ajt-action="/submit?q=test" data-ajt-trigger="input" name="txt" value="Lorem ipsum">
+        <input data-testid="get" data-ajt-action="/submit?q=test" data-ajt-method="GET" data-ajt-trigger="input" name="txt" value="Lorem ipsum">
+        <input data-testid="post" data-ajt-action="/submit?q=test" data-ajt-method="POST" data-ajt-trigger="input" name="txt" value="Lorem ipsum">
+        <input data-testid="data_name" data-ajt-action="/submit?q=test" data-ajt-trigger="input" data-ajt-name="txt" name="txt2" value="Lorem ipsum">
       </form>
-      <div id="test">Div before ajt call</div>
+      <div>Original page</div>
+      <div id="test">Div to be replaced</div>
     </body>
   </html>
   `
@@ -190,8 +197,10 @@ test.describe('builtin event handlers', () => {
         await page.getByTestId(testId).fill('Div after ajt call')
         await responsePromise
 
-        await expect(page.getByText('Div after ajt call')).toBeAttached()
         expect(actualReq.method).toEqual(expectedMethod)
+        await expect(page.getByText('Original page')).toBeAttached()
+        await expect(page.getByText('Div to be replaced')).not.toBeAttached()
+        await expect(page.getByText('Div after ajt call')).toBeAttached()
       })
     })
   })
@@ -206,7 +215,7 @@ test.describe('ajtEventHandlers', () => {
 <head>
   <script>
     window.ajtEventHandlers = Object.assign({
-      focus: (event) => {
+      focusin: (event) => {
         const url = new URL(event.target.dataset.url, document.baseURI)
         return [url.href]
       }
@@ -214,12 +223,17 @@ test.describe('ajtEventHandlers', () => {
   </script>
   <script type="module">
     import ajt from './index.js'
-    window.ajt = ajt
+    document.addEventListener('focusin', (event) => {
+      if (event.target.closest('[data-ajt-trigger~=focusin]')) {
+        ajt(event)
+      }
+    })
   </script>
 </head>
 <body>
-  <div tabindex="1" data-testid="btn" onfocus="console.log(this); ajt(event)" data-url="/test2">Update</div>
-  <div id="test">Div before ajt call</div>
+  <div tabindex="1" data-testid="btn" data-ajt-trigger="focusin" data-url="/test2">Update</div>
+  <div>Original page</div>
+  <div id="test">Div to be replaced</div>
 </body>
 </html>
 `
@@ -234,6 +248,9 @@ test.describe('ajtEventHandlers', () => {
     })
     await page.goto('/test')
     await page.getByTestId('btn').focus()
+
+    await expect(page.getByText('Original page')).toBeAttached()
+    await expect(page.getByText('Div to be replaced')).not.toBeAttached()
     await expect(page.getByText('Div after ajt call')).toBeAttached()
   })
 })

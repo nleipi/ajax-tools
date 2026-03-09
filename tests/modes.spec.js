@@ -14,7 +14,7 @@ test.describe('loading', () => {
     </script>
   </head>
   <body>
-    <a data-testid="btn" href="/submit" onclick="event.preventDefault(); ajt(event)">Update</a>
+    <a data-testid="btn" href="/submit" onclick="event.preventDefault(); ajt(event, this)">Update</a>
     <div id="test">Div before ajt call</div>
   </body>
 </html>

@@ -32,8 +32,8 @@ test('url', async ({ page, app }) => {
 
 test.describe('builtin event handlers', () => {
   test.describe('click event', () => {
-    ['href', 'data-href'].forEach((attr) => {
-      test(attr, async ({ page, app }) => {
+    ['href', 'data-href', 'inline', 'nested'].forEach((testId) => {
+      test(testId, async ({ page, app }) => {
         app.get('/test', (req, res) => {
           const html = `
 <!DOCTYPE html>
@@ -42,17 +42,28 @@ test.describe('builtin event handlers', () => {
     <script type="module">
       import ajt from './index.js'
       window.ajt = ajt
+      document.addEventListener('click', (event) => {
+        if (event.target.closest('[data-ajt-trigger~=click]')) {
+          ajt(event)
+        }
+      })
     </script>
   </head>
   <body>
-    <a data-testid="btn" ${attr}="/test2" onclick="event.preventDefault(); ajt(event)">Update</a>
-    <div id="test">Div before ajt call</div>
+    <a data-testid="inline" href="/submit" onclick="ajt(event)">Update</a>
+    <a data-testid="href" href="/submit" data-ajt-trigger="click">Update</a>
+    <a data-testid="data-href" href="/noop" data-href="/submit" data-ajt-trigger="click">Update</a>
+    <a href="/submit" data-ajt-trigger="click">
+      <span data-testid="nested">Update<span>
+    </a>
+    <div>Original page</div>
+    <div id="test">Div to be replaced</div>
   </body>
 </html>
 `
           res.send(html)
         })
-        app.get('/test2', (req, res) => {
+        app.get('/submit', (req, res) => {
           const html = `
 <!DOCTYPE html>
 <div id="test" data-ajt-mode="replace">Div after ajt call</div>
@@ -60,7 +71,9 @@ test.describe('builtin event handlers', () => {
           res.send(html)
         })
         await page.goto('/test')
-        await page.getByTestId('btn').click()
+        await page.getByTestId(testId).click()
+        await expect(page.getByText('Original page')).toBeAttached()
+        await expect(page.getByText('Div to be replaced')).not.toBeAttached()
         await expect(page.getByText('Div after ajt call')).toBeAttached()
       })
     })

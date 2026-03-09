@@ -12,6 +12,7 @@ export const test = base.extend({
 
     await use(page);
   },
+  // eslint-disable-next-line no-empty-pattern
   app: async ({}, use) => {
     const app = express()
     app.use(express.static('lib'))

@@ -412,7 +412,7 @@ test.describe('return value', () => {
     })
   })
 
-  test('then', async ({ page, app }) => {
+  test('then', async ({ page }) => {
     await page.goto('/test')
     const result = await page.evaluate(() => {
       const res = window.ajt('/submit')
@@ -421,22 +421,20 @@ test.describe('return value', () => {
     expect(result).toBe(true)
     await expect(page.getByText('Div after ajt call')).toBeAttached()
   })
-  test('catch', async ({ page, app }) => {
-    await page.addInitScript(() => {
-      window.fetch = function () {
-        return Promise.reject('my error')
-      }
-    })
+  test('catch', async ({ page }) => {
+    await page.route('/submit', (route) => route.abort('aborted'))
     await page.goto('/test')
     const result = await page.evaluate(() => {
       return window.ajt('/submit').catch((err) => {
-        return err
+        if (err instanceof TypeError) {
+          return 'error caught'
+        }
       })
     })
-    expect(result).toBe('my error')
+    expect(result).toBe('error caught')
     await expect(page.getByText('Div after ajt call')).not.toBeAttached()
   })
-  test('programmatic cancelation', async ({ page, app }) => {
+  test('programmatic cancelation', async ({ page }) => {
     await page.goto('/test')
     const result = await page.evaluate(() => {
       const res = window.ajt('/submit')

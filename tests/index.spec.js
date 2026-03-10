@@ -387,3 +387,63 @@ test.describe('context', () => {
     })
   })
 })
+
+test.describe('return value', () => {
+  test.beforeEach(({ app }) => {
+    app.get('/test', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module" src="./index.js"></script>
+  </head>
+  <body>
+    <div id="test">Div before ajt call</div>
+  </body>
+</html>
+`
+      res.send(html)
+    })
+    app.get('/submit', (req, res) => {
+      const html = `
+<div id="test" data-ajt-mode="replace">Div after ajt call</div>
+`
+      res.send(html)
+    })
+  })
+
+  test('then', async ({ page, app }) => {
+    await page.goto('/test')
+    const result = await page.evaluate(() => {
+      const res = window.ajt('/submit')
+      return res
+    })
+    expect(result).toBe(true)
+    await expect(page.getByText('Div after ajt call')).toBeAttached()
+  })
+  test('catch', async ({ page, app }) => {
+    await page.addInitScript(() => {
+      window.fetch = function () {
+        return Promise.reject('my error')
+      }
+    })
+    await page.goto('/test')
+    const result = await page.evaluate(() => {
+      return window.ajt('/submit').catch((err) => {
+        return err
+      })
+    })
+    expect(result).toBe('my error')
+    await expect(page.getByText('Div after ajt call')).not.toBeAttached()
+  })
+  test('programmatic cancelation', async ({ page, app }) => {
+    await page.goto('/test')
+    const result = await page.evaluate(() => {
+      const res = window.ajt('/submit')
+      res.cancel()
+      return res
+    })
+    expect(result).toBe(false)
+    await expect(page.getByText('Div after ajt call')).not.toBeAttached()
+  })
+})

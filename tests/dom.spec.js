@@ -31,6 +31,7 @@ test.describe('data-ajt-mode', () => {
     })
     app.get('/submit', (req, res) => {
       const html = `
+<!DOCTYPE html>
 <div id="test" data-testid="el" data-ajt-mode="replace">Div after ajt call</div>
 `
       res.send(html)
@@ -70,6 +71,7 @@ test.describe('data-ajt-mode', () => {
     })
     app.get('/submit', (req, res) => {
       const html = `
+<!DOCTYPE html>
 <div id="test" data-testid="newEl" data-ajt-mode="replaceContent">Dolor <span>Div after ajt call</span> sit</div>
 `
       res.send(html)
@@ -119,6 +121,7 @@ test.describe('data-ajt-mode', () => {
       })
       app.get('/submit', (req, res) => {
         const html = `
+<!DOCTYPE html>
 <div id="test" data-testid="newEl" data-ajt-mode="${mode}">Dolor <span>Div after ajt call</span> sit</div>
 `
         res.send(html)
@@ -162,6 +165,7 @@ test.describe('data-ajt-mode', () => {
     })
     app.get('/submit', (req, res) => {
       const html = `
+<!DOCTYPE html>
 <div id="test" data-testid="el" data-ajt-mode="remove">Div after ajt call</div>
 `
       res.send(html)
@@ -174,5 +178,53 @@ test.describe('data-ajt-mode', () => {
     ])
     await expect(page.getByText('Div after ajt call')).not.toBeAttached()
     await expect(page.getByText('Div before ajt call')).not.toBeAttached()
+  })
+
+  test('update', async ({ page, app }) => {
+    app.get('/test', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module" src="./index.js"></script>
+  </head>
+  <body>
+    <div id="test" data-testid="el">
+      Same content 1
+      <span>Div before ajt call</span>
+      <div>Same content 2</div>
+    </div>
+  </body>
+</html>
+`
+      res.send(html)
+    })
+    app.get('/submit', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<div id="test" data-ajt-mode="update">
+  Same content 1
+  <span>Div after ajt call</span>
+  <div>Same content 2</div>
+</div>
+`
+      res.send(html)
+    })
+    await page.goto('/test')
+    await page.getByTestId('el').evaluate((el) => window.oldElement = el)
+
+    await page.evaluate(() => window.ajt('/submit'))
+
+    await page.getByTestId('el').evaluate((el) => window.newElement = el)
+
+    expect(await page.evaluate(() => window.handlersHistory)).toEqual([
+      ['removed', '<span>Div before ajt call</span>'],
+      ['preadd', '<span>Div after ajt call</span>'],
+      ['added', '<span>Div after ajt call</span>'],
+    ])
+    await expect(page.getByText('Div after ajt call')).toBeAttached()
+    expect(await page.evaluate(() => {
+      return window.oldElement === window.newElement
+    })).toBe(true)
   })
 })

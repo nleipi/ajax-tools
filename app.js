@@ -15,8 +15,37 @@ app.get('/a', (req, res) => {
 <!DOCTYPE html>
 <html>
   <head>
+    <style>
+      :root {
+        view-transition-name: none;
+      }
+      ::view-transition {
+        pointer-events: none;
+      }
+    </style>
     <script type="module" nonce="foobar">
       window.nonce = "foobar"
+      function pushAjtHistory(el, type) {
+        console.log(type, el.outerHTML || el.textContent)
+      }
+      window.ajtElementRemovedHandlers = [
+        (el) => pushAjtHistory(el, 'removed'),
+        (el) => {
+          el.style.viewTransitionName = 'foobar'
+        }
+      ]
+      window.ajtElementPreAddHandlers = [
+        (el) => pushAjtHistory(el, 'preadd'),
+        (el) => {
+          el.style.viewTransitionName = 'foobar'
+        }
+      ]
+      window.ajtElementAddedHandlers = [
+        (el) => pushAjtHistory(el, 'added'),
+        (el) => {
+          el.style.viewTransitionName = null
+        }
+      ]
     </script>
     <script type="module" nonce="foobar" src="./index.js"></script>
   </head>
@@ -30,7 +59,7 @@ app.get('/a', (req, res) => {
         <input type="submit" name="sbm">
         <input type="image" name="img">
       </form>
-      <div id="test" style="view-transition-name: test">Lorem <span>Div before ajt call<span>inner</span></span> ipsum</div>
+      <div id="test">Lorem <span style="">Div before ajt call<span>inner</span></span> ipsum</div>
     </main>
   </body>
 </html>
@@ -38,9 +67,8 @@ app.get('/a', (req, res) => {
 })
 
 app.all('/submit', (req, res) => {
-  console.log(req.body)
   const html = `
-<div id="test" style="view-transition-name: test" data-ajt-mode="replace">Dolor <span>${req.body.text_input}</span> sit</div>
+<div id="test" data-ajt-mode="appendContent"><div>Dolor <span>${req.body.text_input}</span> sit</div></div>
 `
   res.send(html)
 })

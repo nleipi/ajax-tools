@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% block headressources %}
+<link rel="stylesheet" href="{% static 'dist/examples/css/index.css' %}">
+<script type="module" src="{% static 'dist/examples/js/index.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<header class="flex gap-5 py-5">
+    <a href="{% url 'examples:index' %}">
+        <h1>Examples</h1>
+    </a>
+</header>
+<main>
+    <ul>
+        {% for example in examples %}
+        <li>
+            <a href="{% url example.full_name %}">{{ example.name }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</main>
+{% endblock %}

@@ -1,5 +1,0 @@
-{
-  "imports": {
-    "domdiff": "./domdiff.js"
-  }
-}

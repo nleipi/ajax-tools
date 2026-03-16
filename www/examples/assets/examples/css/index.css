@@ -1,0 +1,40 @@
+@import "tailwindcss" source("../../../templates");
+@source "../../../../templates";
+
+
+@theme inline {
+  --color-btn-bg: var(--foobar-color-btn-bg);
+  --color-btn-ring: var(--foobar-color-btn-ring);
+  --color-btn-ring-hover: var(--foobar-color-btn-ring-hover);
+}
+
+:root {
+  --foobar-color-btn-bg: var(--color-blue-100);
+  --foobar-color-btn-ring: var(--color-blue-400);
+  --foobar-color-btn-ring-hover: var(--color-blue-600);
+  @variant dark {
+    --foobar-color-btn-bg: var(--color-gray-600);
+    --foobar-color-btn-ring: var(--color-blue-600);
+  --foobar-color-btn-ring-hover: var(--color-blue-400);
+  }
+
+  view-transition-name: none;
+}
+
+::view-transition {
+  pointer-events: none;
+}
+
+@layer base {
+  h1 {
+    @apply text-2xl font-bold;
+  }
+  h2 {
+    @apply text-xl;
+  }
+}
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+}

@@ -13,15 +13,6 @@
     </a>
 </header>
 {% block main %}
-<main>
-    <ul>
-        {% for example in examples %}
-        <li>
-            <a href="{% url example.full_name %}">{{ example.name }}</a>
-        </li>
-        {% endfor %}
-    </ul>
-</main>
 {% endblock %}
 {% endblock %}
 

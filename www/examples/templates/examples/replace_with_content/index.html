@@ -1,0 +1,15 @@
+{% extends "examples/base.html" %}
+
+{% block main %}
+    <h2 class="mb-3">replaceWithContent</h2>
+
+    <div class="flex flex-col">
+        {% for p in text %}
+        <p>{{ p }}</p>
+        {% endfor %}
+        {% if show_more %}
+        <a id="show-more" class="link" href="{% url 'examples:replace_with_content:more' %}" data-ajt-trigger="click">Show more</a>
+        {% endif %}
+    </div>
+{% endblock %}
+

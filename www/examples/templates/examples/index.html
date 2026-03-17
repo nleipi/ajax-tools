@@ -13,12 +13,13 @@
     </a>
 </header>
 <main>
-    <ul>
+    <dl class="grid grid-cols-[auto_1fr] gap-4">
         {% for example in examples %}
-        <li>
+        <dt class="font-bold">
             <a href="{% url example.full_name %}">{{ example.name }}</a>
-        </li>
+        </dt>
+        <dd>{{ example.description }}</dd>
         {% endfor %}
-    </ul>
+    </dl>
 </main>
 {% endblock %}

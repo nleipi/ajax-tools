@@ -3,13 +3,18 @@
 {% block main %}
     <h2 class="mb-3">replaceWithContent</h2>
 
-    <div class="flex flex-col">
-        {% for p in text %}
-        <p>{{ p }}</p>
-        {% endfor %}
+    <div>
+        {{ text }}
         {% if show_more %}
-        <a id="show-more" class="link" href="{% url 'examples:replace_with_content:more' %}" data-ajt-trigger="click">Show more</a>
+        <a id="show-more" class="block link" href="{% url 'examples:replace_with_content:more' %}" data-ajt-trigger="click">Show more</a>
         {% endif %}
     </div>
+    <details>
+        <summary>What happens in dom?</summary>
+        <pre>
+            <code>
+            </code>
+        </pre>
+    </details>
 {% endblock %}
 

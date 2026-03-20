@@ -10,10 +10,10 @@ urlpatterns = [
         path("", views.replace, name="replace"),
         path("full/", views.replace_more, name="full"),
     ], "replace"))),
-    # path("replace-content/", include(([
-    #     path("", views.replace_with_content, name="replaceWithContent"),
-    #     path("more/", views.replace_with_content_more, name="more"),
-    # ], "replace_content"))),
+    path("replace-content/", include(([
+        path("", views.replace_content, name="replaceContent"),
+        path("more/", views.replace_content_more, name="more"),
+    ], "replace_content"))),
     path("replace-with-content/", include(([
         path("", views.replace_with_content, name="replaceWithContent"),
         path("more/", views.replace_with_content_more, name="more"),

@@ -1,9 +1,29 @@
 {% extends "examples/base.html" %}
 
 {% block main %}
-    <h2 class="mb-3">replace</h2>
+    <h2>replace</h2>
 
     {% include "examples/replace/text.html" %}
+
+    {% load example_helpers %}
+    <details>
+        <summary>What happens in dom?</summary>
+        <pre><code>
+{% filter code %}
+-- <div id="text" data-ajt-mode="replace">
+--     <div>
+--         This is the initial content, that will be replaced
+--     </div>
+--     <a class="link" href="/examples/replace/full/" data-ajt-trigger="click">Show more</a>
+-- </div>
+++ <div id="text" data-ajt-mode="replace">
+++     <div>
+++         This is the new content. Tha parent element has been replaced.
+++     </div>
+++ </div>
+{% endfilter %}
+</code></pre>
+    </details>
 {% endblock %}
 
 

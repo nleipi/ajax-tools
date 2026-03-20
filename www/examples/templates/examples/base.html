@@ -3,7 +3,6 @@
 {% load static %}
 {% block headressources %}
 <link rel="stylesheet" href="{% static 'dist/examples/css/index.css' %}">
-<script type="module" src="{% static 'dist/examples/js/index.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -12,7 +11,24 @@
         <h1>Examples</h1>
     </a>
 </header>
-{% block main %}
-{% endblock %}
+<main class="flex flex-col gap-5">
+    <div class="flex flex-col gap-2 size-fit">
+        <button id="enable-ajt" class="h-12 px-4 inset-ring-2 inset-ring-ui-primary bg-ui-bg rounded-md">Enable ajt</button>
+        <script type="module">
+const button = document.getElementById('enable-ajt')
+button.addEventListener('click', (event) => {
+    if (!window.ajt) {
+        import('{% static 'dist/examples/js/index.js' %}').then((ajtModule) => {
+            console.log('ajt initialized')
+            const message = document.createElement('div')
+            message.textContent = 'ajt loaded'
+            button.after(message)
+        })
+    }
+})
+</script>
+    </div>
+    {% block main %}No main{% endblock %}
+</main>
 {% endblock %}
 

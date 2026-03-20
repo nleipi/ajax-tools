@@ -1,0 +1,26 @@
+{% extends "examples/base.html" %}
+
+{% block main %}
+    <h2>replaceContent</h2>
+
+    {% include "examples/replace_content/text.html" %}
+    {% load example_helpers %}
+    <details>
+        <summary>What happens in dom?</summary>
+        <pre>
+            <code>
+{% filter code %}<details id="details-el" class="flex flex-col" data-ajt-mode="replaceContent">{% endfilter %}
+    <del>{% filter code %}<summary>This is the initial summary, that will be replaced</summary>
+    <div>
+        <a class="link" href="/examples/replace-content/more/" data-ajt-trigger="click">Show more</a>
+    </div>{% endfilter %}</del>
+    <ins>{% filter code %}<summary>This is the replacement summary</summary>
+    <div>
+        This is added text section. The &lt;details&gt; element hasn't been closed because only its contents were replaced
+    </div>{% endfilter %}</ins>
+{% filter code %}</details>{% endfilter %}
+            </code>
+        </pre>
+    </details>
+{% endblock %}
+

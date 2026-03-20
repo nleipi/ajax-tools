@@ -1,7 +1,7 @@
 <div id="text" data-ajt-mode="replace">
-    {% for p in text %}
-    <p>{{ p }}</p>
-    {% endfor %}
+    <div>
+    {{ text }}
+    </div>
     {% if show_more %}
     <a class="link" href="{% url 'examples:replace:full' %}" data-ajt-trigger="click">Show more</a>
     {% endif %}

@@ -3,19 +3,19 @@
 
 
 @theme inline {
-  --color-btn-bg: var(--foobar-color-btn-bg);
-  --color-btn-ring: var(--foobar-color-btn-ring);
-  --color-btn-ring-hover: var(--foobar-color-btn-ring-hover);
+  --color-ui-bg: var(--ajt-color-ui-bg);
+  --color-ui-primary: var(--ajt-color-ui-primary);
+  --color-ui-ring-hover: var(--ajt-color-ui-ring-hover);
 }
 
 :root {
-  --foobar-color-btn-bg: var(--color-blue-100);
-  --foobar-color-btn-ring: var(--color-blue-400);
-  --foobar-color-btn-ring-hover: var(--color-blue-600);
+  --ajt-color-ui-bg: var(--color-gray-100);
+  --ajt-color-ui-primary: var(--color-blue-400);
+  --ajt-color-ui-ring-hover: var(--color-blue-600);
   @variant dark {
-    --foobar-color-btn-bg: var(--color-gray-600);
-    --foobar-color-btn-ring: var(--color-blue-600);
-  --foobar-color-btn-ring-hover: var(--color-blue-400);
+    --ajt-color-ui-bg: var(--color-gray-600);
+    --ajt-color-ui-primary: var(--color-blue-600);
+    --ajt-color-ui-ring-hover: var(--color-blue-400);
   }
 
   view-transition-name: none;
@@ -31,6 +31,12 @@
   }
   h2 {
     @apply text-xl;
+  }
+  del {
+    @apply line-through bg-red-200 dark:bg-red-500;
+  }
+  ins {
+    @apply no-underline bg-green-200 dark:bg-green-500;
   }
 }
 

@@ -25,22 +25,21 @@ window.ajt = (...args) => {
   markNodes(rootClone, 'old')
   return ajt(...args).then(() => {
     diffChanges(rootClone, exampleRoot)
-    const changes = collectChanges(rootClone)
-    const patch = createPatch(changes)
-    const targetElement = document.getElementById('display');
+    const changes = collectChanges(rootClone, 0, 2)
+    const patch = createPatch(changes, 2)
+    const targetElement = document.getElementById('diff');
     const configuration = {
       drawFileList: false,
       matching: 'lines',
+      diffStyle: 'char',
       highlight: true,
       outputFormat: 'side-by-side',
       synchronisedScroll: true,
       highlight: true,
       renderNothingWhenEmpty: false,
-      colorScheme: 'auto'
+      colorScheme: 'auto',
+      maxLineLengthHighlight: 0,
     }
-    // const diff2htmlUi = new Diff2HtmlUI(targetElement, patch, configuration)
-    // diff2htmlUi.draw()
-    // diff2htmlUi.highlightCode()
 
     targetElement.innerHTML = Diff2Html.html(patch, configuration)
   })
@@ -59,20 +58,35 @@ function createChange(value, state, padding) {
   }
 }
 
-function collectChanges(node, depth = 0) {
+function limitDepth(node, depth) {
+  if (depth === 0) {
+    node.textContent = '...'
+  } else {
+    if (node.children) {
+      Array.from(node.children).forEach((child) => {
+        limitDepth(child, depth - 1)
+      })
+    }
+  }
+}
+
+function collectChanges(node, depth = 0, limit = 2) {
   const padding = depth * 4
   const changes = []
   if (node.ajtDebug === 'inserted') {
+    limitDepth(node, limit)
     changes.push(createChange(diffable(node.outerHTML || node.textContent), '+', padding))
   } else if (node.ajtDebug === 'deleted') {
+    limitDepth(node, limit)
     changes.push(createChange(diffable(node.outerHTML || node.textContent), '-', padding))
   } else {
     if (node.innerHTML) {
       const html = diffable(node.cloneNode().outerHTML)
+
       const openingTag = html.substring(0, html.lastIndexOf('\n', html.length - 2))
       changes.push(createChange(openingTag, ' ', padding))
       Array.from(node.childNodes).forEach((child) => {
-        changes.push(...collectChanges(child, depth + 1))
+        changes.push(...collectChanges(child, depth + 1, limit))
       })
       const closingTag = html.substring(html.lastIndexOf('\n', html.length - 2))
       changes.push(createChange(closingTag, ' ', padding))
@@ -83,38 +97,60 @@ function collectChanges(node, depth = 0) {
   return changes.filter((change) => change.count > 0)
 }
 
-function createPatch(changes) {
+function createHunk(hunks, i) {
+  if (hunks.length === 0 || i === 0) {
+    const hunk = []
+    hunk.isHunk = true
+    return hunk
+  }
+  const item = hunks.pop()
+  if (item.isHunk) {
+    return item
+  }
+  const hunk = createHunk(hunks, i - 1)
+  hunk.push(item)
+  return hunk
+}
+
+function createPatch(changes, contextSize = 3) {
   const buffer = [
     '--- document',
     '+++ document',
   ]
-  let oldLines = 0
-  let newLines = 0
+
   let currentHunk = null
   const hunks = []
+  let hunkResetCounter = 0
   for (let change of changes) {
     if (!currentHunk) {
       if (change.state === ' ') {
-        hunks.push([change])
+        hunks.push(change)
       } else {
-        currentHunk = hunks.pop() || []
-        currentHunk.isHunk = true
-        currentHunk.push(change)
-        hunks.push(currentHunk)
+        const hunk = createHunk(hunks, contextSize)
+        hunk.push(change)
+        hunks.push(hunk)
+        currentHunk = hunk
+        hunkResetCounter = contextSize
       }
     } else {
       currentHunk.push(change)
       if (change.state === ' ') {
-        currentHunk = null
+        hunkResetCounter -= 1
+        if (hunkResetCounter === 0) {
+          currentHunk = null
+        }
+      } else {
+        hunkResetCounter = contextSize
       }
     }
   }
+
+  let oldLines = 0
+  let newLines = 0
   hunks.forEach((hunk) => {
-    console.log(hunk)
     if (!hunk.isHunk) {
-      const lines = hunk.reduce((lines, change) => lines + change.count, 0)
-      oldLines += lines
-      newLines += lines
+      oldLines += hunk.count
+      newLines += hunk.count
     } else {
       const oldStart = oldLines + 1
       const newStart = newLines + 1

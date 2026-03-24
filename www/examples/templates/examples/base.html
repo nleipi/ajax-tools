@@ -35,8 +35,12 @@ button.addEventListener('click', (event) => {
 })
 </script>
     </div>
-    {% block main %}No main{% endblock %}
-    <div id="display"></div>
+    <div class="mb-10">
+        {% block main %}No main{% endblock %}
+    </div>
+    <div id="diff">
+        After the request you can see a diff of dom changes
+    </div>
 </main>
 {% endblock %}
 

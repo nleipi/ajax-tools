@@ -1,6 +1,8 @@
 import path from 'node:path'
 import { globSync } from 'glob';
-import { nodeResolve } from '@rollup/plugin-node-resolve';
+import { nodeResolve } from '@rollup/plugin-node-resolve'
+import commonjs from '@rollup/plugin-commonjs'
+import json from '@rollup/plugin-json'
 
 export default {
   input: Object.fromEntries(globSync([
@@ -17,7 +19,9 @@ export default {
     entryFileNames: '[name]',
     manualChunks: {}
   },
-  plugins: [nodeResolve({
-    browser: true
-  })]
+  plugins: [
+    nodeResolve({ browser: true }),
+    commonjs(),
+    json(),
+  ]
 }

@@ -8,10 +8,15 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.2",
+    "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@tailwindcss/cli": "^4.2.1",
     "ajax-tools": "file:..",
     "concurrently": "^9.2.1",
+    "diff": "^8.0.3",
+    "diff2html": "^3.4.56",
+    "diffable-html": "^6.0.1",
     "glob": "^13.0.6",
     "rollup": "^4.59.0"
   }

@@ -3,6 +3,13 @@
 {% load static %}
 {% block headressources %}
 <link rel="stylesheet" href="{% static 'dist/examples/css/index.css' %}">
+<!-- Stylesheet -->
+
+<!-- CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css" />
+
+<!-- Javascripts -->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html.min.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -29,9 +36,7 @@ button.addEventListener('click', (event) => {
 </script>
     </div>
     {% block main %}No main{% endblock %}
-    <pre>
     <div id="display"></div>
-    </pre>
 </main>
 {% endblock %}
 

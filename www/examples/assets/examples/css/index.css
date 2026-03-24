@@ -32,12 +32,6 @@
   h2 {
     @apply text-xl;
   }
-  del {
-    @apply line-through bg-red-200 dark:bg-red-500;
-  }
-  ins {
-    @apply no-underline bg-green-200 dark:bg-green-500;
-  }
 }
 
 @layer components {

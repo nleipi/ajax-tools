@@ -19,50 +19,124 @@ window.ajt = (...args) => {
   removed = []
   added = []
   const changeMap = {}
-  const exampleRoot = document.getElementById('example')
+  const exampleRoot = document.documentElement
   markNodes(exampleRoot, 'old')
   const rootClone = exampleRoot.cloneNode(true)
   markNodes(rootClone, 'old')
   return ajt(...args).then(() => {
     diffChanges(rootClone, exampleRoot)
-    const ajtDiff = printDiff(rootClone).join('\n')
-    const display = document.getElementById('display')
-    display.textContent = ajtDiff
+    const changes = collectChanges(rootClone)
+    const patch = createPatch(changes)
+    const targetElement = document.getElementById('display');
+    const configuration = {
+      drawFileList: false,
+      matching: 'lines',
+      highlight: true,
+      outputFormat: 'side-by-side',
+      synchronisedScroll: true,
+      highlight: true,
+      renderNothingWhenEmpty: false,
+      colorScheme: 'auto'
+    }
+    // const diff2htmlUi = new Diff2HtmlUI(targetElement, patch, configuration)
+    // diff2htmlUi.draw()
+    // diff2htmlUi.highlightCode()
+
+    targetElement.innerHTML = Diff2Html.html(patch, configuration)
   })
 }
 
-function printChunk(chunk, prefix, padding) {
-  return chunk.split('\n')
+function createChange(value, state, padding) {
+  const lines = value.split('\n')
     .filter((line) => !!line)
     .map((line) => {
-      console.log(line)
-      return `${prefix.padEnd(padding)}${line}`
+      return `${''.padEnd(padding)}${line}`
     })
-    .join('\n')
+  return {
+    state: state,
+    value: lines,
+    count: lines.length,
+  }
 }
 
-function printDiff(node, depth = 0) {
+function collectChanges(node, depth = 0) {
   const padding = depth * 4
-  const parts = []
+  const changes = []
   if (node.ajtDebug === 'inserted') {
-    parts.push(printChunk(diffable(node.outerHTML || node.textContent), '+', padding))
+    changes.push(createChange(diffable(node.outerHTML || node.textContent), '+', padding))
   } else if (node.ajtDebug === 'deleted') {
-    parts.push(printChunk(diffable(node.outerHTML || node.textContent), '-', padding))
+    changes.push(createChange(diffable(node.outerHTML || node.textContent), '-', padding))
   } else {
     if (node.innerHTML) {
       const html = diffable(node.cloneNode().outerHTML)
       const openingTag = html.substring(0, html.lastIndexOf('\n', html.length - 2))
-      parts.push(printChunk(openingTag, '', padding))
+      changes.push(createChange(openingTag, ' ', padding))
       Array.from(node.childNodes).forEach((child) => {
-        parts.push(...printDiff(child, depth + 1))
+        changes.push(...collectChanges(child, depth + 1))
       })
       const closingTag = html.substring(html.lastIndexOf('\n', html.length - 2))
-      parts.push(printChunk(closingTag, '', padding))
+      changes.push(createChange(closingTag, ' ', padding))
     } else {
-      parts.push(printChunk(diffable(node.textContent), '', padding))
+      changes.push(createChange(diffable(node.textContent), ' ', padding))
     }
   }
-  return parts
+  return changes.filter((change) => change.count > 0)
+}
+
+function createPatch(changes) {
+  const buffer = [
+    '--- document',
+    '+++ document',
+  ]
+  let oldLines = 0
+  let newLines = 0
+  let currentHunk = null
+  const hunks = []
+  for (let change of changes) {
+    if (!currentHunk) {
+      if (change.state === ' ') {
+        hunks.push([change])
+      } else {
+        currentHunk = hunks.pop() || []
+        currentHunk.isHunk = true
+        currentHunk.push(change)
+        hunks.push(currentHunk)
+      }
+    } else {
+      currentHunk.push(change)
+      if (change.state === ' ') {
+        currentHunk = null
+      }
+    }
+  }
+  hunks.forEach((hunk) => {
+    console.log(hunk)
+    if (!hunk.isHunk) {
+      const lines = hunk.reduce((lines, change) => lines + change.count, 0)
+      oldLines += lines
+      newLines += lines
+    } else {
+      const oldStart = oldLines + 1
+      const newStart = newLines + 1
+      hunk.forEach((change) => {
+        if (change.state === '-') {
+          oldLines += change.count
+        } else if (change.state === '+') {
+          newLines += change.count
+        } else {
+          oldLines += change.count
+          newLines += change.count
+        }
+      })
+      const oldSize = oldLines - oldStart
+      const newSize = newLines - newStart
+      buffer.push(`@@ -${oldStart},${oldSize} +${newStart},${newSize} @@`)
+      hunk.forEach((change) => change.value.forEach((value) => {
+        buffer.push(`${change.state}${value}`)
+      }))
+    }
+  })
+  return buffer.join('\n')
 }
 
 function markNodes(root, prefix) {

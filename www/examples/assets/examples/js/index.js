@@ -3,6 +3,7 @@ import { diff } from 'ajax-tools/dom'
 import { diffWords, diffWordsWithSpace, createTwoFilesPatch } from 'diff'
 import diffable from 'diffable-html'
 import { html } from 'diff2html'
+import hljs from 'highlight.js'
 
 
 let removed = []
@@ -15,7 +16,16 @@ let added = []
   added.push(el.outerHTML || el.textContent)
 })
 
+;(window.ajtResponseHandlers = window.ajtResponseHandlers || []).push((str) => {
+  window.lastAjtResponse = str
+  return str
+})
+
+
 window.ajt = (...args) => {
+  if (document.getElementById('disable-ajt').checked) {
+    return
+  }
   removed = []
   added = []
   const changeMap = {}
@@ -39,9 +49,20 @@ window.ajt = (...args) => {
       renderNothingWhenEmpty: false,
       colorScheme: 'auto',
       maxLineLengthHighlight: 0,
+      highlight: true,
+      synchronisedScroll: true,
     }
 
-    targetElement.innerHTML = Diff2Html.html(patch, configuration)
+    const diff2htmlUI = new Diff2HtmlUI(targetElement, patch, configuration)
+    diff2htmlUI.draw()
+    diff2htmlUI.highlightCode()
+
+    const el = document.getElementById('response')
+    const resp = diffable(window.lastAjtResponse)
+      .split('\n')
+      .filter((line) => line.trim())
+      .join('\n')
+    el.innerHTML = hljs.highlight(resp, { language: 'html' }).value
   })
 }
 
@@ -114,8 +135,8 @@ function createHunk(hunks, i) {
 
 function createPatch(changes, contextSize = 3) {
   const buffer = [
-    '--- document',
-    '+++ document',
+    '--- document.html',
+    '+++ document.html',
   ]
 
   let currentHunk = null

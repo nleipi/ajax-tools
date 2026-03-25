@@ -1,7 +1,23 @@
 {% extends "examples/base.html" %}
 
-{% block main %}
-    <h2>update</h2>
+{% block example_description %}
+{% load example_helpers %}
+{% filter markdown %}
+# Update
+Simple `data-ajt-mode="update"` example.
+
+`examples/update/text.html` is used in main template and re-used in the ajax endpoint.
+
+Setting the id on an element helps ajt to recognize it a the same element during diff construction.
+Element with `id="details-content"` won't be replaced even though its content has changed.
+Alternatively, `data-ajt-compare` attribute can be utilized instead of `id`
+
+This example showcases how `data-ajt-mode="update"` can be utilized to replace the content of an element,
+that has changed. This method can be useful for complex use-cases such as form validation.
+{% endfilter %}
+{% endblock %}
+
+{% block example %}
     {% include "examples/update/text.html" %}
 {% endblock %}
 

@@ -4,12 +4,21 @@
 {% block headressources %}
 <link rel="stylesheet" href="{% static 'dist/examples/css/index.css' %}">
 <!-- Stylesheet -->
-
-<!-- CSS -->
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css"
+  media="screen and (prefers-color-scheme: light)"
+/>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css"
+  media="screen and (prefers-color-scheme: dark)"
+/>
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css" />
 
 <!-- Javascripts -->
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html-ui.min.js"></script>
+<script type="module" src="{% static 'dist/examples/js/index.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -19,27 +28,26 @@
     </a>
 </header>
 <main class="flex flex-col gap-5">
-    <div class="flex flex-col gap-2 size-fit">
-        <button id="enable-ajt" class="h-12 px-4 inset-ring-2 inset-ring-ui-primary bg-ui-bg rounded-md">Enable ajt</button>
-        <script type="module">
-const button = document.getElementById('enable-ajt')
-button.addEventListener('click', (event) => {
-    if (!window.ajt) {
-        import('{% static 'dist/examples/js/index.js' %}').then((ajtModule) => {
-            console.log('ajt initialized')
-            const message = document.createElement('div')
-            message.textContent = 'ajt loaded'
-            button.after(message)
-        })
-    }
-})
-</script>
+    <div class="prose dark:prose-invert">{% block example_description %}{% endblock %}</div>
+    <div class="flex flex-col gap-3">
+        <div class="p-5 border border-gray-300 dark:border-gray-700">
+            {% block example %}Example body{% endblock %}
+        </div>
+        <div class="flex flex-col gap-2 size-fit">
+            <label class="flex gap-1"><input id="disable-ajt" type="checkbox"/>Disable ajt</label>
+        </div>
     </div>
-    <div class="mb-10">
-        {% block main %}No main{% endblock %}
+    <div class="flex flex-col gap-3">
+        <h2>Response</h2>
+        <div class="overflow-scroll p-5 bg-gray-100 dark:bg-gray-900">
+            <pre id="response"></pre>
+        </div>
     </div>
-    <div id="diff">
-        After the request you can see a diff of dom changes
+    <div class="flex flex-col gap-3">
+        <h2>Dom changes</h2>
+        <div id="diff">
+            After the request you can see a diff of dom changes
+        </div>
     </div>
 </main>
 {% endblock %}

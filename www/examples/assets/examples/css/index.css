@@ -1,5 +1,6 @@
 @import "tailwindcss" source("../../../templates");
 @source "../../../../templates";
+@plugin "@tailwindcss/typography";
 
 
 @theme inline {

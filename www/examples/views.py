@@ -40,7 +40,7 @@ def replace_more(request: HttpRequest):
             'text': "This is the new content. The parent element has been replaced.",
         })
     return render(request, "examples/replace/index.html", {
-        'text': "Looks like you clicked 'show more' without ajt. Go back and try it!"
+        'text': "Looks like you clicked 'show more' without ajt."
     })
 
 def replace_content(request):
@@ -60,7 +60,7 @@ def replace_content_more(request: HttpRequest):
 
     return render(request, "examples/replace_content/index.html", {
         'summary': 'This is the summary',
-        'text': "Looks like you clicked 'show more' without ajt. Go back and try it!"
+        'text': "Looks like you clicked 'show more' without ajt."
     })
 
 def replace_with_content(request):
@@ -74,11 +74,9 @@ def replace_with_content(request):
 def replace_with_content_more(request):
     print(request.headers)
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return render(request, "examples/replace_with_content/more.html", {
-            'text': "This is additional content, that replaced the link."
-        })
+        return render(request, "examples/replace_with_content/more.html", {})
     return render(request, "examples/replace_with_content/index.html", {
-        'text': "Looks like you clicked 'show more' without ajt. Go back and try it!"
+        'text': "Looks like you clicked 'show more' without ajt."
     })
 
 def update(request):
@@ -98,5 +96,5 @@ def update_more(request: HttpRequest):
 
     return render(request, "examples/update/index.html", {
         'summary': 'This is the summary',
-        'text': "Looks like you clicked 'show more' without ajt. Go back and try it!"
+        'text': "Looks like you clicked 'show more' without ajt."
     })

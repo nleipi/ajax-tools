@@ -1,6 +1,18 @@
 {% extends "examples/base.html" %}
 
-{% block main %}
+{% block example_description %}
+{% load example_helpers %}
+{% filter markdown %}
+# Replace content
+Simple `data-ajt-mode="replaceContent"` example.
+
+`examples/replace_content/text.html` is used in main template and re-used in the ajax endpoint.
+
+The example showcases how `data-ajt-mode="replaceContent"` can be utilized to keep the current state of the parent element, in this instance `<details>` stays open.
+{% endfilter %}
+{% endblock %}
+
+{% block example %}
     <h2>replaceContent</h2>
     {% include "examples/replace_content/text.html" %}
 {% endblock %}

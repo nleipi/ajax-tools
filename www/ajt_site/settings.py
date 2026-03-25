@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-t$59dg&vwvids@vbko)=%tjiy0@_m*hsdb!=b2!gkvp&o79o#q
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'vast-schools-obey.loca.lt'
+    '.loca.lt', '.localhost', '127.0.0.1', '[::1]'
 ]
 
 

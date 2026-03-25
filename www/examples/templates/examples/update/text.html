@@ -1,0 +1,15 @@
+{% spaceless %}
+<details id="details-el" class="flex flex-col" data-ajt-mode="update">
+    <summary>{{ summary }}</summary>
+    <div id="details-content">
+        <div>Same element that doesn't change</div>
+        {% if text %}
+        <span>{{ text }}</span>
+        {% else %}
+        <a class="link" href="{% url 'examples:update:more' %}" data-ajt-trigger="click">Show more</a>
+        {% endif %}
+        <div>Another element that doesn't change</div>
+    </div>
+</details>
+{% endspaceless %}
+

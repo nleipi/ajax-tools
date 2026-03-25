@@ -25,7 +25,9 @@ SECRET_KEY = 'django-insecure-t$59dg&vwvids@vbko)=%tjiy0@_m*hsdb!=b2!gkvp&o79o#q
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'vast-schools-obey.loca.lt'
+]
 
 
 # Application definition

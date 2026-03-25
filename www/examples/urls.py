@@ -18,4 +18,8 @@ urlpatterns = [
         path("", views.replace_with_content, name="replaceWithContent"),
         path("more/", views.replace_with_content_more, name="more"),
     ], "replace_with_content"))),
+    path("update/", include(([
+        path("", views.update, name="update"),
+        path("more/", views.update_more, name="more"),
+    ], "update"))),
 ]

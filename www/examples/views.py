@@ -37,7 +37,7 @@ def replace_more(request: HttpRequest):
     print(request.headers)
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return render(request, "examples/replace/text.html", {
-            'text': "This is the new content. Tha parent element has been replaced.",
+            'text': "This is the new content. The parent element has been replaced.",
         })
     return render(request, "examples/replace/index.html", {
         'text': "Looks like you clicked 'show more' without ajt. Go back and try it!"
@@ -75,8 +75,28 @@ def replace_with_content_more(request):
     print(request.headers)
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return render(request, "examples/replace_with_content/more.html", {
-            'text': "This is addition content, that replaced the link."
+            'text': "This is additional content, that replaced the link."
         })
     return render(request, "examples/replace_with_content/index.html", {
+        'text': "Looks like you clicked 'show more' without ajt. Go back and try it!"
+    })
+
+def update(request):
+    """Simple example of data-ajt-mode="replaceContent".
+    """
+    return render(request, "examples/update/index.html", {
+        'summary': 'This is the initial summary, that will be replaced',
+    })
+
+def update_more(request: HttpRequest):
+    print(request.headers)
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, "examples/update/text.html", {
+            'summary': 'This is the replacement summary',
+            'text': "This text replaced the anchor tag. The <details> element hasn't been closed because only its contents were replaced"
+        })
+
+    return render(request, "examples/update/index.html", {
+        'summary': 'This is the summary',
         'text': "Looks like you clicked 'show more' without ajt. Go back and try it!"
     })

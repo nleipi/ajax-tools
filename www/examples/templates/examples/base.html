@@ -2,23 +2,33 @@
 
 {% load static %}
 {% block headressources %}
-<link rel="stylesheet" href="{% static 'dist/examples/css/index.css' %}">
+<link rel="stylesheet" nonce="{{ csp_nonce }}" href="{% static 'dist/examples/css/index.css' %}">
 <!-- Stylesheet -->
 <link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css"
-  media="screen and (prefers-color-scheme: light)"
+    rel="stylesheet"
+    nonce="{{ csp_nonce }}"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css"
+    media="screen and (prefers-color-scheme: light)"
 />
 <link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css"
-  media="screen and (prefers-color-scheme: dark)"
+    rel="stylesheet"
+    nonce="{{ csp_nonce }}"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css"
+    media="screen and (prefers-color-scheme: dark)"
 />
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css" />
+<link
+    rel="stylesheet"
+    nonce="{{ csp_nonce }}"
+    type="text/css"
+    href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css" />
+
+<script nonce="{{ csp_nonce }}">
+    window.ajtNonce = '{{ csp_nonce }}'
+</script>
 
 <!-- Javascripts -->
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html-ui.min.js"></script>
-<script type="module" src="{% static 'dist/examples/js/index.js' %}"></script>
+<script type="text/javascript" nonce="{{ csp_nonce }}" src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html-ui.min.js"></script>
+<script type="module" nonce="{{ csp_nonce }}"  src="{% static 'dist/examples/js/index.js' %}"></script>
 {% endblock %}
 
 {% block content %}

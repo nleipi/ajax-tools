@@ -15,7 +15,7 @@ export default {
   })),
   output: {
     dir: 'static/dist/',
-    format: 'esm',
+    format: 'es',
     entryFileNames: '[name]',
     manualChunks: {}
   },

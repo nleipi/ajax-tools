@@ -15,8 +15,8 @@
 <main>
     <dl class="grid grid-cols-[auto_1fr] gap-4">
         {% for example in examples %}
-        <dt class="font-bold">
-            <a href="{% url example.full_name %}">{{ example.name }}</a>
+        <dt>
+            <a class="link" href="{% url example.full_name %}">{{ example.name }}</a>
         </dt>
         <dd>{{ example.description }}</dd>
         {% endfor %}

@@ -98,3 +98,23 @@ def update_more(request: HttpRequest):
         'summary': 'This is the summary',
         'text': "Looks like you clicked 'show more' without ajt."
     })
+
+def script(request):
+    """Simple example of data-ajt-mode="replaceContent".
+    """
+    return render(request, "examples/script/index.html", {
+        'summary': 'This is the initial summary, that will be replaced',
+    })
+
+def script_reload(request: HttpRequest):
+    print(request.headers)
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, "examples/script/partial.html", {
+            'summary': 'This is the replacement summary',
+            'text': "This text replaced the anchor tag. The <details> element hasn't been closed because only its contents were replaced"
+        })
+
+    return render(request, "examples/update/index.html", {
+        'summary': 'This is the summary',
+        'text': "Looks like you clicked 'show more' without ajt."
+    })

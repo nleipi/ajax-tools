@@ -228,3 +228,128 @@ test.describe('data-ajt-mode', () => {
     })).toBe(true)
   })
 })
+
+test.describe('scripts (unsafe)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      window.ajtAllowUnsafeScripts = true
+      window.results = []
+    });
+  })
+  ;([
+    { name: 'root', mode: 'replaceContent' },
+    { name: 'nested', mode: 'replace' },
+  ]).forEach(({ name, mode }) => {
+      test(name, async ({ page, app }) => {
+        app.get('/test', (req, res) => {
+          const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module" src="./index.js"></script>
+  </head>
+  <body>
+    <div id="test" data-testid="el">Div before ajt call</div>
+  </body>
+</html>
+`
+          res.send(html)
+        })
+        app.get('/submit', (req, res) => {
+          const html = `
+<!DOCTYPE html>
+<div id="test" data-testid="el" data-ajt-mode="${mode}">
+  <script>
+    window.results.push(true)
+  </script>
+</div>
+`
+          res.send(html)
+        })
+        await page.goto('/test')
+
+        await page.evaluate(() => window.ajt('/submit'))
+
+        expect(await page.evaluate(() => window.results)).toEqual([true])
+      })
+    })
+
+  test('module', async ({ page, app }) => {
+    app.get('/test', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module" src="./index.js"></script>
+  </head>
+  <body>
+    <div id="test" data-testid="el">Div before ajt call</div>
+  </body>
+</html>
+`
+      res.send(html)
+    })
+    app.get('/submit', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<div id="test" data-testid="el" data-ajt-mode="replace">
+  <script type="module">
+    if (import.meta) {
+      window.results.push(true)
+    }
+  </script>
+</div>
+`
+      res.send(html)
+    })
+    await page.goto('/test')
+
+    await page.evaluate(() => window.ajt('/submit'))
+
+    expect(await page.evaluate(() => window.results)).toEqual([true])
+  })
+
+  test.describe('application/x-ajt-script', () => {
+    [
+      { name: 'default', type: '' },
+      { name: 'module', type: 'module' }
+    ].forEach(({ name, type }) => {
+      test(name, async ({ page, app }) => {
+        app.get('/test', (req, res) => {
+          const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module" src="./index.js"></script>
+  </head>
+  <body>
+    <div id="test" data-testid="el">Div before ajt call</div>
+  </body>
+</html>
+`
+          res.send(html)
+        })
+        app.get('/submit', (req, res) => {
+          const html = `
+<!DOCTYPE html>
+<div id="test" data-testid="el" data-ajt-mode="replace">
+  <script data-testid="script" type="application/x-ajt-script" ${type ? `data-ajt-script-type="${type}"` : ''}>
+    window.results.push(true)
+  </script>
+</div>
+`
+            res.send(html)
+          })
+          await page.goto('/test')
+
+          await page.evaluate(() => window.ajt('/submit'))
+
+          expect(await page.evaluate(() => window.results)).toEqual([true])
+          expect(await page.getByTestId('script').evaluate(
+            (el, expectedType) => el.type === expectedType,
+            type
+          )).toBe(true)
+        })
+      })
+  })
+})

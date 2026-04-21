@@ -228,3 +228,269 @@ test.describe('data-ajt-mode', () => {
     })).toBe(true)
   })
 })
+
+test.describe('scripts', () => {
+  ;([
+    { name: 'root', mode: 'replaceContent' },
+    { name: 'nested', mode: 'replace' },
+  ]).forEach(({ name, mode }) => {
+      test(name, async ({ page, app }) => {
+        app.get('/test', (req, res) => {
+          const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module" src="./index.js"></script>
+    <script>
+      window.ajtAllowUnsafeScripts = true
+      window.results = []
+    </script>
+  </head>
+  <body>
+    <div id="test" data-testid="el">Div before ajt call</div>
+  </body>
+</html>
+`
+          res.send(html)
+        })
+        app.get('/submit', (req, res) => {
+          const html = `
+<!DOCTYPE html>
+<div id="test" data-testid="el" data-ajt-mode="${mode}">
+  <script>
+    window.results.push(true)
+  </script>
+</div>
+`
+          res.send(html)
+        })
+        await page.goto('/test')
+
+        await page.evaluate(() => window.ajt('/submit'))
+
+        expect(await page.evaluate(() => window.results)).toEqual([true])
+      })
+    })
+
+  test('module', async ({ page, app }) => {
+    app.get('/test', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module" src="./index.js"></script>
+    <script>
+      window.ajtAllowUnsafeScripts = true
+      window.results = []
+    </script>
+  </head>
+  <body>
+    <div id="test" data-testid="el">Div before ajt call</div>
+  </body>
+</html>
+`
+      res.send(html)
+    })
+    app.get('/submit', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<div id="test" data-testid="el" data-ajt-mode="replace">
+  <script type="module">
+    if (import.meta) {
+      window.results.push(true)
+    }
+  </script>
+</div>
+`
+      res.send(html)
+    })
+    await page.goto('/test')
+
+    await page.evaluate(() => window.ajt('/submit'))
+
+    expect(await page.evaluate(() => window.results)).toEqual([true])
+  })
+
+  test.describe('application/x-ajt-script', () => {
+    [
+      { name: 'default', type: '' },
+      { name: 'module', type: 'module' }
+    ].forEach(({ name, type }) => {
+      test(name, async ({ page, app }) => {
+        app.get('/test', (req, res) => {
+          const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module" src="./index.js"></script>
+    <script>
+      window.ajtAllowUnsafeScripts = true
+      window.results = []
+    </script>
+  </head>
+  <body>
+    <div id="test" data-testid="el">Div before ajt call</div>
+  </body>
+</html>
+`
+          res.send(html)
+        })
+        app.get('/submit', (req, res) => {
+          const html = `
+<!DOCTYPE html>
+<div id="test" data-testid="el" data-ajt-mode="replace">
+  <script data-testid="script" type="application/x-ajt-script" ${type ? `data-ajt-script-type="${type}"` : ''}>
+    window.results.push(true)
+  </script>
+</div>
+`
+            res.send(html)
+          })
+          await page.goto('/test')
+
+          await page.evaluate(() => window.ajt('/submit'))
+
+          expect(await page.evaluate(() => window.results)).toEqual([true])
+          expect(await page.getByTestId('script').evaluate(
+            (el, expectedType) => el.type === expectedType,
+            type
+          )).toBe(true)
+        })
+      })
+  })
+
+  test.describe('nonce', () => {
+    ;[
+      { name: 'valid nonce', nonces: {
+        mainCsp: 'foo', ajtNonce: 'foo', responseCsp: 'bar', responseScript: 'bar'
+      }, expected: [true] },
+      { name: 'invalid ajtNonce', nonces: {
+        mainCsp: 'foo', ajtNonce: '', responseCsp: 'bar', responseScript: 'bar'
+      }, expected: [] },
+      { name: 'invalid responce nonce', nonces: {
+        mainCsp: 'foo', ajtNonce: 'foo', responseCsp: 'bar', responseScript: 'bar2'
+      }, expected: [] },
+      { name: 'empty responce nonce', nonces: {
+        mainCsp: 'foo', ajtNonce: 'foo', responseCsp: '', responseScript: ''
+      }, expected: [] },
+    ].forEach(({ name, nonces, expected }) => {
+        test(name, async ({ page, app }) => {
+          app.get('/test', (req, res) => {
+            res.append('Content-Security-Policy', `script-src 'nonce-${nonces.mainCsp}'`)
+            const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module" src="./index.js" nonce="${nonces.mainCsp}"></script>
+    <script nonce="${nonces.mainCsp}">
+      window.ajtNonce = '${nonces.ajtNonce}'
+      window.results = []
+    </script>
+  </head>
+  <body>
+    <div id="test" data-testid="el">Div before ajt call</div>
+  </body>
+</html>
+`
+            res.send(html)
+          })
+          app.get('/submit', (req, res) => {
+            if (nonces.responseCsp) {
+              res.append('Content-Security-Policy', `script-src 'nonce-${nonces.responseCsp}'`)
+            }
+            const html = `
+<!DOCTYPE html>
+<div id="test" data-testid="el" data-ajt-mode="replace">
+  <script ${nonces.responseScript ? `nonce="${nonces.responseScript}"` : ''}>
+    window.results.push(true)
+  </script>
+</div>
+`
+            res.send(html)
+          })
+          await page.goto('/test')
+
+          await page.evaluate(() => window.ajt('/submit'))
+
+          expect(await page.evaluate(() => window.results)).toEqual(expected)
+        })
+      })
+  })
+//   test('valid nonce', async ({ page, app }) => {
+//     app.get('/test', (req, res) => {
+//       res.append('Content-Security-Policy', "script-src 'nonce-foo'")
+//       const html = `
+// <!DOCTYPE html>
+// <html>
+//   <head>
+//     <script type="module" src="./index.js" nonce="foo"></script>
+//     <script nonce="foo">
+//       window.ajtNonce = 'foo'
+//       window.results = []
+//     </script>
+//   </head>
+//   <body>
+//     <div id="test" data-testid="el">Div before ajt call</div>
+//   </body>
+// </html>
+// `
+//       res.send(html)
+//     })
+//     app.get('/submit', (req, res) => {
+//       res.append('Content-Security-Policy', "script-src 'nonce-bar'")
+//       const html = `
+// <!DOCTYPE html>
+// <div id="test" data-testid="el" data-ajt-mode="replace">
+//   <script nonce="bar">
+//     window.results.push(true)
+//   </script>
+// </div>
+// `
+//       res.send(html)
+//     })
+//     await page.goto('/test')
+//
+//     await page.evaluate(() => window.ajt('/submit'))
+//
+//     expect(await page.evaluate(() => window.results)).toEqual([true])
+//   })
+
+//   test('invalid nonce', async ({ page, app }) => {
+//     app.get('/test', (req, res) => {
+//       res.append('Content-Security-Policy', "script-src 'nonce-foo'")
+//       const html = `
+// <!DOCTYPE html>
+// <html>
+//   <head>
+//     <script type="module" src="./index.js" nonce="foo"></script>
+//     <script nonce="foo">
+//       window.ajtNonce = 'foo'
+//       window.results = []
+//     </script>
+//   </head>
+//   <body>
+//     <div id="test" data-testid="el">Div before ajt call</div>
+//   </body>
+// </html>
+// `
+//       res.send(html)
+//     })
+//     app.get('/submit', (req, res) => {
+//       res.append('Content-Security-Policy', "script-src 'nonce-bar'")
+//       const html = `
+// <!DOCTYPE html>
+// <div id="test" data-testid="el" data-ajt-mode="replace">
+//   <script nonce="bar">
+//     window.results.push(true)
+//   </script>
+// </div>
+// `
+//       res.send(html)
+//     })
+//     await page.goto('/test')
+//
+//     await page.evaluate(() => window.ajt('/submit'))
+//
+//     expect(await page.evaluate(() => window.results)).toEqual([])
+//   })
+})

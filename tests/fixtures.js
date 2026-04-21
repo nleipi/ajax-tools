@@ -24,7 +24,7 @@ export const test = base.extend({
   },
   server: async ({ app }, use) => {
     const server = await new Promise((resolve) => {
-      const s = app.listen(0, () => resolve(s))
+      const s = app.listen(0, '0.0.0.0', () => resolve(s))
     })
     await use(server)
     await new Promise((resolve, reject) => {

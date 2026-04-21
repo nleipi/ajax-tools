@@ -1,0 +1,34 @@
+{% extends "examples/base.html" %}
+
+{% block example_description %}
+{% load example_helpers %}
+{% filter markdown %}
+# Executing scripts
+Scripts are only executed if their parent element was added to the dom by ajt.
+
+`examples/script/partial.html` is used in main template and re-used in the ajax endpoint.
+
+Scripts with `type="application/x-ajt-script"` are ignored during normal page load.
+They are only executed when processed by ajt requests, making it possible to include ajax-specific javascript inside reusable templates without affecting the initial page execution.
+
+## Script Execution Safety
+
+Scripts are not executed by default. To enable execution, either:
+
+- set `window.ajtUnsafeScripts = true`, or  
+- provide a CSP nonce via `window.ajtNonce`
+
+When `window.ajtNonce` is defined, ajt validates scripts by comparing the nonce included
+in the ajax response with the script's `nonce` attribute. If they match, the nonce is replaced with `window.ajtNonce`, allowing the browser to execute the script under the current page's Content Security Policy.
+{% endfilter %}
+{% endblock %}
+
+{% block example %}
+
+    <div class="flex flex-col gap-5">
+        {% include "examples/script/partial.html" %}
+        <a class="link" href="{% url 'examples:script:reload' %}" data-ajt-trigger="click">Reload</a>
+    </div>
+
+    {% load example_helpers %}
+{% endblock %}

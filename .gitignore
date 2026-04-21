@@ -4,6 +4,7 @@ node_modules/
 # Python
 __pycache__/
 site/
+.ropeproject/
 
 # Playwright
 /test-results/
@@ -12,5 +13,14 @@ site/
 /playwright/.cache/
 /playwright/.auth/
 
+# Django #
+*.log
+*.pot
+*.pyc
+__pycache__
+db.sqlite3
+media
+
 # Project
 .env
+www/static/dist/

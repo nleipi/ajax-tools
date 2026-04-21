@@ -1,0 +1,37 @@
+<div id="text" data-ajt-mode="replace">
+    <div id="script-results">
+        <div>Script messages:</div>
+    </div>
+    <script nonce="{{ csp_nonce }}">
+        (function () {
+            const el = document.getElementById('script-results')
+            const msg = document.createElement('div')
+            msg.textContent = 'Regular script executed'
+            el.appendChild(msg)
+        }())
+    </script>
+    <script type="application/x-ajt-script" nonce="{{ csp_nonce }}">
+        (function () {
+            const el = document.getElementById('script-results')
+            const msg = document.createElement('div')
+            msg.textContent = 'ajt-only script executed'
+            el.appendChild(msg)
+        }())
+    </script>
+    <script type="application/x-ajt-script" data-ajt-script-type="module" nonce="{{ csp_nonce }}">
+        if (import.meta) {
+            const el = document.getElementById('script-results')
+            const msg = document.createElement('div')
+            msg.textContent = 'ajt-only module executed'
+            el.appendChild(msg)
+        }
+    </script>
+</div>
+<script nonce="{{ csp_nonce }}">
+    (function () {
+        const el = document.getElementById('script-results')
+        const msg = document.createElement('div')
+        msg.textContent = 'Script outside of ajt-parent executed'
+        el.appendChild(msg)
+    }())
+</script>

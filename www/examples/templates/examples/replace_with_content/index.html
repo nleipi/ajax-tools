@@ -1,0 +1,22 @@
+{% extends "examples/base.html" %}
+
+{% block example_description %}
+{% load example_helpers %}
+{% filter markdown %}
+# Mode `replaceWithContent`
+Simple `data-ajt-mode="replaceWithContent"` example.
+
+This example showcases how `data-ajt-mode="replaceWithContent"` can be utilized to replace an element, e.g. a placeholder, with multiple elements. More clicks on "Show more" will have no effect, because the placeholder was replaced by first click.
+{% endfilter %}
+{% endblock %}
+
+{% block example %}
+    <div class="flex flex-col gap-3">
+        {{ text }}
+        {% if show_more %}
+        <a class="block link" href="{% url 'examples:replace_with_content:more' %}" data-ajt-trigger="click">Show more</a>
+    <div id="show-more" class="empty:hidden"></div>
+        {% endif %}
+    </div>
+{% endblock %}
+

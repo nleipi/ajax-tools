@@ -1,7 +1,0 @@
-<form id="todoForm"
-      action="{{ url_for('todo_mvc.index', state=state) }}"
-      method="post"
-      data-ajt-mode="replace"
-      onsubmit="ajt(event)">
-  {{ todo_form.csrf_token }}
-</form>

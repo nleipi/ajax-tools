@@ -1,0 +1,47 @@
+@import "tailwindcss" source("../../../templates");
+@source "../../../../templates";
+@plugin "@tailwindcss/typography";
+
+
+@theme inline {
+  --color-ui-bg: var(--ajt-color-ui-bg);
+  --color-ui-primary: var(--ajt-color-ui-primary);
+  --color-ui-ring-hover: var(--ajt-color-ui-ring-hover);
+}
+
+:root {
+  --ajt-color-ui-bg: var(--color-gray-100);
+  --ajt-color-ui-primary: var(--color-blue-400);
+  --ajt-color-ui-ring-hover: var(--color-blue-600);
+  @variant dark {
+    --ajt-color-ui-bg: var(--color-gray-600);
+    --ajt-color-ui-primary: var(--color-blue-600);
+    --ajt-color-ui-ring-hover: var(--color-blue-400);
+  }
+
+  view-transition-name: none;
+}
+
+::view-transition {
+  pointer-events: none;
+}
+
+@layer base {
+  h1 {
+    @apply text-2xl font-bold;
+  }
+  h2 {
+    @apply text-xl;
+  }
+}
+
+@layer components {
+  .link {
+    @apply underline text-blue-400;
+  }
+}
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+}

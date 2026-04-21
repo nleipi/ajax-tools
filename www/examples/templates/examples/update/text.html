@@ -1,0 +1,18 @@
+{% spaceless %}
+<details id="details-el" class="flex flex-col gap-3" data-ajt-mode="update">
+    <summary>{{ summary }}</summary>
+    <div id="details-content" class="flex flex-col gap-3">
+        <div>Same element that doesn't change</div>
+        {% if text %}
+        <span>{{ text }}</span>
+        {% else %}
+        <a class="link" href="{% url 'examples:update:more' %}" data-ajt-trigger="click">Show more</a>
+        {% endif %}
+        <div>
+            <label><input type="checkbox">Checkbox will keep it's state</label>
+        </div>
+        <div>Another element that doesn't change</div>
+    </div>
+</details>
+{% endspaceless %}
+

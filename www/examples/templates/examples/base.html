@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% block headressources %}
+<link rel="stylesheet" nonce="{{ csp_nonce }}" href="{% static 'dist/examples/css/index.css' %}">
+<!-- Stylesheet -->
+<link
+    rel="stylesheet"
+    nonce="{{ csp_nonce }}"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css"
+    media="screen and (prefers-color-scheme: light)"
+/>
+<link
+    rel="stylesheet"
+    nonce="{{ csp_nonce }}"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css"
+    media="screen and (prefers-color-scheme: dark)"
+/>
+<link
+    rel="stylesheet"
+    nonce="{{ csp_nonce }}"
+    type="text/css"
+    href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css" />
+
+<script nonce="{{ csp_nonce }}">
+    window.ajtNonce = '{{ csp_nonce }}'
+</script>
+
+<!-- Javascripts -->
+<script type="text/javascript" nonce="{{ csp_nonce }}" src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html-ui.min.js"></script>
+<script type="module" nonce="{{ csp_nonce }}"  src="{% static 'dist/examples/js/index.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<header class="flex gap-5 py-5">
+    <a href="{% url 'examples:index' %}">
+        <h1>Examples</h1>
+    </a>
+</header>
+<main class="flex flex-col gap-5">
+    <div class="prose dark:prose-invert">{% block example_description %}{% endblock %}</div>
+    <div class="flex flex-col gap-3">
+        <div class="p-5 border border-gray-300 dark:border-gray-700">
+            {% block example %}Example body{% endblock %}
+        </div>
+        <div class="flex flex-col gap-2 size-fit">
+            <label class="flex gap-1"><input id="disable-ajt" type="checkbox"/>Disable ajt</label>
+        </div>
+    </div>
+    <div class="flex flex-col gap-3">
+        <h2>Response</h2>
+        <div class="overflow-scroll p-5 bg-gray-100 dark:bg-gray-900">
+            <pre id="response"></pre>
+        </div>
+    </div>
+    <div class="flex flex-col gap-3">
+        <h2>Dom changes</h2>
+        <div id="diff">
+            After the request you can see a diff of dom changes
+        </div>
+    </div>
+</main>
+{% endblock %}
+

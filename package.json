@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "A set of tools allowing to use ajax in server-side rendered web-sites in simple declarative manner.",
   "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./dom": "./lib/dom.js"
+  },
   "scripts": {
     "test": "dotenv -- npx playwright test",
     "test:ui": "npm run test -- --ui",

@@ -1,0 +1,19 @@
+{% extends "examples/base.html" %}
+
+{% block example_description %}
+{% load example_helpers %}
+{% filter markdown %}
+# Mode `appendContent`
+Simple `data-ajt-mode="appendContent"` example.
+
+The example showcases how `data-ajt-mode="appendContent"` can be utilized to show additional content, e.g. in a list.
+{% endfilter %}
+{% endblock %}
+
+{% block example %}
+    <h2>append</h2>
+    {% include "examples/append/list.html" %}
+    <a class="link" href="{% url 'examples:append:more' %}" data-ajt-trigger="click">Show more</a>
+{% endblock %}
+
+

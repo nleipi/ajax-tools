@@ -64,18 +64,19 @@ def replace_content_more(request: HttpRequest):
     })
 
 def append(request):
-    """Simple example of data-ajt-mode="append".
+    """Simple example of data-ajt-mode="prependContent/appendContent".
     """
     items = words(5, True).split(' ')
     return render(request, "examples/append/index.html", {
-        'items': items
+        'items': items,
     })
 
 def append_more(request: HttpRequest):
     items = words(10, True).split(' ')
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return render(request, "examples/append/list.html", {
-            'items': items[5:]
+            'items': items[5:],
+            'mode': request.GET.get('mode', 'appendContent')
         })
     return render(request, "examples/append/index.html", {
         'items': items

@@ -3,8 +3,10 @@
 {% block example_description %}
 {% load example_helpers %}
 {% filter markdown %}
-# Mode `appendContent`
-Simple `data-ajt-mode="appendContent"` example.
+# Mode `prependContent/appendContent`
+Simple `data-ajt-mode="prependContent/appendContent"` example.
+
+`examples/append/list.html` is used in main template and re-used in the ajax endpoint.
 
 The example showcases how `data-ajt-mode="appendContent"` can be utilized to show additional content, e.g. in a list.
 {% endfilter %}
@@ -12,8 +14,9 @@ The example showcases how `data-ajt-mode="appendContent"` can be utilized to sho
 
 {% block example %}
     <h2>append</h2>
+<a class="link" href="{% url 'examples:append:more' %}{% querystring mode='prependContent' %}" data-ajt-trigger="click">Prepend</a>
     {% include "examples/append/list.html" %}
-    <a class="link" href="{% url 'examples:append:more' %}" data-ajt-trigger="click">Show more</a>
+    <a class="link" href="{% url 'examples:append:more' %}{% querystring mode='appendContent' %}" data-ajt-trigger="click">Append</a>
 {% endblock %}
 
 

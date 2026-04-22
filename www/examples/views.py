@@ -2,7 +2,7 @@ from django.http import HttpRequest
 from inspect import getdoc
 from django.urls import get_resolver, URLResolver
 from django.shortcuts import render
-from django.utils.lorem_ipsum import paragraphs
+from django.utils.lorem_ipsum import words
 
 from . import urls
 
@@ -61,6 +61,25 @@ def replace_content_more(request: HttpRequest):
     return render(request, "examples/replace_content/index.html", {
         'summary': 'This is the summary',
         'text': "Looks like you clicked 'show more' without ajt."
+    })
+
+def append(request):
+    """Simple example of data-ajt-mode="prependContent/appendContent".
+    """
+    items = words(5, True).split(' ')
+    return render(request, "examples/append/index.html", {
+        'items': items,
+    })
+
+def append_more(request: HttpRequest):
+    items = words(10, True).split(' ')
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, "examples/append/list.html", {
+            'items': items[5:],
+            'mode': request.GET.get('mode', 'appendContent')
+        })
+    return render(request, "examples/append/index.html", {
+        'items': items
     })
 
 def replace_with_content(request):

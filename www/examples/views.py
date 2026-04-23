@@ -3,8 +3,10 @@ from inspect import getdoc
 from django.urls import get_resolver, URLResolver
 from django.shortcuts import render
 from django.utils.lorem_ipsum import words
+from django.views.generic import ListView
 
 from . import urls
+from .models import Product
 
 def index(request):
     resolver = get_resolver(urls)
@@ -12,6 +14,7 @@ def index(request):
     for resolver in resolver.url_patterns:
         if isinstance(resolver, URLResolver):
             url_name = f"examples:{resolver.namespace}"
+            print(url_name)
             for pattern in resolver.url_patterns:
                 if str(pattern.pattern) == '':
                     examples.append({
@@ -19,7 +22,6 @@ def index(request):
                         'name': pattern.name,
                         'description': getdoc(pattern.callback),
                     })
-
 
     return render(request, "examples/index.html", {
         'examples': examples
@@ -137,3 +139,16 @@ def script_reload(request: HttpRequest):
         'summary': 'This is the summary',
         'text': "Looks like you clicked 'show more' without ajt."
     })
+
+class ShowMoreView(ListView):
+    """More complex example demonstating pagination
+    """
+    paginate_by = 6
+    model = Product
+    template_name = "examples/show-more/index.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_ajax'] = self.request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        context['down'] = not self.request.GET.get('direction', 'up') == 'up'
+        return context

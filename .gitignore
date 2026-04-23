@@ -19,7 +19,6 @@ site/
 *.pyc
 __pycache__
 db.sqlite3
-media
 
 # Project
 .env

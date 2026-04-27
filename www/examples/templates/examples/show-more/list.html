@@ -1,15 +1,35 @@
+{% partialdef pagination_btn %}
+<a id="{{ btn_id }}"
+  class="link"
+  href="{% url 'examples:show-more:Show more' %}{% querystring page=page direction=direction%}"
+  data-ajt-trigger="click"
+  data-ajt-mode="replace"
+><span>{{ label }}</span></a>
+{% endpartialdef %}
+
+{% partialdef prev_btn %}
+  {% with btn_id="show-prev" page=page_obj.previous_page_number direction='up' label="Show previous" %} 
+    {% partial pagination_btn %}
+  {% endwith %}
+{% endpartialdef %}
+
+{% partialdef next_btn %}
+  {% with btn_id="show-next" page=page_obj.next_page_number direction='down' label="Show next" %} 
+    {% partial pagination_btn %}
+  {% endwith %}
+{% endpartialdef %}
+
 <div class="flex flex-col gap-7 items-center max-w-xl">
-  {% if page_obj.has_previous %}
-  <a id="show-less"
-    class="link"
-    href="{% url 'examples:show-more:Show more' %}{% querystring page=page_obj.previous_page_number direction='up'%}"
-    data-ajt-trigger="click"
-    data-ajt-mode="replace"
-  ><span>Show more</span></a>
-  {% elif is_ajax %}
-  <div id="show-less" data-ajt-mode="remove"></div>
+  {% if is_ajax and direction == 'up' %}
+    {% if page_obj.has_previous %}
+      {% partial prev_btn %}
+    {% else %}
+      <div id="show-prev" data-ajt-mode="replace">You reached the first page</div>
+    {% endif %}
+  {% elif not is_ajax and page_obj.has_previous %}
+    {% partial prev_btn %}
   {% endif %}
-  <ul id="product-list" class="grid grid-cols-3 gap-4" data-ajt-mode="{{ down|yesno:'appendContent,prependContent'}}">
+  <ul id="product-list" class="grid grid-cols-3 gap-4" data-ajt-mode="{% if direction == 'up' %}prependContent{% else %}appendContent{% endif %}">
     {% for product in page_obj %}
     <li class="flex flex-col items-center">
       <img class="bg-ajt-ui-bg"
@@ -21,14 +41,13 @@
       window.history.replaceState(null, '', '{% url 'examples:show-more:Show more' %}{% querystring direction=None%}')
     </script>
   </ul>
-  {% if page_obj.has_next %}
-  <a id="show-more"
-    class="link"
-    href="{% url 'examples:show-more:Show more' %}{% querystring page=page_obj.next_page_number direction='down'%}"
-    data-ajt-trigger="click"
-    data-ajt-mode="replace"
-    >Show more</a>
-  {% elif is_ajax %}
-  <div id="show-more" data-ajt-mode="remove"></div>
+  {% if is_ajax and direction == 'down' %}
+    {% if page_obj.has_next %}
+      {% partial next_btn %}
+    {% else %}
+      <div id="show-next" data-ajt-mode="replace">You reached the last page</div>
+    {% endif %}
+  {% elif not is_ajax and page_obj.has_next %}
+    {% partial next_btn %}
   {% endif %}
 </div>

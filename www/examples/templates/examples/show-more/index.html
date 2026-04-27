@@ -10,28 +10,4 @@ More complex example demonstrating pagination
 
 {% block example %}
 {% include "examples/show-more/list.html" %}
-<script nonce="{{ csp_nonce }}">
-  (function () {
-    const productList = document.getElementById('product-list')
-    let lastPosition;
-    let lastFirstElement;
-    window.ajtBeforeDomChange = function (context) {
-      console.log(context)
-      if (context?.origin.type === 'click') {
-      }
-      lastFirstElement = productList.firstElementChild
-      lastPosition = lastFirstElement.getBoundingClientRect().top
-      console.log(lastPosition)
-    }
-    window.ajtAfterDomChange = function (context) {
-      console.log(context)
-      const currentPosition = lastFirstElement.getBoundingClientRect().top
-      console.log(currentPosition)
-      window.scrollTo(0, currentPosition - lastPosition)
-    }
-  }())
-</script>
 {% endblock %}
-
-
-

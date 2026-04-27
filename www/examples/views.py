@@ -147,6 +147,11 @@ class ShowMoreView(ListView):
     model = Product
     template_name = "examples/show-more/index.html"
 
+    def get_template_names(self, **kwargs):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return 'examples/show-more/list.html'
+        return 'examples/show-more/index.html'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['is_ajax'] = self.request.headers.get('x-requested-with') == 'XMLHttpRequest'

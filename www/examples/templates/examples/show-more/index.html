@@ -9,5 +9,84 @@ More complex example demonstrating pagination
 {% endblock %}
 
 {% block example %}
+<style nonce="{{ csp_nonce }}">
+.product-list {
+  view-transition-name: product-list;
+}
+
+::view-transition-image-pair(product-list) {
+  isolation: auto;
+}
+
+::view-transition-old(product-list) {
+  transform: none;
+  bottom: 0;
+  margin-top: auto;
+}
+
+::view-transition-group(product-list) {
+  animation: none;
+}
+
+::view-transition-old(product-list),
+::view-transition-new(product-list) {
+  animation: none;
+  mix-blend-mode: normal;
+  display: block;
+}
+</style>
 {% include "examples/show-more/list.html" %}
+<script type="module" nonce="{{ csp_nonce }}">
+let lastElement;
+let lastPosition;
+const productList = document.getElementById('product-list')
+document.addEventListener('ajtBeforeDomChange', (event) => {
+  const triggerEl = event.detail?.origin.target.closest('[data-app-direction]')
+  if (triggerEl?.dataset.appDirection === 'up') {
+    lastElement = productList.querySelector('li')
+    lastPosition = lastElement.getBoundingClientRect().top
+  }
+})
+document.addEventListener('ajtAfterDomChange', (event) => {
+  if (lastElement) {
+    window.scrollBy(0, lastElement.getBoundingClientRect().top - lastPosition)
+    lastElement = null
+  }
+})
+
+
+let lastClick;
+document.addEventListener("click", (event) => (lastClick = event));
+
+document.addEventListener('ajtTransitionReady', (event) => {
+  console.log(event)
+  // Get the click position, or fallback to the middle of the screen
+  const rect = productList.getBoundingClientRect()
+  const x = lastClick.clientX - rect.left
+  const y = lastClick.clientY - rect.top
+  // Get the distance to the furthest corner
+  const endRadius = Math.hypot(
+    Math.max(x, innerWidth - x),
+    Math.max(y, innerHeight - y),
+  );
+  console.log(x, y, rect)
+  document.documentElement.animate(
+    {
+      clipPath: [
+        `circle(0 at ${x}px ${y}px)`,
+        `circle(${endRadius}px at ${x}px ${y}px)`,
+        // `circle(0 at 50% 0px)`,
+        // `circle(${endRadius}px at 50% 0px)`,
+      ],
+    },
+    {
+      duration: 500,
+      easing: "ease-in",
+      // Specify which pseudo-element to animate
+      pseudoElement: "::view-transition-new(product-list)",
+    },
+  );
+})
+
+</script>
 {% endblock %}

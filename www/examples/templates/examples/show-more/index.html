@@ -73,6 +73,15 @@ window.ajtElementPreAddHandlers.push((el) => {
   if (el.matches?.('.product-item')) {
     el.style.viewTransitionName = `product-item-${productItemCounter}`
     productItemCounter += 1;
+    const img = el.querySelector('img')
+    if (img && !img.complete) {
+      el.ajtTransitionPromise = new Promise((resolve, reject) => {
+        img.onload = () => {
+          resolve()
+        }
+        img.onerror = reject
+      })
+    }
   } else if (el.matches?.('.btn')) {
     el.style.viewTransitionName = 'btn'
   }

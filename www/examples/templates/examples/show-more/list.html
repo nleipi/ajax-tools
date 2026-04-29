@@ -30,7 +30,7 @@
   {% elif not is_ajax and page_obj.has_previous %}
     {% partial prev_btn %}
   {% endif %}
-  <ul id="product-list" class="grid grid-cols-3 gap-4 product-list" data-ajt-mode="{% if direction == 'up' %}prependContent{% else %}appendContent{% endif %}" data-ajt-view-transition-types="{% if direction == 'up' %}prev-page{% else %}next-page{% endif %}">
+  <ul id="product-list" class="grid grid-cols-3 gap-4 product-list" data-ajt-mode="{% if direction == 'up' %}prependContent{% else %}appendContent{% endif %}">
     {% for product in page_obj %}
     <li class="flex flex-col items-center{% if is_ajax %} product-item{% endif %}">
       <img class="bg-ajt-ui-bg"

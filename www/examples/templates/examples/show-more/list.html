@@ -1,6 +1,6 @@
 {% partialdef pagination_btn %}
 <a id="{{ btn_id }}"
-  class="link {{ btn_css }}"
+  class="link btn"
   href="{% url 'examples:show-more:Show more' %}{% querystring page=page direction=direction%}"
   data-ajt-trigger="click"
   data-ajt-mode="replace"
@@ -9,13 +9,13 @@
 {% endpartialdef %}
 
 {% partialdef prev_btn %}
-  {% with btn_id="show-prev" page=page_obj.previous_page_number direction='up' label="Show previous" btn_css="btn btn--up" %} 
+  {% with btn_id="show-prev" page=page_obj.previous_page_number direction='up' label="Show previous" %} 
     {% partial pagination_btn %}
   {% endwith %}
 {% endpartialdef %}
 
 {% partialdef next_btn %}
-  {% with btn_id="show-next" page=page_obj.next_page_number direction='down' label="Show next" btn_css="btn btn--down" %} 
+  {% with btn_id="show-next" page=page_obj.next_page_number direction='down' label="Show next" %} 
     {% partial pagination_btn %}
   {% endwith %}
 {% endpartialdef %}
@@ -32,7 +32,7 @@
   {% endif %}
   <ul id="product-list" class="grid grid-cols-3 gap-4 product-list" data-ajt-mode="{% if direction == 'up' %}prependContent{% else %}appendContent{% endif %}" data-ajt-view-transition-types="{% if direction == 'up' %}prev-page{% else %}next-page{% endif %}">
     {% for product in page_obj %}
-    <li class="flex flex-col items-center">
+    <li class="flex flex-col items-center{% if is_ajax %} product-item{% endif %}">
       <img class="bg-ajt-ui-bg"
         src="{{ product.image.url }}" width="{{ product.image.width }}" height="{{ product.image.height }}" />
       <span class="p-4">{{ product.name }}</span>

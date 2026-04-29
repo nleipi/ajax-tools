@@ -5,34 +5,40 @@
 {% filter markdown %}
 # Pagination
 More complex example demonstrating pagination
+
+Same `ShowMoreView` is utilized for initial and ajax requests.
+`examples/show-more/list.html` is used in main template and re-used in the ajax endpoint with some changes depending on is_ajax context attribute.
+
+View transitions are not a part of ajt. The example showcases how ajt allows you to implement view transitions in your preferred way.
+
 {% endfilter %}
 {% endblock %}
 
 {% block example %}
 <style nonce="{{ csp_nonce }}">
-.product-list {
-  view-transition-name: product-list;
+.product-item {
+  view-transition-class: product-item;
 }
 
+::view-transition-image-pair(.product-item),
 ::view-transition-image-pair(product-list) {
   isolation: auto;
 }
 
-::view-transition-old(product-list) {
-  transform: none;
-  bottom: 0;
-  margin-top: auto;
+::view-transition-old(.product-item),
+::view-transition-old(btn) {
+  animation: none;
+  display: none;
 }
 
-::view-transition-group(product-list) {
+::view-transition-new(.product-item),
+::view-transition-new(btn) {
   animation: none;
 }
 
-::view-transition-old(product-list),
-::view-transition-new(product-list) {
+::view-transition-group(.product-item),
+::view-transition-group(btnn) {
   animation: none;
-  mix-blend-mode: normal;
-  display: block;
 }
 </style>
 {% include "examples/show-more/list.html" %}
@@ -54,38 +60,54 @@ document.addEventListener('ajtAfterDomChange', (event) => {
   }
 })
 
+let productItemCounter = 0
+window.ajtElementRemovedHandlers = window.ajtElementRemovedHandlers || []
+window.ajtElementRemovedHandlers.push((el) => {
+  if (el.matches?.('.btn')) {
+    el.style.viewTransitionName = 'btn'
+  }
+})
+
+window.ajtElementPreAddHandlers = window.ajtElementPreAddHandlers || []
+window.ajtElementPreAddHandlers.push((el) => {
+  if (el.matches?.('.product-item')) {
+    el.style.viewTransitionName = `product-item-${productItemCounter}`
+    productItemCounter += 1;
+  } else if (el.matches?.('.btn')) {
+    el.style.viewTransitionName = 'btn'
+  }
+})
 
 let lastClick;
 document.addEventListener("click", (event) => (lastClick = event));
 
 document.addEventListener('ajtTransitionReady', (event) => {
-  console.log(event)
-  // Get the click position, or fallback to the middle of the screen
-  const rect = productList.getBoundingClientRect()
-  const x = lastClick.clientX - rect.left
-  const y = lastClick.clientY - rect.top
-  // Get the distance to the furthest corner
-  const endRadius = Math.hypot(
-    Math.max(x, innerWidth - x),
-    Math.max(y, innerHeight - y),
-  );
-  console.log(x, y, rect)
-  document.documentElement.animate(
-    {
-      clipPath: [
-        `circle(0 at ${x}px ${y}px)`,
-        `circle(${endRadius}px at ${x}px ${y}px)`,
-        // `circle(0 at 50% 0px)`,
-        // `circle(${endRadius}px at 50% 0px)`,
-      ],
-    },
-    {
-      duration: 500,
-      easing: "ease-in",
-      // Specify which pseudo-element to animate
-      pseudoElement: "::view-transition-new(product-list)",
-    },
-  );
+  const columns = 3
+  document.querySelectorAll('.product-item').forEach((el, index) => {
+    document.documentElement.animate(
+      [
+        {
+          transform: 'translateY(-50px) scale(1.1)',
+          opacity: 0
+        },
+        {
+          transform: 'translateY(0px) scale(1)',
+          opacity: 1
+        },
+      ], {
+        duration: 300,
+        delay: Math.floor(index / columns) * 100 + (index % columns * 50),
+        easing: 'ease-in-out',
+        fill: 'both',
+        pseudoElement: `::view-transition-new(${el.style.viewTransitionName})`,
+      }
+    )
+    el.classList.remove('product-item')
+    el.style.viewTransitionName = null
+  })
+  document.querySelectorAll('.btn').forEach((el) => {
+    el.style.viewTransitionName = null
+  })
 })
 
 </script>

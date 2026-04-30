@@ -30,4 +30,7 @@ urlpatterns = [
         path("", views.script, name="Executing scripts"),
         path("more/", views.script_reload, name="reload"),
     ], "script"))),
+    path("show-more/", include(([
+        path("", views.ShowMoreView.as_view(), name="Show more"),
+    ], "show-more"))),
 ]

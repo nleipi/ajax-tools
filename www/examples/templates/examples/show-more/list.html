@@ -2,6 +2,7 @@
 <a id="{{ btn_id }}"
   class="link btn"
   href="{% url 'examples:show-more:Show more' %}{% querystring page=page direction=direction%}"
+  data-ajt-context-closest="#product-list-container"
   data-ajt-trigger="click"
   data-ajt-mode="replace"
   data-app-direction="{{ direction }}"
@@ -20,7 +21,7 @@
   {% endwith %}
 {% endpartialdef %}
 
-<div class="flex flex-col gap-7 items-center max-w-xl">
+<div id="product-list-container" class="flex flex-col gap-7 items-center max-w-xl data-[ajt-status=loading]:opacity-80 transition-opacity">
   {% if is_ajax and direction == 'up' %}
     {% if page_obj.has_previous %}
       {% partial prev_btn %}

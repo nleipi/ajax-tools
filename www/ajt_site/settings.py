@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-t$59dg&vwvids@vbko)=%tjiy0@_m*hsdb!=b2!gkvp&o79o#q
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '.loca.lt', '.localhost', '127.0.0.1', '[::1]'
+    'ajt.lucky-salmon.dev', '.trycloudflare.com', '.loca.lt', '.localhost', '127.0.0.1', '[::1]'
 ]
 
 
@@ -124,6 +124,7 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static'
 ]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = 'media/'

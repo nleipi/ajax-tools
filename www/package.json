@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "description": "",
   "scripts": {
-    "watch": "concurrently -n 'tailwind,rollup' 'tailwindcss -i ./examples/assets/examples/css/index.css -o ./static/dist/examples/css/index.css --watch' 'rollup -c --watch'"
+    "watch": "concurrently -n 'tailwind,rollup' 'tailwindcss -i ./examples/assets/examples/css/index.css -o ./static/dist/examples/css/index.css --watch' 'rollup -c --watch'",
+    "build": "concurrently -n 'tailwind,rollup' 'tailwindcss -i ./examples/assets/examples/css/index.css -o ./static/dist/examples/css/index.css' 'rollup -c'"
   },
   "author": "",
   "license": "ISC",

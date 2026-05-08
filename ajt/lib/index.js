@@ -147,7 +147,7 @@ function getNonces(res) {
   const map = res.headers.get('content-security-policy')?.split(';')
     .map(s => s.trim())
     .reduce((accumulator, str) => {
-      const [match, directiveName, directiveValue] = str.match(/([a-z-]*)\s*(.*)/);
+      const [, directiveName, directiveValue] = str.match(/([a-z-]*)\s*(.*)/);
       accumulator[directiveName] = directiveValue.split(' ').map(val => val.trim());
       return accumulator
     }, {})

@@ -1,0 +1,34 @@
+{
+  "name": "@ajax-tools/ajt",
+  "version": "1.0.0",
+  "description": "A set of tools allowing to use ajax in server-side rendered web-sites in simple declarative manner.",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./dom": "./lib/dom.js"
+  },
+  "scripts": {
+    "test": "dotenv -- npx playwright test",
+    "test:ui": "npm run test -- --ui",
+    "lint": "eslint .",
+    "start-pw-remote": "docker run --add-host=hostmachine:host-gateway -p 3000:3000 --rm --init -it --workdir /home/pwuser --user pwuser mcr.microsoft.com/playwright:v1.59.1-noble /bin/sh -c \"npx -y playwright@1.59.1 run-server --port 3000 --host 0.0.0.0\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nleipi/ajax-tools.git"
+  },
+  "keywords": [
+    "ajax"
+  ],
+  "author": "Nikolay Leipi",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/nleipi/ajax-tools/issues"
+  },
+  "homepage": "https://github.com/nleipi/ajax-tools#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "dotenv-cli": "^11.0.0",
+    "express": "^5.2.1"
+  }
+}

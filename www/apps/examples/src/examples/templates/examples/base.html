@@ -2,8 +2,8 @@
 
 {% load static %}
 {% block headressources %}
-<link rel="stylesheet" nonce="{{ csp_nonce }}" href="{% static 'dist/examples/css/index.css' %}">
 <!-- Stylesheet -->
+{{ block.super }}
 <link
     rel="stylesheet"
     nonce="{{ csp_nonce }}"
@@ -28,7 +28,7 @@
 
 <!-- Javascripts -->
 <script type="text/javascript" nonce="{{ csp_nonce }}" src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html-ui.min.js"></script>
-<script type="module" nonce="{{ csp_nonce }}"  src="{% static 'dist/examples/js/index.js' %}"></script>
+<script type="module" nonce="{{ csp_nonce }}"  src="{% static 'examples/js/index.js' %}"></script>
 {% endblock %}
 
 {% block content %}

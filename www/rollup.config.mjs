@@ -7,14 +7,14 @@ import json from '@rollup/plugin-json'
 export default {
   input: Object.fromEntries(globSync([
     'assets/**/*.js',
-    '*/assets/**/*.js',
+    'apps/*/assets/**/*.js',
   ]).map(file => {
     const fileName = file.split('assets/')[1]
     console.log(fileName, file)
     return [fileName, file]
   })),
   output: {
-    dir: 'static/dist/',
+    dir: 'static/',
     format: 'es',
     entryFileNames: '[name]',
     manualChunks: {}

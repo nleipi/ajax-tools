@@ -1,4 +1,4 @@
-FROM python:3.12-slim-trixie AS builder
+FROM python:3.12-slim-trixie AS libs_builder
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 ARG version=v24.15.0
@@ -28,7 +28,10 @@ WORKDIR www
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=www/uv.lock,target=uv.lock \
     --mount=type=bind,source=www/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=www/pyproject.toml,target=pyproject.toml \
     uv sync --frozen --no-install-workspace
+
+FROM libs_builder AS app_builder
 
 COPY . /app
 
@@ -39,8 +42,6 @@ RUN npm run build
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked
 
-RUN uv run python manage.py collectstatic --noinput
-
 FROM python:3.12-slim-trixie
 
 RUN apt update -y && apt install less -y
@@ -48,7 +49,11 @@ RUN apt update -y && apt install less -y
 RUN groupadd --system --gid 999 nonroot \
  && useradd --system --gid 999 --uid 999 --create-home nonroot
 
-COPY --from=builder --chown=nonroot:nonroot --exclude=node_modules/ /app/www /app/www
+COPY --from=libs_builder --chown=nonroot:nonroot --exclude=node_modules/ /app/www /app/www
+
+COPY --from=app_builder --chown=nonroot:nonroot /app/www/media /app/www/media
+
+COPY --from=app_builder --chown=nonroot:nonroot --exclude=node_modules/ /app/www /app/www
 
 ENV PATH="/app/www/.venv/bin:$PATH"
 

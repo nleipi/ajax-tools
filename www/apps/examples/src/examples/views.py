@@ -11,7 +11,6 @@ from .models import Product
 def index(request):
     resolver = get_resolver(urls)
     examples = []
-
     for resolver in resolver.url_patterns:
         if isinstance(resolver, URLResolver):
             url_name = f"examples:{resolver.namespace}"

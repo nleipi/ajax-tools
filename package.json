@@ -5,8 +5,7 @@
     "www"
   ],
   "scripts": {
-    "lint": "npm run lint --workspaces --if-present",
-    "foo": "npm run foo --workspaces --if-present"
+    "lint": "npm run lint --workspaces --if-present"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

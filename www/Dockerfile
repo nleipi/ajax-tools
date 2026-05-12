@@ -8,22 +8,7 @@ ENV UV_LINK_MODE=copy
 ENV UV_NO_DEV=1
 ENV UV_PYTHON_DOWNLOADS=0
 
-RUN apt update -y && apt install curl -y \
-&& curl -fsSL https://nodejs.org/dist/$version/node-$version-linux-x64.tar.gz -o node.tar.gz \
-&& tar -xzvf node.tar.gz && rm node.tar.gz
-
-ENV PATH="/node-$version-linux-x64/bin:$PATH"
-
-WORKDIR /app
-
-RUN --mount=type=cache,target=/root/.npm/_cacache \
-    --mount=type=bind,source=package-lock.json,target=package-lock.json \
-    --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=ajt/package.json,target=ajt/package.json \
-    --mount=type=bind,source=www/package.json,target=www/package.json \
-    npm ci
-
-WORKDIR www
+WORKDIR /app/www
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=www/uv.lock,target=uv.lock \
@@ -37,10 +22,25 @@ COPY . /app
 
 WORKDIR /app/www
 
-RUN npm run build
-
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked
+
+FROM node:24-trixie-slim AS assets_builder
+
+WORKDIR /app
+
+RUN --mount=type=cache,target=/root/.npm/_cacache \
+    --mount=type=bind,source=package-lock.json,target=package-lock.json \
+    --mount=type=bind,source=package.json,target=package.json \
+    --mount=type=bind,source=ajt/package.json,target=ajt/package.json \
+    --mount=type=bind,source=www/package.json,target=www/package.json \
+    npm ci
+
+COPY --from=app_builder --chown=nonroot:nonroot /app /app
+
+WORKDIR /app/www
+
+RUN npm run build
 
 FROM python:3.12-slim-trixie
 
@@ -54,6 +54,8 @@ COPY --from=libs_builder --chown=nonroot:nonroot --exclude=node_modules/ /app/ww
 COPY --from=app_builder --chown=nonroot:nonroot /app/www/media /app/www/media
 
 COPY --from=app_builder --chown=nonroot:nonroot --exclude=node_modules/ /app/www /app/www
+
+COPY --from=assets_builder --chown=nonroot:nonroot --exclude=node_modules/ /app/www /app/www
 
 ENV PATH="/app/www/.venv/bin:$PATH"
 

@@ -9,6 +9,9 @@ services:
       - UV_NO_DEV=0
     volumes:
       - ./data:/app/www/data
+      - .:/app/www
+      - /app/www/.venv
+      - /app/node_modules/
     user: root
     command: 
       - /bin/sh
@@ -19,13 +22,6 @@ services:
         ./manage.py runserver 0.0.0.0:8000
     develop:
       watch:
-        - action: sync
-          path: .
-          target: /app/www
-          include:
-            - ajt_site
-            - apps
-            - static
         - action: rebuild
           path: ./uv.lock
 

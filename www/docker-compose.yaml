@@ -1,0 +1,31 @@
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: ./www/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - UV_NO_DEV=0
+    volumes:
+      - ./data:/app/www/data
+    user: root
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        ./manage.py migrate 
+        ./manage.py loaddata products 
+        ./manage.py runserver 0.0.0.0:8000
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app/www
+          include:
+            - ajt_site
+            - apps
+            - assets
+            - static
+        - action: rebuild
+          path: ./uv.lock

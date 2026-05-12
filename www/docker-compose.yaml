@@ -1,5 +1,5 @@
 services:
-  web:
+  django:
     build:
       context: ..
       dockerfile: ./www/Dockerfile
@@ -25,7 +25,25 @@ services:
           include:
             - ajt_site
             - apps
-            - assets
             - static
         - action: rebuild
           path: ./uv.lock
+
+  assets:
+    build:
+      context: ..
+      dockerfile: ./www/assets.Dockerfile
+    volumes:
+      - .:/app/www
+      - /app/node_modules/
+    develop:
+      watch:
+        - action: rebuild
+          path: .
+          include:
+            - "**/package.json"
+        - action: restart
+          path: .
+          include:
+            - assets/css/index.css
+            - rollup.config.mjs

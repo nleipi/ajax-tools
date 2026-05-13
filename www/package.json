@@ -1,19 +1,23 @@
 {
-  "name": "ajt-site",
+  "name": "@ajax-tools/ajt-site",
   "version": "0.0.1",
+  "private": true,
   "description": "",
   "scripts": {
-    "watch": "concurrently -n 'tailwind,rollup' 'tailwindcss -i ./examples/assets/examples/css/index.css -o ./static/dist/examples/css/index.css --watch' 'rollup -c --watch'"
+    "watch": "concurrently -n 'tailwind,rollup' 'tailwindcss -i ./assets/css/index.css -o ./static/css/index.css --watch' 'rollup -c --watch'",
+    "build": "concurrently -n 'tailwind,rollup' 'tailwindcss -i ./assets/css/index.css -o ./static/css/index.css' 'rollup -c'"
   },
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "@ajax-tools/ajt": "*"
+  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^29.0.2",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@tailwindcss/cli": "^4.2.1",
     "@tailwindcss/typography": "^0.5.19",
-    "ajax-tools": "file:..",
     "concurrently": "^9.2.1",
     "diff": "^8.0.3",
     "diff2html": "^3.4.56",

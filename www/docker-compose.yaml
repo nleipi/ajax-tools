@@ -1,0 +1,45 @@
+services:
+  django:
+    build:
+      context: ..
+      dockerfile: ./www/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - UV_NO_DEV=0
+    volumes:
+      - ./data:/app/www/data
+      - .:/app/www
+      - /app/www/.venv
+      - /app/node_modules/
+    user: root
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        ./manage.py migrate 
+        ./manage.py loaddata products 
+        ./manage.py runserver 0.0.0.0:8000
+    develop:
+      watch:
+        - action: rebuild
+          path: ./uv.lock
+
+  assets:
+    build:
+      context: ..
+      dockerfile: ./www/assets.Dockerfile
+    volumes:
+      - .:/app/www
+      - /app/node_modules/
+    develop:
+      watch:
+        - action: rebuild
+          path: .
+          include:
+            - "**/package.json"
+        - action: restart
+          path: .
+          include:
+            - assets/css/index.css
+            - rollup.config.mjs

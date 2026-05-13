@@ -1,5 +1,5 @@
-import ajt from 'ajax-tools'
-import { diff } from 'ajax-tools/dom'
+import ajt from '@ajax-tools/ajt'
+import { diff } from '@ajax-tools/ajt/dom'
 import { diffWords, diffWordsWithSpace, createTwoFilesPatch } from 'diff'
 import diffable from 'diffable-html'
 import { html } from 'diff2html'

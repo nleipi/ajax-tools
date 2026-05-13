@@ -147,7 +147,7 @@ class ShowMoreView(ListView):
     model = Product
     template_name = "examples/show-more/index.html"
 
-    def get_template_names(self, **kwargs):
+    def get_template_names(self):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return 'examples/show-more/list.html'
         return 'examples/show-more/index.html'

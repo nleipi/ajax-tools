@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-t$59dg&vwvids@vbko)=%tjiy0@_m*hsdb!=b2!gkvp&o79o#q
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '.loca.lt', '.localhost', '127.0.0.1', '[::1]'
+    'ajt.lucky-salmon.dev', '.trycloudflare.com', '.loca.lt', '.localhost', '127.0.0.1', '[::1]'
 ]
 
 
@@ -81,7 +81,7 @@ WSGI_APPLICATION = 'ajt_site.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'data' / 'db.sqlite3',
     }
 }
 
@@ -124,6 +124,7 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static'
 ]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = 'media/'
@@ -131,7 +132,7 @@ MEDIA_URL = 'media/'
 SECURE_CSP = {
     'default-src': [CSP.SELF],
     'img-src': ['data:', CSP.SELF],
-    'style-src': [CSP.SELF, 'example.com', CSP.NONCE],
+    'style-src': [CSP.SELF, CSP.NONCE],
     'script-src': [CSP.NONCE],
     'frame-src': [CSP.NONE],
 }

@@ -1,0 +1,17 @@
+{% extends "examples/base.html" %}
+
+{% block example_description %}
+{% load example_helpers %}
+{% filter markdown %}
+# Froms
+More complex example demonstrating forms
+{% endfilter %}
+{% endblock %}
+
+{% block example %}
+<form action="{% url 'examples:addresses:create-new' %}" method="POST" novalidate>
+  {% csrf_token %}
+  {{ form }}
+  <button type="submit">Create</button>
+</form>
+{% endblock %}

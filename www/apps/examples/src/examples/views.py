@@ -1,12 +1,11 @@
 from django.http import HttpRequest
 from inspect import getdoc
-from django.urls import get_resolver, URLResolver
+from django.urls import get_resolver, URLResolver, reverse_lazy
 from django.shortcuts import render
 from django.utils.lorem_ipsum import words
-from django.views.generic import ListView
+from django.views import generic
 
-from . import urls
-from .models import Product
+from . import urls, models, forms
 
 def index(request):
     resolver = get_resolver(urls)
@@ -140,12 +139,11 @@ def script_reload(request: HttpRequest):
         'text': "Looks like you clicked 'show more' without ajt."
     })
 
-class ShowMoreView(ListView):
+class ShowMoreView(generic.ListView):
     """More complex example demonstating pagination
     """
     paginate_by = 6
-    model = Product
-    template_name = "examples/show-more/index.html"
+    model = models.Product
 
     def get_template_names(self):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -157,3 +155,23 @@ class ShowMoreView(ListView):
         context['is_ajax'] = self.request.headers.get('x-requested-with') == 'XMLHttpRequest'
         context['direction'] = self.request.GET.get('direction', 'down')
         return context
+
+class AddressesView(generic.ListView):
+    """More complex example demonstating forms
+    """
+    model = models.Address
+
+    def get_queryset(self):
+        return super().get_queryset().for_session(
+            self.request.session.session_key)
+
+class AddressCreateView(generic.CreateView):
+    model = models.Address
+    fields = ['address', 'city', 'state', 'postal_code', 'country_code']
+    success_url = reverse_lazy('examples:addresses:Addresses')
+
+    def form_valid(self, form):
+        if not self.request.session.session_key:
+            self.request.session.create()
+        form.instance.session_id = self.request.session.session_key
+        return super().form_valid(form)

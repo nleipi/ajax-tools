@@ -1,0 +1,34 @@
+{% extends "examples/base.html" %}
+
+{% block example_description %}
+{% load example_helpers %}
+{% filter markdown %}
+# Froms
+More complex example demonstrating forms
+{% endfilter %}
+{% endblock %}
+
+{% block example %}
+<style nonce="{{ csp_nonce }}">
+</style>
+<script type="module" nonce="{{ csp_nonce }}">
+</script>
+<div class="flex flex-col gap-7">
+  <a class="link" href="{% url 'examples:addresses:create-new' %}">Create new</a>
+  {% if object_list %}
+  <ul class="flex flex-col gap-3">
+    {% for address in object_list %}
+    <li class="flex flex-col">
+      <span>{{ address.address }}</span>
+      <span>{{ address.city }}</span>
+      <span>{{ address.state }}</span>
+      <span>{{ address.postal_code }}</span>
+      <span>{{ address.country_code }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div>No addresses stored</div>
+  {% endif %}
+</div>
+{% endblock %}

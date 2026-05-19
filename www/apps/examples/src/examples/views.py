@@ -13,7 +13,6 @@ def index(request):
     for resolver in resolver.url_patterns:
         if isinstance(resolver, URLResolver):
             url_name = f"examples:{resolver.namespace}"
-            print(url_name)
             for pattern in resolver.url_patterns:
                 if str(pattern.pattern) == '':
                     examples.append({
@@ -146,13 +145,12 @@ class ShowMoreView(generic.ListView):
     model = models.Product
 
     def get_template_names(self):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        if getattr(self.request, 'is_ajax', False):
             return 'examples/show-more/list.html'
         return 'examples/show-more/index.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['is_ajax'] = self.request.headers.get('x-requested-with') == 'XMLHttpRequest'
         context['direction'] = self.request.GET.get('direction', 'down')
         return context
 
@@ -169,9 +167,16 @@ class AddressCreateView(generic.CreateView):
     model = models.Address
     fields = ['address', 'city', 'state', 'postal_code', 'country_code']
     success_url = reverse_lazy('examples:addresses:Addresses')
+    template_name_suffix = '_create_form'
 
     def form_valid(self, form):
         if not self.request.session.session_key:
             self.request.session.create()
         form.instance.session_id = self.request.session.session_key
         return super().form_valid(form)
+
+class AddressUpdateView(generic.UpdateView):
+    model = models.Address
+    fields = ['address', 'city', 'state', 'postal_code', 'country_code']
+    success_url = reverse_lazy('examples:addresses:Addresses')
+    template_name_suffix = '_update_form'

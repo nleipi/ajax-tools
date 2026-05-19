@@ -7,6 +7,7 @@
   --color-ui-bg: var(--ajt-color-ui-bg);
   --color-ui-primary: var(--ajt-color-ui-primary);
   --color-ui-ring-hover: var(--ajt-color-ui-ring-hover);
+  --radius-ui-md: var(--radius-lg);
 }
 
 :root {
@@ -46,3 +47,14 @@
   padding-inline: 2rem;
 }
 
+@custom-variant show-label {
+  &:is(:placeholder-shown:not(:focus):not(:autofill)) {
+    @slot;
+  }
+}
+
+@custom-variant show-select-label {
+  &:is(:not(:has(:not(.hidden):checked))) {
+    @slot;
+  }
+}

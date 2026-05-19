@@ -1,17 +1,65 @@
-{% extends "examples/base.html" %}
+{% partialdef input %}
+{% firstof field.auto_id field_id as id %}
+{% if field.widget_type == 'text' %}
+<div id="{{id}}-container"
+  class="relative group {{ css }}">
+  <input id="{{id}}"
+    type="text"
+    name="{{ field.html_name }}"
+    class="peer w-full px-3 py-2.5 h-11 border-0 rounded-ui-md bg-ui-bg show-label:placeholder:text-transparent overflow-hidden"
+    placeholder=""
+    placeholder="test"
+    {% if size %}size="{{ size }}"{% endif %}
+    {% if field.value %}value="{{ field.value }}"{% endif %}
+    {% include "django/forms/widgets/attrs.html" %}
+  />
+  <label for="{{id}}"
+    class="pointer-events-none text-xs whitespace-nowrap absolute left-0 -top-4 transition-all peer-show-label:left-3 peer-show-label:top-2.5 peer-show-label:text-base"
+  >{{ field.label }}{% if field.field.required %}
+    <abbr title="This field is required"
+      class="text-red-500 no-underline"
+    >*</abbr>
+    {% endif %}</label>
+</div>
+{% elif field.widget_type == 'select' %}
+<div id="{{id}}-container"
+  class="relative group {{ css }}">
 
-{% block example_description %}
-{% load example_helpers %}
-{% filter markdown %}
-# Froms
-More complex example demonstrating forms
-{% endfilter %}
-{% endblock %}
+  <select id="{{id}}"
+    name="{{ field.html_name }}"
+    class="peer w-full px-3 py-2.5 h-11 border-0 rounded-ui-md bg-ui-bg"
+    >
+    {% for value, label in field.field.choices %}
+      {% if value %}
+      <option class="checked:hidden"
+        {% if field.value == value %}selected{% endif %}
+        value="{{ value }}">{{ label }}</option>
+      {% else %}
+      <option class="hidden"></option>
+      {% endif %}
+    {% endfor %}
+  </select>
+  <label for="{{id}}"
+    autocomplete="off"
+    class="pointer-events-none text-xs whitespace-nowrap absolute left-0 -top-4 transition-all peer-show-select-label:left-3 peer-show-select-label:top-2.5 peer-show-select-label:text-base"
+  >{{ field.label }}{% if field.field.required %}
+    <abbr title="This field is required"
+      class="text-red-500 no-underline"
+    >*</abbr>
+    {% endif %}</label>
+</div>
+{% endif %}
+{% endpartialdef %}
 
-{% block example %}
-<form action="{% url 'examples:addresses:create-new' %}" method="POST" novalidate>
-  {% csrf_token %}
-  {{ form }}
-  <button type="submit">Create</button>
-</form>
-{% endblock %}
+<div class="flex flex-col gap-5">
+  {{ form.non_field_errors }}
+  {% with field=form.address %}{% partial input %}{% endwith %}
+  <div class="contents @sm:flex gap-4 w-full">
+  {% with field=form.city css="flex-1" %}{% partial input %}{% endwith %}
+  {% with field=form.postal_code size='6' %}{% partial input %}{% endwith %}
+  </div>
+  <div class="contents @sm:flex gap-4 w-full">
+  {% with field=form.state css="flex-1" %}{% partial input %}{% endwith %}
+  {% with field=form.country_code %}{% partial input %}{% endwith %}
+  </div>
+</div>

@@ -36,6 +36,7 @@ urlpatterns = [
     path("addresses/", include(([
         path("", views.AddressesView.as_view(), name="Addresses"),
         path("new", views.AddressCreateView.as_view(), name="create-new"),
+        path("<str:pk>", views.AddressUpdateView.as_view(), name="update"),
     ], "addresses"))),
 ]
 

@@ -22,7 +22,10 @@ class Address(models.Model):
     city = models.CharField(max_length=200)
     state = models.CharField(max_length=200, blank=True)
     postal_code = models.CharField(max_length=20)
-    country_code = models.CharField(max_length=2, choices=[
+    country_code = models.CharField(
+        max_length=2,
+        verbose_name='Country',
+        choices=[
         ("AT", "Austria"),
         ("BE", "Belgium"),
         ("BG", "Bulgaria"),

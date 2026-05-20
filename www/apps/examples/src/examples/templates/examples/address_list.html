@@ -21,6 +21,11 @@ More complex example demonstrating forms
   view-transition-name: match-element;
   view-transition-class: modal;
 }
+.modal::backdrop {
+  view-transition-name: match-element;
+  view-transition-class: modal;
+}
+
 ::view-transition-group(.modal) {
 }
 ::view-transition-old(.modal) {
@@ -56,13 +61,14 @@ More complex example demonstrating forms
     el.querySelectorAll?.('[data-role=close-dialog-btn]').forEach((el) => {
       el.addEventListener('click', (event) => {
         event.preventDefault()
-        if (!document.startViewTransition) {
-          el.closest('dialog').close()
-        } else {
-          document.startViewTransition(() => {
-            el.closest('dialog').close()
-          })
-        }
+        el.closest('dialog').close()
+        // if (!document.startViewTransition) {
+        //   el.closest('dialog').close()
+        // } else {
+        //   document.startViewTransition(() => {
+        //     el.closest('dialog').close()
+        //   })
+        // }
       })
     })
   })
@@ -92,7 +98,25 @@ More complex example demonstrating forms
   <div>No addresses stored</div>
   {% endif %}
 </div>
-<dialog id="modal" class="w-full max-w-[min(var(--container-md),_calc(100vw_-_var(--spacing)_*_8))] m-auto p-6 rounded-ui-md shadow-xl bg-ui-modal-bg backdrop:bg-black/50 modal">
+<dialog id="modal"
+  class="w-full max-w-[min(var(--container-md),_calc(100vw_-_var(--spacing)_*_8))] m-auto p-6 rounded-ui-md shadow-xl bg-ui-modal-bg backdrop:bg-black/50 modal"
+  closedBy="any"
+>
   <div id="modal-content"></div>
 </dialog>
+<script nonce="{{ csp_nonce }}">
+  (function () {
+    const dialog = document.getElementById('modal')
+    dialog.addEventListener('cancel', (event) => {
+      event.preventDefault()
+      if (!document.startViewTransition) {
+        dialog.close()
+      } else {
+        document.startViewTransition(() => {
+          dialog.close()
+        })
+      }
+    })
+  }())
+</script>
 {% endblock %}

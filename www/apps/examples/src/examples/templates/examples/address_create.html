@@ -1,0 +1,12 @@
+{% if is_ajax %}
+  <div id="modal-content" data-ajt-mode="replaceContent">
+    {% include 'examples/addresses/create_form.html' %}
+    <script nonce="{{ csp_nonce }}">
+      (function () {
+        document.getElementById('modal').showModal();
+      }())
+    </script>
+  </div>
+{% else %}
+  {% include 'examples/addresses/create_full.html' %}
+{% endif %}

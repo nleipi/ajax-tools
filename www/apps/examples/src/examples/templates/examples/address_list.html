@@ -17,14 +17,63 @@ More complex example demonstrating forms
 
 {% block example %}
 <style nonce="{{ csp_nonce }}">
+.modal {
+  view-transition-name: match-element;
+  view-transition-class: modal;
+}
+::view-transition-group(.modal) {
+}
+::view-transition-old(.modal) {
+  animation: 0.3s ease-in-out both close-modal;
+}
+::view-transition-new(.modal) {
+  animation: 0.3s ease-in-out both open-modal;
+}
+@keyframes open-modal {
+  from {
+    opacity: 0;
+    transform: translateY(80px) scale(1);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0px) scale(1);
+  }
+}
+@keyframes close-modal {
+  from {
+    opacity: 1;
+    transform: translateY(0px) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-80px) scale(1);
+  }
+}
 </style>
 <script type="module" nonce="{{ csp_nonce }}">
+  window.ajtElementPreAddHandlers = window.ajtElementPreAddHandlers || []
+  window.ajtElementPreAddHandlers.push((el) => {
+    el.querySelectorAll?.('[data-role=close-dialog-btn]').forEach((el) => {
+      el.addEventListener('click', (event) => {
+        event.preventDefault()
+        if (!document.startViewTransition) {
+          el.closest('dialog').close()
+        } else {
+          document.startViewTransition(() => {
+            el.closest('dialog').close()
+          })
+        }
+      })
+    })
+  })
 </script>
 <div class="flex flex-col gap-7">
   <a class="flex flex-col justify-center items-center h-10 px-4 border-2 border-ui-primary rounded-ui-md bg-ui-bg w-fit"
-    href="{% url 'examples:addresses:create-new' %}">new address</a>
+    href="{% url 'examples:addresses:create-new' %}"
+    data-ajt-trigger="click"
+  >new address</a>
   {% if object_list %}
-  <ul class="grid grid-cols-3 gap-3">
+  <ul class="grid sm:grid-cols-auto-fill-xs gap-4">
     {% for address in object_list %}
     <li class="flex flex-col p-3 border-2 border-ui-bg rounded-ui-md">
       <span>{{ address.address }}</span>
@@ -43,4 +92,7 @@ More complex example demonstrating forms
   <div>No addresses stored</div>
   {% endif %}
 </div>
+<dialog id="modal" class="w-full max-w-[min(var(--container-md),_calc(100vw_-_var(--spacing)_*_8))] m-auto p-6 rounded-ui-md shadow-xl bg-ui-modal-bg backdrop:bg-black/50 modal">
+  <div id="modal-content"></div>
+</dialog>
 {% endblock %}

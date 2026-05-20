@@ -5,6 +5,7 @@
 
 @theme inline {
   --color-ui-bg: var(--ajt-color-ui-bg);
+  --color-ui-modal-bg: var(--ajt-color-ui-modal-bg);
   --color-ui-primary: var(--ajt-color-ui-primary);
   --color-ui-ring-hover: var(--ajt-color-ui-ring-hover);
   --radius-ui-md: var(--radius-lg);
@@ -12,10 +13,13 @@
 
 :root {
   --ajt-color-ui-bg: var(--color-gray-100);
+  --ajt-color-ui-modal-bg: var(--color-gray-200);
   --ajt-color-ui-primary: var(--color-blue-400);
   --ajt-color-ui-ring-hover: var(--color-blue-600);
   @variant dark {
+    @apply bg-gray-950;
     --ajt-color-ui-bg: var(--color-gray-600);
+    --ajt-color-ui-modal-bg: var(--color-gray-800);
     --ajt-color-ui-primary: var(--color-blue-600);
     --ajt-color-ui-ring-hover: var(--color-blue-400);
   }
@@ -45,6 +49,11 @@
 @utility container {
   margin-inline: auto;
   padding-inline: 2rem;
+}
+
+@utility grid-cols-auto-fill-* {
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--spacing) * --value(number)), auto));
+  grid-template-columns: repeat(auto-fill, minmax(--value(--container-*, [length]), auto));
 }
 
 @custom-variant show-label {

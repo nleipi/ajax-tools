@@ -30,6 +30,10 @@ ALLOWED_HOSTS = [
     'ajt.lucky-salmon.dev', '.trycloudflare.com', '.loca.lt', '.localhost', '127.0.0.1', '[::1]'
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://ajt.lucky-salmon.dev'
+]
+
 
 # Application definition
 

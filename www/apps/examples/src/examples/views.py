@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.utils.lorem_ipsum import words
 from django.views import generic
 
-from . import urls, models, forms
+from . import urls, models
 
 def index(request):
     resolver = get_resolver(urls)
@@ -167,7 +167,7 @@ class AddressCreateView(generic.CreateView):
     model = models.Address
     fields = ['address', 'city', 'state', 'postal_code', 'country_code']
     success_url = reverse_lazy('examples:addresses:Addresses')
-    template_name_suffix = '_create_form'
+    template_name_suffix = '_create'
 
     def form_valid(self, form):
         if not self.request.session.session_key:

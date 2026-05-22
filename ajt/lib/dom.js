@@ -110,7 +110,7 @@ export default async function processContent (doc, options) {
         targets.forEach((target) => {
           try {
             element = handleScriptNodes(element, options)
-            element.dataset.ajtViewTransitionTypes?.split(/\W+/)
+            element.dataset.ajtViewTransitionTypes?.split(/ +/)
               .forEach(type => {
                 viewTransitionTypes.add(type)
               })

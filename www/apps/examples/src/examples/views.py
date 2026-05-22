@@ -1,9 +1,15 @@
+from django.contrib.messages.views import SuccessMessageMixin
 from django.http import HttpRequest
 from inspect import getdoc
 from django.urls import get_resolver, URLResolver, reverse_lazy
 from django.shortcuts import render
 from django.utils.lorem_ipsum import words
-from django.views import generic
+from django.views.generic import (
+    ListView,
+    CreateView,
+    UpdateView,
+    DeleteView,
+)
 
 from . import urls, models
 
@@ -138,7 +144,7 @@ def script_reload(request: HttpRequest):
         'text': "Looks like you clicked 'show more' without ajt."
     })
 
-class ShowMoreView(generic.ListView):
+class ShowMoreView(ListView):
     """More complex example demonstating pagination
     """
     paginate_by = 6
@@ -154,7 +160,7 @@ class ShowMoreView(generic.ListView):
         context['direction'] = self.request.GET.get('direction', 'down')
         return context
 
-class AddressesView(generic.ListView):
+class AddressesView(ListView):
     """More complex example demonstating forms
     """
     model = models.Address
@@ -163,11 +169,12 @@ class AddressesView(generic.ListView):
         return super().get_queryset().for_session(
             self.request.session.session_key)
 
-class AddressCreateView(generic.CreateView):
+class AddressCreateView(SuccessMessageMixin, CreateView):
     model = models.Address
     fields = ['address', 'city', 'state', 'postal_code', 'country_code']
     success_url = reverse_lazy('examples:addresses:Addresses')
     template_name_suffix = '_create'
+    success_message = 'New address added'
 
     def form_valid(self, form):
         if not self.request.session.session_key:
@@ -175,8 +182,13 @@ class AddressCreateView(generic.CreateView):
         form.instance.session_id = self.request.session.session_key
         return super().form_valid(form)
 
-class AddressUpdateView(generic.UpdateView):
+class AddressUpdateView(SuccessMessageMixin, UpdateView):
     model = models.Address
     fields = ['address', 'city', 'state', 'postal_code', 'country_code']
     success_url = reverse_lazy('examples:addresses:Addresses')
     template_name_suffix = '_update_form'
+    success_message = 'Address saved'
+
+class AddressDeleteView(SuccessMessageMixin, DeleteView):
+    model = models.Address
+    success_url = reverse_lazy('examples:addresses:Addresses')

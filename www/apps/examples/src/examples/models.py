@@ -14,7 +14,7 @@ class Product(models.Model):
 
 class AddressQuerySet(models.QuerySet):
     def for_session(self, session_key):
-        return self.filter(session_id=session_key)
+        return self.filter(session_id=session_key).order_by('-created_at')
 
 class Address(models.Model):
     session = models.ForeignKey(Session, on_delete=models.CASCADE)
@@ -54,10 +54,11 @@ class Address(models.Model):
         ("ES", "Spain"),
         ("SE", "Sweden"),
     ])
+    created_at = models.DateTimeField(auto_now_add=True)
     objects = AddressQuerySet.as_manager()
 
     def __str__(self):
         return self.address
 
     class Meta:
-       ordering = ['-country_code', '-city']
+        ordering = ['-country_code', '-city']

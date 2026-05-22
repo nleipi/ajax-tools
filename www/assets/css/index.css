@@ -6,21 +6,27 @@
 @theme inline {
   --color-ui-bg: var(--ajt-color-ui-bg);
   --color-ui-modal-bg: var(--ajt-color-ui-modal-bg);
+  --color-ui-error-bg: var(--ajt-color-ui-error-bg);
   --color-ui-primary: var(--ajt-color-ui-primary);
+  --color-ui-error: var(--ajt-color-ui-error);
   --color-ui-ring-hover: var(--ajt-color-ui-ring-hover);
   --radius-ui-md: var(--radius-lg);
 }
 
 :root {
   --ajt-color-ui-bg: var(--color-gray-100);
+  --ajt-color-ui-error-bg: var(--color-red-100);
   --ajt-color-ui-modal-bg: var(--color-gray-200);
   --ajt-color-ui-primary: var(--color-blue-400);
+  --ajt-color-ui-error: var(--color-red-400);
   --ajt-color-ui-ring-hover: var(--color-blue-600);
   @variant dark {
     @apply bg-gray-950;
     --ajt-color-ui-bg: var(--color-gray-600);
+    --ajt-color-ui-error-bg: var(--color-rose-900);
     --ajt-color-ui-modal-bg: var(--color-gray-800);
     --ajt-color-ui-primary: var(--color-blue-600);
+    --ajt-color-ui-error: var(--color-rose-600);
     --ajt-color-ui-ring-hover: var(--color-blue-400);
   }
 

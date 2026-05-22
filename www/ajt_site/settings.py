@@ -139,7 +139,7 @@ MEDIA_URL = 'media/'
 SECURE_CSP = {
     'default-src': [CSP.SELF],
     'img-src': ['data:', CSP.SELF],
-    'style-src': [CSP.SELF, CSP.NONCE],
+    'style-src': [CSP.NONCE],
     'script-src': [CSP.NONCE],
     'frame-src': [CSP.NONE],
 }

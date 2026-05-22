@@ -17,13 +17,35 @@ More complex example demonstrating forms
 
 {% block example %}
 <style nonce="{{ csp_nonce }}">
-.modal {
+.error-transitionn {
   view-transition-name: match-element;
-  view-transition-class: modal;
 }
-.modal::backdrop {
-  view-transition-name: match-element;
-  view-transition-class: modal;
+:active-view-transition-type(update-list) {
+  .address {
+    view-transition-class: address;
+    view-transition-name: match-element;
+  }
+}
+
+:active-view-transition-type(modal):active-view-transition-type(update-list) {
+  &::view-transition-group(.address),
+  &::view-transition-old(.address),
+  &::view-transition-new(.address) {
+    animation-delay: 0.15s;
+  }
+  &::view-transition-new(.address):only-child {
+    animation-delay: 0.3s;
+  }
+}
+:active-view-transition-type(modal) {
+  .modal {
+    view-transition-class: modal;
+    view-transition-name: match-element;
+  }
+  .modal::backdrop {
+    view-transition-class: modal;
+    view-transition-name: match-element;
+  }
 }
 
 ::view-transition-group(.modal) {
@@ -34,6 +56,7 @@ More complex example demonstrating forms
 ::view-transition-new(.modal) {
   animation: 0.3s ease-in-out both open-modal;
 }
+
 @keyframes open-modal {
   from {
     opacity: 0;
@@ -56,21 +79,34 @@ More complex example demonstrating forms
 }
 </style>
 <script type="module" nonce="{{ csp_nonce }}">
+  const dialog = document.getElementById('modal')
+
+  function closeDialog(el) {
+    if (!document.startViewTransition) {
+      el.close()
+    } else {
+      document.startViewTransition({
+        types:['modal'],
+        update: () => {
+          el.close()
+        }
+      })
+    }
+  }
+
   window.ajtElementPreAddHandlers = window.ajtElementPreAddHandlers || []
   window.ajtElementPreAddHandlers.push((el) => {
     el.querySelectorAll?.('[data-role=close-dialog-btn]').forEach((el) => {
       el.addEventListener('click', (event) => {
         event.preventDefault()
-        el.closest('dialog').close()
-        // if (!document.startViewTransition) {
-        //   el.closest('dialog').close()
-        // } else {
-        //   document.startViewTransition(() => {
-        //     el.closest('dialog').close()
-        //   })
-        // }
+        closeDialog(el.closest('dialog'))
       })
     })
+  })
+
+  dialog.addEventListener('cancel', (event) => {
+    event.preventDefault()
+    closeDialog(event.target)
   })
 </script>
 <div class="flex flex-col gap-7">
@@ -78,25 +114,35 @@ More complex example demonstrating forms
     href="{% url 'examples:addresses:create-new' %}"
     data-ajt-trigger="click"
   >new address</a>
-  {% if object_list %}
-  <ul class="grid sm:grid-cols-auto-fill-xs gap-4">
-    {% for address in object_list %}
-    <li class="flex flex-col p-3 border-2 border-ui-bg rounded-ui-md">
-      <span>{{ address.address }}</span>
-      <span>{{ address.city }}</span>
-      <span>{{ address.state }}</span>
-      <span>{{ address.postal_code }}</span>
-      <span>{{ address.country_code }}</span>
-      <a class="self-end absolute w-10 h-10 p-1"
-        href="{% url 'examples:addresses:update' pk=address.pk %}">
-        {% partial edit_icon %}
-      </a>
-    </li>
-    {% endfor %}
-  </ul>
-  {% else %}
-  <div>No addresses stored</div>
-  {% endif %}
+  <div id="address-view" data-ajt-mode="update" data-ajt-view-transition-types="update-list modal">
+    {% if object_list %}
+    <ul id="address-list" class="grid sm:grid-cols-auto-fill-xs gap-4">
+      {% for address in object_list %}
+      <li id="address-{{ address.id }}" class="flex flex-col p-3 border-2 border-ui-bg rounded-ui-md address">
+        <span>{{ address.address }}</span>
+        <span>{{ address.city }}</span>
+        <span>{{ address.state }}</span>
+        <span>{{ address.postal_code }}</span>
+        <span>{{ address.country_code }}</span>
+        <a class="self-end absolute w-10 h-10 p-1"
+          href="{% url 'examples:addresses:update' pk=address.id %}">
+          {% partial edit_icon %}
+        </a>
+      </li>
+      {% endfor %}
+      {% if is_ajax %}
+      <script nonce="{{ csp_nonce }}">
+        (function () {
+          const dialog = document.getElementById('modal')
+          dialog.close()
+        }())
+      </script>
+      {% endif %}
+    </ul>
+    {% else %}
+    <div>No addresses stored</div>
+    {% endif %}
+  </div>
 </div>
 <dialog id="modal"
   class="w-full max-w-[min(var(--container-md),_calc(100vw_-_var(--spacing)_*_8))] m-auto p-6 rounded-ui-md shadow-xl bg-ui-modal-bg backdrop:bg-black/50 modal"
@@ -104,19 +150,4 @@ More complex example demonstrating forms
 >
   <div id="modal-content"></div>
 </dialog>
-<script nonce="{{ csp_nonce }}">
-  (function () {
-    const dialog = document.getElementById('modal')
-    dialog.addEventListener('cancel', (event) => {
-      event.preventDefault()
-      if (!document.startViewTransition) {
-        dialog.close()
-      } else {
-        document.startViewTransition(() => {
-          dialog.close()
-        })
-      }
-    })
-  }())
-</script>
 {% endblock %}

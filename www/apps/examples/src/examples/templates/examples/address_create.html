@@ -1,12 +1,18 @@
 {% if is_ajax %}
-  <div id="modal-content" data-ajt-mode="replaceContent">
+  {% if request.method == 'GET' %}
+  <div id="modal-content" data-ajt-mode="replaceContent" data-ajt-view-transition-types="modal">
     {% include 'examples/addresses/create_form.html' %}
     <script nonce="{{ csp_nonce }}">
       (function () {
-        document.getElementById('modal').showModal();
+        const dialog = document.getElementById('modal')
+        dialog.classList.add('modal-transition')
+        dialog.showModal()
       }())
     </script>
   </div>
+  {% else %}
+    {% include 'examples/addresses/create_form.html' %}
+  {% endif %}
 {% else %}
   {% include 'examples/addresses/create_full.html' %}
 {% endif %}

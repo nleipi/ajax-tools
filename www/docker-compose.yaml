@@ -30,6 +30,7 @@ services:
       context: ..
       dockerfile: ./www/assets.Dockerfile
     volumes:
+      - ../ajt:/app/ajt
       - .:/app/www
       - /app/node_modules/
     develop:

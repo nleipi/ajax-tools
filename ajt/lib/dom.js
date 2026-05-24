@@ -121,7 +121,6 @@ export default async function processContent (doc, options) {
             viewTransitionTypes.add(type)
           })
         const result = handler(
-          // element.cloneNode(true),
           element,
           handleRemoveContent,
           (el) => {
@@ -147,7 +146,11 @@ export default async function processContent (doc, options) {
         detail: { options }
       }))
       for (let callback of handlerCallbacks) {
-        callback()
+        try {
+          callback()
+        } catch (e) {
+          console.error(e)
+        }
       }
       document.dispatchEvent(new CustomEvent('ajtAfterDomChange', {
         detail: { options }

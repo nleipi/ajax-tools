@@ -86,12 +86,11 @@ More complex example demonstrating forms
 }
 </style>
 <script type="module" nonce="{{ csp_nonce }}">
-
   window.ajtContentHandlers = Object.assign({
     dialog(element, handleRemoveContent, handleContentAdded, handleAddContent) {
       const dialog = document.createElement('dialog')
       dialog.closedBy = element.dataset.appModalClosedBy || 'any'
-      dialog.classList = 'w-full max-w-[min(var(--container-md),_calc(100vw_-_var(--spacing)_*_8))] m-auto p-6 rounded-ui-md shadow-xl bg-ui-modal-bg backdrop:bg-black/50 modal'
+      dialog.classList = 'w-full max-w-[min(var(--container-md),_calc(100vw_-_var(--spacing)_*_8))] m-auto p-6 rounded-ui-md shadow-xl bg-ui-modal-bg backdrop:bg-black/50 overscroll-contain modal'
       dialog.addEventListener('cancel', (event) => {
         event.preventDefault()
         closeDialog(event.target)
@@ -126,19 +125,17 @@ More complex example demonstrating forms
 
   function closeDialog(el) {
     if (!document.startViewTransition) {
-      el.close()
       el.remove()
     } else {
       document.startViewTransition({
         types:['modal'],
         update: () => {
-          el.close()
-        }
-      }).finished.then(() => {
           el.remove()
-        })
+        }
+      })
     }
   }
+  window.closeDialog = closeDialog
 
 </script>
 <div class="flex flex-col gap-7">
@@ -186,8 +183,7 @@ More complex example demonstrating forms
       {% if is_ajt %}
       <script nonce="{{ csp_nonce }}">
         (function () {
-          const dialog = document.getElementById('modal')
-          dialog.close()
+          document.querySelectorAll('dialog').forEach((dialog) => closeDialog(dialog))
         }())
       </script>
       {% endif %}

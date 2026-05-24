@@ -86,39 +86,60 @@ More complex example demonstrating forms
 }
 </style>
 <script type="module" nonce="{{ csp_nonce }}">
-  const dialog = document.getElementById('modal')
+
+  window.ajtContentHandlers = Object.assign({
+    dialog(element, handleRemoveContent, handleContentAdded, handleAddContent) {
+      const dialog = document.createElement('dialog')
+      dialog.closedBy = element.dataset.appModalClosedBy || 'any'
+      dialog.classList = 'w-full max-w-[min(var(--container-md),_calc(100vw_-_var(--spacing)_*_8))] m-auto p-6 rounded-ui-md shadow-xl bg-ui-modal-bg backdrop:bg-black/50 modal'
+      dialog.addEventListener('cancel', (event) => {
+        event.preventDefault()
+        closeDialog(event.target)
+      })
+      dialog.addEventListener('click', (event) => {
+        const closeBtn = event.target.closest('[data-role=close-dialog-btn]')
+        if (closeBtn && dialog.contains(closeBtn)) {
+          event.preventDefault()
+          closeDialog(dialog)
+        }
+      })
+
+      const fragment = document.createDocumentFragment()
+      while (element.firstChild) {
+        handleAddContent(element.firstChild)
+        fragment.appendChild(element.firstChild)
+      }
+      return () => {
+        dialog.append(fragment)
+        document.body.append(dialog)
+        dialog.showModal()
+        for (let child = dialog.firstChild; child; child = child.nextSibling) {
+          try {
+            handleContentAdded(child)
+          } catch (e) {
+            console.error(e)
+          }
+        }
+      }
+    }
+  }, window.ajtContentHandlers)
 
   function closeDialog(el) {
     if (!document.startViewTransition) {
       el.close()
+      el.remove()
     } else {
       document.startViewTransition({
         types:['modal'],
         update: () => {
           el.close()
         }
-      })
+      }).finished.then(() => {
+          el.remove()
+        })
     }
   }
 
-  document.addEventListener('click', (event) => {
-    console.log('click')
-    const closeBtn = event.target.closest('[data-role=close-dialog-btn]')
-    console.log(closeBtn)
-    if (closeBtn) {
-      const dialog = closeBtn.closest('dialog')
-      console.log(dialog)
-      if (dialog) {
-        event.preventDefault()
-        closeDialog(dialog)
-      }
-    }
-  })
-
-  dialog.addEventListener('cancel', (event) => {
-    event.preventDefault()
-    closeDialog(event.target)
-  })
 </script>
 <div class="flex flex-col gap-7">
   {% if messages %}
@@ -176,10 +197,4 @@ More complex example demonstrating forms
     {% endif %}
   </div>
 </div>
-<dialog id="modal"
-  class="w-full max-w-[min(var(--container-md),_calc(100vw_-_var(--spacing)_*_8))] m-auto p-6 rounded-ui-md shadow-xl bg-ui-modal-bg backdrop:bg-black/50 modal"
-  closedBy="any"
->
-  <div id="modal-content"></div>
-</dialog>
 {% endblock %}

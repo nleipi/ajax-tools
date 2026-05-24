@@ -120,7 +120,7 @@ export default async function processContent (doc, options) {
           .forEach(type => {
             viewTransitionTypes.add(type)
           })
-        handlerCallbacks.push(...handler(
+        const result = handler(
           // element.cloneNode(true),
           element,
           handleRemoveContent,
@@ -128,7 +128,12 @@ export default async function processContent (doc, options) {
             addedElements.push(el)
           },
           handleAddContent
-        ))
+        )
+        if (typeof result === 'function') {
+          handlerCallbacks.push(result)
+        } else {
+          handlerCallbacks.push(...result)
+        }
       } catch (e) {
         console.error(e)
       }

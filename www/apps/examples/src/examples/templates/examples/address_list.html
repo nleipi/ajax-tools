@@ -101,14 +101,18 @@ More complex example demonstrating forms
     }
   }
 
-  window.ajtElementPreAddHandlers = window.ajtElementPreAddHandlers || []
-  window.ajtElementPreAddHandlers.push((el) => {
-    el.querySelectorAll?.('[data-role=close-dialog-btn]').forEach((el) => {
-      el.addEventListener('click', (event) => {
+  document.addEventListener('click', (event) => {
+    console.log('click')
+    const closeBtn = event.target.closest('[data-role=close-dialog-btn]')
+    console.log(closeBtn)
+    if (closeBtn) {
+      const dialog = closeBtn.closest('dialog')
+      console.log(dialog)
+      if (dialog) {
         event.preventDefault()
-        closeDialog(el.closest('dialog'))
-      })
-    })
+        closeDialog(dialog)
+      }
+    }
   })
 
   dialog.addEventListener('cancel', (event) => {
@@ -146,11 +150,13 @@ More complex example demonstrating forms
         <span>{{ address.country_code }}</span>
         <div class="flex flex-col self-end absolute gap-2">
           <a class="w-10 h-10 p-1"
-            href="{% url 'examples:addresses:update' pk=address.id %}">
+            href="{% url 'examples:addresses:update' pk=address.id %}"
+            data-ajt-trigger="click">
             {% partial edit_icon %}
           </a>
           <a class="w-10 h-10 p-1"
-            href="{% url 'examples:addresses:delete' pk=address.id %}">
+            href="{% url 'examples:addresses:delete' pk=address.id %}"
+            data-ajt-trigger="click">
             {% partial delete_icon %}
           </a>
         </div>

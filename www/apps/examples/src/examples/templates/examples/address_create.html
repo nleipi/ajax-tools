@@ -1,18 +1,13 @@
-{% if is_ajax %}
-  {% if request.method == 'GET' %}
-  <div id="modal-content" data-ajt-mode="replaceContent" data-ajt-view-transition-types="modal">
-    {% include 'examples/addresses/create_form.html' %}
-    <script nonce="{{ csp_nonce }}">
-      (function () {
-        const dialog = document.getElementById('modal')
-        dialog.classList.add('modal-transition')
-        dialog.showModal()
-      }())
-    </script>
-  </div>
-  {% else %}
-    {% include 'examples/addresses/create_form.html' %}
-  {% endif %}
-{% else %}
-  {% include 'examples/addresses/create_full.html' %}
-{% endif %}
+{% extends "examples/base.html" %}
+
+{% block example_description %}
+{% load example_helpers %}
+{% filter markdown %}
+# Froms
+More complex example demonstrating forms
+{% endfilter %}
+{% endblock %}
+
+{% block example %}
+ {% include 'examples/addresses/create_form.html' %}
+{% endblock %}

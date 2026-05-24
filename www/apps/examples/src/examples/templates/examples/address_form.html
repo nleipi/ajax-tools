@@ -6,7 +6,7 @@
   <input id="{{id}}"
     type="text"
     name="{{ field.html_name }}"
-    class="peer w-full px-3 py-2.5 h-11 border-0 rounded-ui-md bg-ui-bg show-label:placeholder:text-transparent overflow-hidden{% if field.errors %} bg-ui-error-bg {% endif %}"
+    class="peer w-full px-3 py-2.5 h-11 border-0 rounded-ui-md bg-ui-bg show-label:placeholder:text-transparent overflow-hidden {% if field.errors %}bg-ui-error-bg{% endif %}"
     placeholder=""
     placeholder="test"
     {% if size %}size="{{ size }}"{% endif %}
@@ -23,7 +23,7 @@
   {% elif field.widget_type == 'select' %}
   <select id="{{id}}"
     name="{{ field.html_name }}"
-    class="peer w-full px-3 py-2.5 h-11 border-0 rounded-ui-md bg-ui-bg"
+    class="peer w-full px-3 py-2.5 h-11 border-0 rounded-ui-md bg-ui-bg {% if field.errors %}bg-ui-error-bg{% endif %}"
     >
     {% for value, label in field.field.choices %}
       {% if value %}

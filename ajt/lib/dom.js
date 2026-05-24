@@ -154,18 +154,23 @@ export default async function processContent (doc, options) {
         return Promise.all(promises)
       }
     }
+    document.dispatchEvent(new CustomEvent('ajtBeforeUpdate', {
+      detail: { options }
+    }))
     if (!document.startViewTransition) {
       update()
     } else {
       const transition = viewTransitionTypes.size > 0
         ? document.startViewTransition({ update, types: Array.from(viewTransitionTypes) })
         : document.startViewTransition(update)
-      await transition.ready.then(() => {
-        document.dispatchEvent(new CustomEvent('ajtTransitionReady', {
-          detail: options
-        }))
-      })
+      document.dispatchEvent(new CustomEvent('ajtTransition', {
+        detail: { options, transition }
+      }))
+      await transition.ready
     }
+    document.dispatchEvent(new CustomEvent('ajtAfterUpdate', {
+      detail: options
+    }))
     for (let element of addedElements) {
       handleContentAdded(element, options)
     }

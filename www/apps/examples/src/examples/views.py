@@ -16,7 +16,7 @@ from django.views.generic import (
 from . import urls, models
 
 
-class AjaxTemplateResponseMixin(TemplateResponseMixin):
+class AjtTemplateResponseMixin(TemplateResponseMixin):
     def get_template_names(self):
         names = super().get_template_names()
         request = getattr(self, 'request', None)
@@ -24,7 +24,7 @@ class AjaxTemplateResponseMixin(TemplateResponseMixin):
             if getattr(request, 'is_ajt', False):
                 ajax_names = []
                 for name in names:
-                    ajax_name = '_ajax'.join(splitext(name))
+                    ajax_name = '_ajt'.join(splitext(name))
                     ajax_names.append(ajax_name)
                 names = ajax_names + names
         return names
@@ -161,7 +161,7 @@ def script_reload(request: HttpRequest):
         'text': "Looks like you clicked 'show more' without ajt."
     })
 
-class ShowMoreView(AjaxTemplateResponseMixin, ListView):
+class ShowMoreView(AjtTemplateResponseMixin, ListView):
     """More complex example demonstating pagination
     """
     paginate_by = 6
@@ -172,7 +172,7 @@ class ShowMoreView(AjaxTemplateResponseMixin, ListView):
         context['direction'] = self.request.GET.get('direction', 'down')
         return context
 
-class AddressesView(AjaxTemplateResponseMixin, ListView):
+class AddressesView(AjtTemplateResponseMixin, ListView):
     """More complex example demonstating forms
     """
     model = models.Address
@@ -181,7 +181,7 @@ class AddressesView(AjaxTemplateResponseMixin, ListView):
         return super().get_queryset().for_session(
             self.request.session.session_key)
 
-class AddressCreateView(SuccessMessageMixin, AjaxTemplateResponseMixin, CreateView):
+class AddressCreateView(SuccessMessageMixin, AjtTemplateResponseMixin, CreateView):
     model = models.Address
     fields = ['address', 'city', 'state', 'postal_code', 'country_code']
     success_url = reverse_lazy('examples:addresses:Addresses')
@@ -194,13 +194,13 @@ class AddressCreateView(SuccessMessageMixin, AjaxTemplateResponseMixin, CreateVi
         form.instance.session_id = self.request.session.session_key
         return super().form_valid(form)
 
-class AddressUpdateView(SuccessMessageMixin, AjaxTemplateResponseMixin, UpdateView):
+class AddressUpdateView(SuccessMessageMixin, AjtTemplateResponseMixin, UpdateView):
     model = models.Address
     fields = ['address', 'city', 'state', 'postal_code', 'country_code']
     success_url = reverse_lazy('examples:addresses:Addresses')
     template_name_suffix = '_update'
     success_message = 'Address saved'
 
-class AddressDeleteView(SuccessMessageMixin, AjaxTemplateResponseMixin, DeleteView):
+class AddressDeleteView(SuccessMessageMixin, AjtTemplateResponseMixin, DeleteView):
     model = models.Address
     success_url = reverse_lazy('examples:addresses:Addresses')

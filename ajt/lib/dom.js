@@ -81,6 +81,25 @@ function createInsertContentHandler (strategy) {
   }
 }
 
+function createForEachTargetHandler (strategy) {
+  return (element, handleRemoveContent, handleContentAdded, handleAddContent) => {
+    const targets = window.ajtGetTargets(element)
+    if (targets.length === 0) {
+      console.warn(`No data-ajt-target or id is defined for element ${element}`)
+    }
+    const clone = targets.length > 1
+    return targets.map((target) => {
+      return strategy(
+        clone ? element.cloneNode(true) : element,
+        target,
+        handleRemoveContent,
+        handleContentAdded,
+        handleAddContent
+      )
+    })
+  }
+}
+
 export default async function processContent (doc, options) {
   if (window.ajtDomHandlers) {
     window.ajtDomHandlers.forEach((handler) => {
@@ -95,38 +114,23 @@ export default async function processContent (doc, options) {
     element = document.adoptNode(element)
     const handler = window.ajtContentHandlers[element.dataset.ajtMode]
     if (handler) {
-      let targets
-      if (element.dataset.ajtTarget) {
-        targets = document.querySelectorAll(element.dataset.ajtTarget)
-      } else if (element.id) {
-        const target = document.getElementById(element.id)
-        if (target) {
-          targets = [target]
-        }
-      } else {
-        console.warn(`No data-ajt-target or id is defined for element ${element}`)
-      }
-      if (targets) {
-        targets.forEach((target) => {
-          try {
-            element = handleScriptNodes(element, options)
-            element.dataset.ajtViewTransitionTypes?.split(/ +/)
-              .forEach(type => {
-                viewTransitionTypes.add(type)
-              })
-            handlerCallbacks.push(handler(
-              element.cloneNode(true),
-              target,
-              handleRemoveContent,
-              (el) => {
-                addedElements.push(el)
-              },
-              handleAddContent
-            ))
-          } catch (e) {
-            console.error(e)
-          }
-        })
+      try {
+        element = handleScriptNodes(element, options)
+        element.dataset.ajtViewTransitionTypes?.split(/ +/)
+          .forEach(type => {
+            viewTransitionTypes.add(type)
+          })
+        handlerCallbacks.push(...handler(
+          // element.cloneNode(true),
+          element,
+          handleRemoveContent,
+          (el) => {
+            addedElements.push(el)
+          },
+          handleAddContent
+        ))
+      } catch (e) {
+        console.error(e)
       }
     } else {
       console.warn('Unknown ajt mode: ' + element.dataset.ajtMode)
@@ -351,15 +355,15 @@ function merge (node, target, handleRemoveContent, handleContentAdded, handleAdd
 }
 
 window.ajtContentHandlers = Object.assign({
-  replace (node, target, handleRemoveContent, handleContentAdded, handleAddContent) {
+  replace: createForEachTargetHandler((node, target, handleRemoveContent, handleContentAdded, handleAddContent) => {
     handleRemoveContent(target)
     handleAddContent(node)
     return () => {
       target.parentNode.replaceChild(node, target)
       handleContentAdded(node)
     }
-  },
-  replaceContent (node, target, handleRemoveContent, handleContentAdded) {
+  }),
+  replaceContent: createForEachTargetHandler((node, target, handleRemoveContent, handleContentAdded, handleAddContent) => {
     for (let child = target.firstChild; child; child = child.nextSibling) {
       handleRemoveContent(child)
     }
@@ -378,8 +382,8 @@ window.ajtContentHandlers = Object.assign({
         }
       }
     }
-  },
-  replaceWithContent (node, target, handleRemoveContent, handleContentAdded) {
+  }),
+  replaceWithContent: createForEachTargetHandler((node, target, handleRemoveContent, handleContentAdded, handleAddContent) => {
     handleRemoveContent(target)
     const fragment = document.createDocumentFragment()
     const nodes = []
@@ -400,21 +404,34 @@ window.ajtContentHandlers = Object.assign({
         }
       }
     }
-  },
-  prependContent: createInsertContentHandler((target, fragment) => {
+  }),
+  prependContent: createForEachTargetHandler(createInsertContentHandler((target, fragment) => {
     target.insertBefore(fragment, target.firstChild)
-  }),
-  appendContent: createInsertContentHandler((target, fragment) => {
+  })),
+  appendContent: createForEachTargetHandler(createInsertContentHandler((target, fragment) => {
     target.appendChild(fragment)
-  }),
-  remove (node, target, handleRemoveContent) {
+  })),
+  remove: createForEachTargetHandler((node, target, handleRemoveContent) => {
     handleRemoveContent(target)
     return () => {
       target.parentNode.removeChild(target)
     }
-  },
-  update: merge
+  }),
+  update: createForEachTargetHandler(merge)
 }, window.ajtContentHandlers)
+
+
+window.ajtGetTargets = window.ajtGetTargets || function getTargets (element) {
+  if (element.dataset.ajtTarget) {
+    return Array.from(document.querySelectorAll(element.dataset.ajtTarget))
+  } else if (element.id) {
+    const target = document.getElementById(element.id)
+    if (target) {
+      return [target]
+    }
+  }
+  return []
+}
 
 window.ajtElementAddedHandlers = window.ajtElementAddedHandlers || []
 window.ajtElementAddedHandlers.push(function handleAutofocus (element) {

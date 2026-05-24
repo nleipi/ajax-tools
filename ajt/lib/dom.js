@@ -144,13 +144,13 @@ export default async function processContent (doc, options) {
   if (handlerCallbacks.length > 0) {
     const update = () => {
       document.dispatchEvent(new CustomEvent('ajtBeforeDomChange', {
-        detail: options
+        detail: { options }
       }))
       for (let callback of handlerCallbacks) {
         callback()
       }
       document.dispatchEvent(new CustomEvent('ajtAfterDomChange', {
-        detail: options
+        detail: { options }
       }))
       const promises = []
       addedElements.forEach((el) => {
@@ -178,7 +178,7 @@ export default async function processContent (doc, options) {
       await transition.ready
     }
     document.dispatchEvent(new CustomEvent('ajtAfterUpdate', {
-      detail: options
+      detail: { options }
     }))
     for (let element of addedElements) {
       handleContentAdded(element, options)

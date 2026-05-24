@@ -1,9 +1,9 @@
 from django.utils.deprecation import MiddlewareMixin
 
-class IsAjaxMiddleware(MiddlewareMixin):
+class IsAjtMiddleware(MiddlewareMixin):
     """
-    Middleware that sets `is_ajax` attribute to request object.
+    Middleware that sets `is_ajt` attribute to request object.
     """
 
     def process_request(self, request):
-        request.is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        request.is_ajt = request.headers.get('x-requested-with') == 'ajt'

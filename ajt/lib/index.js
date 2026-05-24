@@ -74,7 +74,7 @@ const parser = new DOMParser()
 
 export function fetch (resource, options = {}) {
   options.headers = Object.assign({
-    'x-requested-with': 'XMLHttpRequest'
+    'x-requested-with': 'ajt'
   }, options.headers)
   return window.fetch(resource, options)
 }

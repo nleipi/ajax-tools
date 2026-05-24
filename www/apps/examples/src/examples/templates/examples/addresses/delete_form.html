@@ -2,7 +2,7 @@
   class="flex flex-col gap-7 max-w-xl @container"
   action="{% url 'examples:addresses:delete' pk=object.pk %}"
   method="POST"
-  {% if is_ajax %}
+  {% if is_ajt %}
   data-ajt-mode="update"
   data-ajt-trigger="submit"
   {% endif %}

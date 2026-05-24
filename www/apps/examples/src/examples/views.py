@@ -21,7 +21,7 @@ class AjaxTemplateResponseMixin(TemplateResponseMixin):
         names = super().get_template_names()
         request = getattr(self, 'request', None)
         if request:
-            if getattr(request, 'is_ajax', False):
+            if getattr(request, 'is_ajt', False):
                 ajax_names = []
                 for name in names:
                     ajax_name = '_ajax'.join(splitext(name))
@@ -58,7 +58,7 @@ def replace(request):
 
 def replace_more(request: HttpRequest):
     print(request.headers)
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    if request.headers.get('x-requested-with') == 'ajt':
         return render(request, "examples/replace/text.html", {
             'text': "This is the new content. The parent element has been replaced.",
         })
@@ -75,7 +75,7 @@ def replace_content(request):
 
 def replace_content_more(request: HttpRequest):
     print(request.headers)
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    if request.headers.get('x-requested-with') == 'ajt':
         return render(request, "examples/replace_content/text.html", {
             'summary': 'This is the replacement summary',
             'text': "This is added text section. The <details> element hasn't been closed because only its contents were replaced"
@@ -96,7 +96,7 @@ def append(request):
 
 def append_more(request: HttpRequest):
     items = words(10, True).split(' ')
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    if request.headers.get('x-requested-with') == 'ajt':
         return render(request, "examples/append/list.html", {
             'items': items[5:],
             'mode': request.GET.get('mode', 'appendContent')
@@ -115,7 +115,7 @@ def replace_with_content(request):
 
 def replace_with_content_more(request):
     print(request.headers)
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    if request.headers.get('x-requested-with') == 'ajt':
         return render(request, "examples/replace_with_content/more.html", {})
     return render(request, "examples/replace_with_content/index.html", {
         'text': "Looks like you clicked 'show more' without ajt."
@@ -130,7 +130,7 @@ def update(request):
 
 def update_more(request: HttpRequest):
     print(request.headers)
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    if request.headers.get('x-requested-with') == 'ajt':
         return render(request, "examples/update/text.html", {
             'summary': 'This is the replacement summary',
             'text': "This text replaced the anchor tag. The <details> element hasn't been closed because only its contents were replaced"
@@ -150,7 +150,7 @@ def script(request):
 
 def script_reload(request: HttpRequest):
     print(request.headers)
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    if request.headers.get('x-requested-with') == 'ajt':
         return render(request, "examples/script/partial.html", {
             'summary': 'This is the replacement summary',
             'text': "This text replaced the anchor tag. The <details> element hasn't been closed because only its contents were replaced"

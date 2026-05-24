@@ -1,4 +1,4 @@
 from django.http import HttpRequest
 
-def is_ajax(request: HttpRequest):
-    return { 'is_ajax': getattr(request, 'is_ajax', False) }
+def is_ajt(request: HttpRequest):
+    return { 'is_ajt': getattr(request, 'is_ajt', False) }

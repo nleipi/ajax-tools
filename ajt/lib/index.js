@@ -92,7 +92,9 @@ window.ajtEventHandlers = Object.assign({
     event.preventDefault()
     const form = event.target
     const submitter = event.submitter
-    const method = submitter?.hasAttribute('formmethod') ? submitter.formMethod : form.method
+    const method = submitter.dataset.ajtFormmethod
+      || submitter.formMethod
+      || form.method
     const action = submitter?.hasAttribute('formaction') ? submitter.formAction : form.action
     const enctype = submitter?.hasAttribute('formenctype') ? submitter.formEnctype : form.enctype
     const params = new URLSearchParams(new FormData(form, submitter))

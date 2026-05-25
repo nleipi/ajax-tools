@@ -1,5 +1,7 @@
+from datetime import timedelta
 from django.db import models
 from django.contrib.sessions.models import Session
+from django.utils import timezone
 
 class Product(models.Model):
     sku = models.CharField(max_length=200)
@@ -14,7 +16,13 @@ class Product(models.Model):
 
 class AddressQuerySet(models.QuerySet):
     def for_session(self, session_key):
-        return self.filter(session_id=session_key).order_by('-created_at')
+        return self.filter(
+            session_id=session_key
+        ).filter(
+            deleted_at__isnull=True
+        ).order_by(
+            '-created_at'
+        )
 
 class Address(models.Model):
     session = models.ForeignKey(Session, on_delete=models.CASCADE)
@@ -55,6 +63,8 @@ class Address(models.Model):
         ("SE", "Sweden"),
     ])
     created_at = models.DateTimeField(auto_now_add=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
     objects = AddressQuerySet.as_manager()
 
     def __str__(self):

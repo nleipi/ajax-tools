@@ -1,7 +1,12 @@
+from django.views import View
+from django.views.generic.detail import BaseDetailView, SingleObjectMixin
+from django.views.generic.edit import FormMixin
 from os.path import splitext
+from django.utils import timezone
 from django.views.generic.base import TemplateResponseMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.http import HttpRequest
+from django.contrib import messages
+from django.http import HttpRequest, HttpResponseRedirect
 from inspect import getdoc
 from django.urls import get_resolver, URLResolver, reverse_lazy
 from django.shortcuts import render
@@ -201,6 +206,49 @@ class AddressUpdateView(SuccessMessageMixin, AjtTemplateResponseMixin, UpdateVie
     template_name_suffix = '_update'
     success_message = 'Address saved'
 
-class AddressDeleteView(SuccessMessageMixin, AjtTemplateResponseMixin, DeleteView):
+
+class SoftDeleteMixin:
+    def form_valid(self, form):
+        object = getattr(self, 'object')
+        request = getattr(self, 'request')
+        response_class = getattr(self, 'response_class')
+        get_context_data = getattr(self, 'get_context_data')
+        template_engine = getattr(self, 'template_engine')
+        get_success_url = getattr(self, 'get_success_url')
+
+        object.deleted_at = timezone.now()
+        object.save()
+
+        if getattr(request, 'is_ajt', False):
+            return response_class(
+                request=request,
+                template='examples/addresses/list_item.html',
+                context=get_context_data(undo=True),
+                using=template_engine,
+            )
+            
+        success_url = get_success_url()
+        return HttpResponseRedirect(success_url)
+
+
+class AddressDeleteView(SuccessMessageMixin, AjtTemplateResponseMixin, SoftDeleteMixin, DeleteView):
     model = models.Address
     success_url = reverse_lazy('examples:addresses:Addresses')
+    success_message = 'Address deleted'
+
+    def form_valid(self, form):
+        if getattr(self.request, 'is_ajt', False):
+            return super(AjtTemplateResponseMixin, self).form_valid(form)
+        return super().form_valid(form)
+
+
+class AddressRestoreView(TemplateResponseMixin, SingleObjectMixin, View):
+    model = models.Address
+    template_name = 'examples/addresses/list_item.html'
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.deleted_at = None
+        self.object.save()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)

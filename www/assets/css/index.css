@@ -80,11 +80,6 @@
   padding-inline: 2rem;
 }
 
-@utility grid-cols-auto-fill-* {
-  grid-template-columns: repeat(auto-fill, minmax(calc(var(--spacing) * --value(number)), auto));
-  grid-template-columns: repeat(auto-fill, minmax(--value(--container-*, [length]), auto));
-}
-
 @custom-variant tags-success (&[data-tags~="success"] *);
 
 @custom-variant show-label {

@@ -9,7 +9,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(Address)
 class AddressAdmin(admin.ModelAdmin):
-    list_display = ['address', 'city', 'postal_code', 'country_code']
+    list_display = ['address', 'city', 'postal_code', 'country_code', 'deleted_at']
 
 @admin.register(models.Session)
 class SessionAdmin(admin.ModelAdmin):

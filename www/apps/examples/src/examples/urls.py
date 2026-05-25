@@ -38,6 +38,7 @@ urlpatterns = [
         path("new", views.AddressCreateView.as_view(), name="create-new"),
         path("<str:pk>", views.AddressUpdateView.as_view(), name="update"),
         path("<str:pk>/delete", views.AddressDeleteView.as_view(), name="delete"),
+        path("<str:pk>/restore", views.AddressRestoreView.as_view(), name="restore"),
     ], "addresses"))),
 ]
 

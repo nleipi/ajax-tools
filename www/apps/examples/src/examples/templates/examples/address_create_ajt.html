@@ -1,0 +1,7 @@
+{% if request.method == 'GET' %}
+<div data-ajt-mode="dialog" data-ajt-view-transition-types="modal">
+  {% include 'examples/addresses/create_form.html' %}
+</div>
+{% else %}
+  {% include 'examples/addresses/create_form.html' %}
+{% endif %}

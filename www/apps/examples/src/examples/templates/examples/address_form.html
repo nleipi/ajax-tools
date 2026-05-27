@@ -1,0 +1,66 @@
+{% partialdef input %}
+{% firstof field.auto_id field_id as id %}
+<div id="{{id}}-container"
+  class="relative group {{ css }}">
+  {% if field.widget_type == 'text' %}
+  <input id="{{id}}"
+    type="text"
+    name="{{ field.html_name }}"
+    class="peer w-full px-3 py-2.5 h-11 border-0 rounded-ui-md bg-ui-bg show-label:placeholder:text-transparent overflow-hidden {% if field.errors %}bg-ui-error-bg{% endif %}"
+    placeholder=""
+    placeholder="test"
+    {% if size %}size="{{ size }}"{% endif %}
+    {% if field.value %}value="{{ field.value }}"{% endif %}
+    {% include "django/forms/widgets/attrs.html" %}
+  />
+  <label for="{{id}}"
+    class="pointer-events-none text-xs whitespace-nowrap absolute left-0 -top-4 transition-all peer-show-label:left-3 peer-show-label:top-2.5 peer-show-label:text-base"
+  >{{ field.label }}{% if field.field.required %}
+    <abbr title="This field is required"
+      class="text-red-500 no-underline"
+    >*</abbr>
+    {% endif %}</label>
+  {% elif field.widget_type == 'select' %}
+  <select id="{{id}}"
+    name="{{ field.html_name }}"
+    class="peer w-full px-3 py-2.5 h-11 border-0 rounded-ui-md bg-ui-bg {% if field.errors %}bg-ui-error-bg{% endif %}"
+    >
+    {% for value, label in field.field.choices %}
+      {% if value %}
+      <option class="checked:hidden"
+        {% if field.value == value %}selected{% endif %}
+        value="{{ value }}">{{ label }}</option>
+      {% else %}
+      <option class="hidden"></option>
+      {% endif %}
+    {% endfor %}
+  </select>
+  <label for="{{id}}"
+    autocomplete="off"
+    class="pointer-events-none text-xs whitespace-nowrap absolute left-0 -top-4 transition-all peer-show-select-label:left-3 peer-show-select-label:top-2.5 peer-show-select-label:text-base"
+  >{{ field.label }}{% if field.field.required %}
+    <abbr title="This field is required"
+      class="text-red-500 no-underline"
+    >*</abbr>
+    {% endif %}</label>
+  {% endif %}
+  {% if field.errors %}
+    {% for error in field.errors %}
+    <div class="mt-2 text-ui-error error-transition">{{ error }}</div>
+    {% endfor %}
+  {% endif %}
+</div>
+{% endpartialdef %}
+
+<div id="address-form" class="flex flex-col gap-5">
+  {{ form.non_field_errors }}
+  {% with field=form.address %}{% partial input %}{% endwith %}
+  <div id="city-and-zip" class="contents @sm:flex gap-4 w-full">
+  {% with field=form.city css="flex-1" %}{% partial input %}{% endwith %}
+  {% with field=form.postal_code size='6' %}{% partial input %}{% endwith %}
+  </div>
+  <div id="state-and-country" class="contents @sm:flex gap-4 w-full">
+  {% with field=form.state css="flex-1" %}{% partial input %}{% endwith %}
+  {% with field=form.country_code %}{% partial input %}{% endwith %}
+  </div>
+</div>

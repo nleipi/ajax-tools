@@ -30,6 +30,10 @@ ALLOWED_HOSTS = [
     'ajt.lucky-salmon.dev', '.trycloudflare.com', '.loca.lt', '.localhost', '127.0.0.1', '[::1]'
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://ajt.lucky-salmon.dev'
+]
+
 
 # Application definition
 
@@ -40,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.forms',
     'examples',
 ]
 
@@ -52,6 +57,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.csp.ContentSecurityPolicyMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'examples.middleware.IsAjtMiddleware',
 ]
 
 ROOT_URLCONF = 'ajt_site.urls'
@@ -67,6 +73,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.csp',
+                'examples.context_processors.is_ajt',
             ],
         },
     },
@@ -132,7 +139,7 @@ MEDIA_URL = 'media/'
 SECURE_CSP = {
     'default-src': [CSP.SELF],
     'img-src': ['data:', CSP.SELF],
-    'style-src': [CSP.SELF, CSP.NONCE],
+    'style-src': [CSP.NONCE],
     'script-src': [CSP.NONCE],
     'frame-src': [CSP.NONE],
 }

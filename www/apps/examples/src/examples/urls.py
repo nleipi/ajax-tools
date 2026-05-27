@@ -33,4 +33,12 @@ urlpatterns = [
     path("show-more/", include(([
         path("", views.ShowMoreView.as_view(), name="Show more"),
     ], "show-more"))),
+    path("addresses/", include(([
+        path("", views.AddressesView.as_view(), name="Addresses"),
+        path("new", views.AddressCreateView.as_view(), name="create-new"),
+        path("<str:pk>", views.AddressUpdateView.as_view(), name="update"),
+        path("<str:pk>/delete", views.AddressDeleteView.as_view(), name="delete"),
+        path("<str:pk>/restore", views.AddressRestoreView.as_view(), name="restore"),
+    ], "addresses"))),
 ]
+

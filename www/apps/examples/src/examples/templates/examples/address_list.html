@@ -1,0 +1,193 @@
+{% extends "examples/base.html" %}
+
+{% block example_description %}
+{% load example_helpers %}
+{% filter markdown %}
+# Froms
+More complex example demonstrating forms
+{% endfilter %}
+{% endblock %}
+
+{% block example %}
+<style nonce="{{ csp_nonce }}">
+.error-transitionn {
+  view-transition-name: match-element;
+}
+
+:active-view-transition-type(update-list) {
+  .address {
+    view-transition-class: address;
+    view-transition-name: match-element;
+  }
+}
+
+:active-view-transition-type(address-item) {
+  .address {
+    view-transition-class: address;
+  }
+  &::view-transition-group(.address) {
+    animation: none;
+  }
+  &::view-transition-image-pair(.address) {
+    perspective: 800px;
+    transform-style: preserve-3d;
+  }
+  &::view-transition-old(.address) {
+    animation: 0.3s ease-in-out both flip;
+    backface-visibility: hidden;
+  }
+  &::view-transition-new(.address) {
+    animation: 0.3s ease-in-out both flip-back;
+    backface-visibility: hidden;
+  }
+  &::view-transition-new(.address):only-child {
+    animation-delay: 0.3s;
+  }
+}
+:active-view-transition-type(modal) {
+  .modal {
+    view-transition-class: modal;
+    view-transition-name: match-element;
+  }
+  .modal::backdrop {
+    view-transition-class: modal-backdrop;
+    view-transition-name: match-element;
+  }
+}
+
+::view-transition-group(.modal) {
+}
+::view-transition-old(.modal) {
+  animation: 0.3s ease-in-out both close-modal;
+}
+::view-transition-new(.modal) {
+  animation: 0.3s ease-in-out both open-modal;
+}
+
+@keyframes open-modal {
+  from {
+    opacity: 0;
+    transform: translateY(80px) scale(1);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0px) scale(1);
+  }
+}
+
+@keyframes close-modal {
+  from {
+    opacity: 1;
+    transform: translateY(0px) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-80px) scale(1);
+  }
+}
+
+@keyframes flip {
+  from {
+    transform: rotateX(0);
+  }
+  to {
+    transform: rotateX(180deg);
+  }
+}
+
+@keyframes flip-back {
+  from {
+    transform: rotateX(-180deg);
+  }
+  to {
+    transform: rotateX(0);
+  }
+}
+</style>
+<script type="module" nonce="{{ csp_nonce }}">
+  window.ajtContentHandlers = Object.assign({
+    dialog(element, handleRemoveContent, handleContentAdded, handleAddContent) {
+      const dialog = document.createElement('dialog')
+      dialog.closedBy = element.dataset.appModalClosedBy || 'any'
+      dialog.classList = 'w-full max-w-[min(var(--container-md),_calc(100vw_-_var(--spacing)_*_8))] m-auto p-6 rounded-ui-md shadow-xl bg-ui-modal-bg backdrop:bg-black/50 overscroll-contain modal'
+      dialog.addEventListener('cancel', (event) => {
+        event.preventDefault()
+        closeDialog(event.target)
+      })
+      dialog.addEventListener('click', (event) => {
+        const closeBtn = event.target.closest('[data-role=close-dialog-btn]')
+        if (closeBtn && dialog.contains(closeBtn)) {
+          event.preventDefault()
+          closeDialog(dialog)
+        }
+      })
+
+      const fragment = document.createDocumentFragment()
+      while (element.firstChild) {
+        handleAddContent(element.firstChild)
+        fragment.appendChild(element.firstChild)
+      }
+      return () => {
+        dialog.append(fragment)
+        document.body.append(dialog)
+        dialog.showModal()
+        for (let child = dialog.firstChild; child; child = child.nextSibling) {
+          try {
+            handleContentAdded(child)
+          } catch (e) {
+            console.error(e)
+          }
+        }
+      }
+    }
+  }, window.ajtContentHandlers)
+
+  function closeDialog(el) {
+    if (!document.startViewTransition) {
+      el.remove()
+    } else {
+      document.startViewTransition({
+        types:['modal'],
+        update: () => {
+          el.remove()
+        }
+      })
+    }
+  }
+
+  window.ajtElementRemovedHandlers = window.ajtElementRemovedHandlers || []
+  window.ajtElementRemovedHandlers.push((el) => {
+    if (el.matches?.('.address')) {
+      el.style.viewTransitionName = `${el.id}`
+      el.dataset.appClearTransitionName = true
+    }
+  })
+
+  window.ajtElementPreAddHandlers = window.ajtElementPreAddHandlers || []
+  window.ajtElementPreAddHandlers.push((el) => {
+    if (el.matches?.('.address')) {
+      el.style.viewTransitionName = `${el.id}`
+      el.dataset.appClearTransitionName = true
+    }
+  })
+
+  document.addEventListener('ajtTransition', (event) => {
+    const transition = event.detail.transition
+    transition.finished.then(() => {
+      document.querySelectorAll('[data-app-clear-transition-name]').forEach((el) => {
+        el.style.viewTransitionName = null
+        delete el.dataset.appClearTransitionName
+      })
+    })
+  })
+
+</script>
+<div class="flex flex-col gap-7">
+  {% include 'examples/messages.html' %}
+  <a class="flex flex-col justify-center items-center h-10 px-4 border-2 border-ui-primary rounded-ui-md bg-ui-bg w-fit"
+    href="{% url 'examples:addresses:create-new' %}"
+    data-ajt-trigger="click"
+  >new address</a>
+  {% include 'examples/addresses/address_list.html' %}
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% if messages %}
+<ul id="messages"
+  class="flex flex-col gap-4"
+  data-ajt-mode="replace"
+  data-ajt-view-transition-types="messages">
+  {% for message in messages %}
+  <li class="p-4 rounded-ui-md border-2 border-ui-level bg-ui-level-bg message"
+    data-message-level="{{ message.level_tag }}">{{ message }}</li>
+  {% endfor %}
+</ul>
+{% else %}
+<ul id="messages" class="empty:hidden"></ul>
+{% endif %}

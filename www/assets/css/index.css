@@ -5,17 +5,42 @@
 
 @theme inline {
   --color-ui-bg: var(--ajt-color-ui-bg);
+  --color-ui-modal-bg: var(--ajt-color-ui-modal-bg);
+  --color-ui-error-bg: var(--ajt-color-ui-error-bg);
   --color-ui-primary: var(--ajt-color-ui-primary);
+  --color-ui-error: var(--ajt-color-ui-error);
+  --color-ui-success: var(--ajt-color-ui-success);
+  --color-ui-success-bg: var(--ajt-color-ui-success-bg);
+  --color-ui-level: var(--ajt-color-ui-level);
+  --color-ui-level-bg: var(--ajt-color-ui-level-bg);
   --color-ui-ring-hover: var(--ajt-color-ui-ring-hover);
+  --radius-ui-md: var(--radius-lg);
 }
 
 :root {
-  --ajt-color-ui-bg: var(--color-gray-100);
   --ajt-color-ui-primary: var(--color-blue-400);
+  --ajt-color-ui-error: var(--color-red-400);
+  --ajt-color-ui-success: var(--color-emerald-400);
+
+  --ajt-color-ui-bg: var(--color-gray-100);
+  --ajt-color-ui-error-bg: var(--color-rose-200);
+  --ajt-color-ui-success-bg: var(--color-emerald-200);
+
+  --ajt-color-ui-modal-bg: var(--color-gray-200);
+
   --ajt-color-ui-ring-hover: var(--color-blue-600);
   @variant dark {
-    --ajt-color-ui-bg: var(--color-gray-600);
+    @apply bg-gray-950;
     --ajt-color-ui-primary: var(--color-blue-600);
+    --ajt-color-ui-error: var(--color-rose-600);
+    --ajt-color-ui-success: var(--color-emerald-600);
+
+    --ajt-color-ui-bg: var(--color-gray-600);
+    --ajt-color-ui-error-bg: var(--color-rose-900);
+    --ajt-color-ui-success-bg: var(--color-emerald-900);
+
+    --ajt-color-ui-modal-bg: var(--color-gray-800);
+
     --ajt-color-ui-ring-hover: var(--color-blue-400);
   }
 
@@ -33,11 +58,20 @@
   h2 {
     @apply text-xl;
   }
+  [data-message-level="success"] {
+    --ajt-color-ui-level: var(--color-ui-success);
+    --ajt-color-ui-level-bg: var(--color-ui-success-bg);
+  }
 }
 
 @layer components {
   .link {
     @apply underline text-blue-400;
+  }
+  .message {
+    &.success {
+      @apply border-ui-success;
+    }
   }
 }
 
@@ -46,3 +80,16 @@
   padding-inline: 2rem;
 }
 
+@custom-variant tags-success (&[data-tags~="success"] *);
+
+@custom-variant show-label {
+  &:is(:placeholder-shown:not(:focus):not(:autofill)) {
+    @slot;
+  }
+}
+
+@custom-variant show-select-label {
+  &:is(:not(:has(:not(.hidden):checked))) {
+    @slot;
+  }
+}

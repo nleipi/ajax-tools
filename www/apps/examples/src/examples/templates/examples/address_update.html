@@ -1,0 +1,14 @@
+{% extends "examples/base.html" %}
+
+{% block example_description %}
+{% load example_helpers %}
+{% filter markdown %}
+# Froms
+More complex example demonstrating forms
+{% endfilter %}
+{% endblock %}
+
+{% block example %}
+{% include 'examples/addresses/update_form.html' %}
+{% endblock %}
+

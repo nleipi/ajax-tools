@@ -74,7 +74,7 @@ const parser = new DOMParser()
 
 export function fetch (resource, options = {}) {
   options.headers = Object.assign({
-    'x-requested-with': 'XMLHttpRequest'
+    'x-requested-with': 'ajt'
   }, options.headers)
   return window.fetch(resource, options)
 }
@@ -92,7 +92,9 @@ window.ajtEventHandlers = Object.assign({
     event.preventDefault()
     const form = event.target
     const submitter = event.submitter
-    const method = submitter?.hasAttribute('formmethod') ? submitter.formMethod : form.method
+    const method = submitter.dataset.ajtFormmethod
+      || submitter.formMethod
+      || form.method
     const action = submitter?.hasAttribute('formaction') ? submitter.formAction : form.action
     const enctype = submitter?.hasAttribute('formenctype') ? submitter.formEnctype : form.enctype
     const params = new URLSearchParams(new FormData(form, submitter))

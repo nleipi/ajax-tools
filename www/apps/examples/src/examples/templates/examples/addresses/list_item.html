@@ -21,7 +21,15 @@
 {% endpartialdef %}
 
 
-<li id="address-{{ object.id }}" class="flex justify-between gap-4 p-3 border-2 border-ui-bg rounded-ui-md address" data-ajt-mode="replace" data-ajt-view-transition-types="address-item">
+<li id="address-{{ object.id }}"
+  class="flex justify-between gap-4 p-3 border-2 border-ui-bg rounded-ui-md address"
+  {% if ajt_mode %}
+  data-ajt-mode="{{ ajt_mode }}"
+  {% endif %}
+  {% if ajt_transition %}
+  data-ajt-view-transition-types="{{ ajt_transition }}"
+  {% endif %}
+  data-app-dialog-trigger>
   {% if undo %}
   <form class="flex flex-col justify-center gap-4 h-full"
     action="{% url 'examples:addresses:restore' pk=address.id %}"

@@ -46,6 +46,8 @@ export class DomProcess extends EventTarget {
   #finished
   #resolveFinished
   #rejectFinished
+  #transitionPromises = []
+  #beforePromises = []
 
   static parser = new DOMParser()
 
@@ -61,17 +63,6 @@ export class DomProcess extends EventTarget {
       this.#resolveFinished = resolve
       this.#rejectFinished = reject
     })
-  }
-
-  dispatchEvent(event) {
-    super.dispatchEvent(event)
-    if (!event.defaultPrevented) {
-      document.dispatchEvent(new CustomEvent(
-        'ajtDomEvent', {
-          detail: event
-        }
-      ))
-    }
   }
 
   get finished() {
@@ -112,6 +103,14 @@ export class DomProcess extends EventTarget {
     return element
   }
 
+  addTransitionPromise(promise) {
+    this.#transitionPromises.push(promise)
+  }
+
+  addBeforePromise(promise) {
+    this.#beforePromises.push(promise)
+  }
+
   async run() {
     const doc = this.#html
     this.#handleDom?.(doc)
@@ -120,6 +119,14 @@ export class DomProcess extends EventTarget {
     const handlerCallbacks = []
     const addedElements = []
     const viewTransitionTypes = new Set()
+    while ((element = doc.querySelector('script[data-ajt-script=before-dom]'))) {
+      element = document.adoptNode(element)
+      element = this.#handleScriptNodes(element)
+      document.body.append(element)
+    }
+    if (this.#beforePromises.length > 0) {
+      await Promise.all(this.#beforePromises)
+    }
     while ((element = doc.querySelector('[data-ajt-mode]'))) {
       element = document.adoptNode(element)
       const handler = window.ajtContentHandlers[element.dataset.ajtMode]
@@ -170,20 +177,23 @@ export class DomProcess extends EventTarget {
           }
         }
         this.dispatchEvent(new Event('afterApplyDomChanges'))
-        const promises = []
-        addedElements.forEach((el) => {
-          if (el.ajtTransitionPromise) {
-            promises.push(el.ajtTransitionPromise)
-            el.ajtTransitionPromise = null
-          }
-        })
-        if (promises.length > 0) {
-          return Promise.all(promises)
+        if (this.#transitionPromises.length > 0) {
+          return Promise.all(this.#transitionPromises)
         }
+        // const promises = []
+        // addedElements.forEach((el) => {
+        //   if (el.ajtTransitionPromise) {
+        //     promises.push(el.ajtTransitionPromise)
+        //     el.ajtTransitionPromise = null
+        //   }
+        // })
+        // if (promises.length > 0) {
+        //   return Promise.all(promises)
+        // }
       }
       this.dispatchEvent(new Event('beforeUpdate'))
       if (!document.startViewTransition) {
-        update()
+        await update()
       } else {
         const transition = viewTransitionTypes.size > 0
           ? document.startViewTransition({ update, types: Array.from(viewTransitionTypes) })
@@ -194,6 +204,11 @@ export class DomProcess extends EventTarget {
         await transition.ready
       }
       this.dispatchEvent(new Event('afterUpdate'))
+    }
+    while ((element = doc.querySelector('script[data-ajt-script=after-dom]'))) {
+      element = document.adoptNode(element)
+      element = this.#handleScriptNodes(element)
+      document.body.append(element)
     }
     this.#resolveFinished()
   }

@@ -1,2 +1,10 @@
-{% include 'examples/messages.html' %}
+{% include 'examples/messages.html' with messages=None %}
 {% include 'examples/addresses/address_list.html' %}
+
+<script nonce="{{ csp_nonce }}" data-ajt-script="before-dom">
+  (function () {
+    document.querySelectorAll('dialog').forEach((dialog) => {
+      window.currentDomProcess.addBeforePromise(window.closeDialog(dialog))
+    })
+  }())
+</script>

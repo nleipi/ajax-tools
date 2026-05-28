@@ -204,13 +204,14 @@ export default function ajt(urlOrEvent, context) {
       handleDom: window.ajtHandleDom,
       scriptNonceReplacement: window.ajtNonce,
     }, nonces))
-    document.body.append(domProcess)
+    window.currentDomProcess = domProcess
     document.dispatchEvent(new CustomEvent('ajtDomProcess', {
       detail: domProcess
     }))
 
     domProcess.run()
     await domProcess.finished
+    window.currentDomProcess = null
     return true
   }
 

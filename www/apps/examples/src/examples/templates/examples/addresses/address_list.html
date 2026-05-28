@@ -4,13 +4,6 @@
     {% for object in object_list %}
     {% include 'examples/addresses/list_item.html' %}
     {% endfor %}
-    {% if is_ajt %}
-    <script nonce="{{ csp_nonce }}">
-      (function () {
-        document.querySelectorAll('dialog').forEach((dialog) => dialog.remove())
-      }())
-    </script>
-    {% endif %}
   </ul>
   {% else %}
   <div>No addresses stored</div>

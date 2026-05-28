@@ -1,0 +1,10 @@
+{% include 'examples/addresses/list_item.html' with ajt_mode="replaceContent" %}
+{% for message in messages %}{% endfor %}
+
+<script nonce="{{ csp_nonce }}" data-ajt-script="after-dom">
+  (function () {
+    document.querySelectorAll('dialog').forEach((dialog) => {
+      window.closeDialog(dialog)
+    })
+  }())
+</script>

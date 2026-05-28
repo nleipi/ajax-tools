@@ -21,7 +21,8 @@ More complex example demonstrating forms
   }
 }
 
-:active-view-transition-type(address-item) {
+:active-view-transition-type(delete-address),
+:active-view-transition-type(restore-address) {
   .address {
     view-transition-class: address;
   }
@@ -32,16 +33,25 @@ More complex example demonstrating forms
     perspective: 800px;
     transform-style: preserve-3d;
   }
+  &::view-transition-old(.address),
+  &::view-transition-new(.address) {
+    backface-visibility: hidden;
+  }
+}
+:active-view-transition-type(delete-address) {
   &::view-transition-old(.address) {
     animation: 0.3s ease-in-out both flip;
-    backface-visibility: hidden;
   }
   &::view-transition-new(.address) {
     animation: 0.3s ease-in-out both flip-back;
-    backface-visibility: hidden;
   }
-  &::view-transition-new(.address):only-child {
-    animation-delay: 0.3s;
+}
+:active-view-transition-type(restore-address) {
+  &::view-transition-old(.address) {
+    animation: 0.3s ease-in-out reverse both flip-back;
+  }
+  &::view-transition-new(.address) {
+    animation: 0.3s ease-in-out reverse both flip;
   }
 }
 :active-view-transition-type(modal) {
@@ -53,6 +63,14 @@ More complex example demonstrating forms
     view-transition-class: modal-backdrop;
     view-transition-name: match-element;
   }
+}
+
+::view-transition-group(zoom-in-dialog) {
+}
+::view-transition-old(zoom-in-dialog),
+::view-transition-new(zoom-in-dialog) {
+  width: 100%;
+  height: 100%
 }
 
 ::view-transition-group(.modal) {
@@ -106,69 +124,79 @@ More complex example demonstrating forms
 </style>
 <script type="module" nonce="{{ csp_nonce }}">
   window.ajtContentHandlers = Object.assign({
-    dialog(element, handleRemoveContent, handleContentAdded, handleAddContent) {
-      const dialog = document.createElement('dialog')
-      dialog.closedBy = element.dataset.appModalClosedBy || 'any'
-      dialog.classList = 'w-full max-w-[min(var(--container-md),_calc(100vw_-_var(--spacing)_*_8))] m-auto p-6 rounded-ui-md shadow-xl bg-ui-modal-bg backdrop:bg-black/50 overscroll-contain modal'
-      dialog.addEventListener('cancel', (event) => {
-        event.preventDefault()
-        closeDialog(event.target)
-      })
-      dialog.addEventListener('click', (event) => {
-        const closeBtn = event.target.closest('[data-role=close-dialog-btn]')
-        if (closeBtn && dialog.contains(closeBtn)) {
-          event.preventDefault()
-          closeDialog(dialog)
-        }
-      })
-
-      const fragment = document.createDocumentFragment()
-      while (element.firstChild) {
-        handleAddContent(element.firstChild)
-        fragment.appendChild(element.firstChild)
-      }
+    dialog(dialog, handleRemoveContent, handleContentAdded, handleAddContent) {
+      handleAddContent(dialog)
       return () => {
-        dialog.append(fragment)
         document.body.append(dialog)
-        dialog.showModal()
-        for (let child = dialog.firstChild; child; child = child.nextSibling) {
-          try {
-            handleContentAdded(child)
-          } catch (e) {
-            console.error(e)
-          }
-        }
       }
     }
   }, window.ajtContentHandlers)
 
-  function closeDialog(el) {
+  function openDialog(dialog, triggerEl) {
     if (!document.startViewTransition) {
-      el.remove()
+      dialog.showModal()
     } else {
+      if (triggerEl) {
+        triggerEl.style.viewTransitionName = 'zoom-in-dialog'
+        dialog.trigger = triggerEl
+      }
       document.startViewTransition({
         types:['modal'],
-        update: () => {
-          el.remove()
+        update() {
+          if (triggerEl) {
+            triggerEl.style.opacity = 0
+            triggerEl.style.viewTransitionName = null
+            dialog.style.viewTransitionName = 'zoom-in-dialog'
+          }
+          dialog.showModal()
         }
       })
     }
+    dialog.addEventListener('cancel', (event) => {
+      event.preventDefault()
+      closeDialog(event.target)
+    })
+    dialog.addEventListener('click', (event) => {
+      const closeBtn = event.target.closest('[data-role=close-dialog-btn]')
+      if (closeBtn && dialog.contains(closeBtn)) {
+        event.preventDefault()
+        closeDialog(dialog)
+      }
+    })
   }
 
-  document.addEventListener('ajtDomEvent', (event) => {
-    if (event.detail.type === 'addElement') {
-      console.log('global', event)
+  function closeDialog(dialog) {
+    if (!document.startViewTransition) {
+      return new Promise((resolve, reject) => {
+        dialog.remove()
+        resolve()
+      })
+    } else {
+      return document.startViewTransition({
+        types:['modal'],
+        update: () => {
+          if (dialog.trigger) {
+            dialog.trigger.style.opacity = null
+            dialog.trigger.style.viewTransitionName = 'zoom-in-dialog'
+            dialog.style.viewTransitionName = null
+          }
+          dialog.remove()
+        }
+      }).finished.then(() => {
+          if (dialog.trigger) {
+            dialog.trigger.style.viewTransitionName = null
+          }
+        })
     }
-  })
+  }
+  window.closeDialog = closeDialog
 
   document.addEventListener('ajtDomProcess', (event) => {
-    console.log(event)
     // whole roundtrip here?
     const domProcess = event.detail
 
     domProcess.addEventListener('removeElement', (event) => {
       // elements to be removed from dom
-      console.log(event)
       const el = event.detail
       if (el.matches?.('.address')) {
         el.style.viewTransitionName = `${el.id}`
@@ -177,23 +205,24 @@ More complex example demonstrating forms
     })
     domProcess.addEventListener('addElement', (event) => {
       // elements to be added to dom
-      console.log(event)
       const el = event.detail
       if (el.matches?.('.address')) {
         el.style.viewTransitionName = `${el.id}`
         el.dataset.appClearTransitionName = true
+      } else if (el.matches?.('[data-app-init-dialog]')) {
+        const triggerEl = event.target.data.origin.target?.closest('[data-app-dialog-trigger]')
+        domProcess.finished.then(() => {
+          openDialog(el, triggerEl)
+        })
       }
     })
     domProcess.addEventListener('beforeUpdate', (event) => {
       // before transition or update
-      console.log(event)
     })
     domProcess.addEventListener('transition', (event) => {
       // transition
-      console.log(event)
       const transition = event.detail
       transition.finished.then(() => {
-        console.log('transition finished')
         document.querySelectorAll('[data-app-clear-transition-name]').forEach((el) => {
           el.style.viewTransitionName = null
           delete el.dataset.appClearTransitionName
@@ -202,15 +231,12 @@ More complex example demonstrating forms
     })
     domProcess.addEventListener('beforeApplyDomChanges', (event) => {
       // inside transition callback before dom changes are applied
-      console.log(event)
     })
     domProcess.addEventListener('afterApplyDomChanges', (event) => {
       // inside transition callback after dom changes are applied
-      console.log(event)
     })
     domProcess.addEventListener('afterUpdate', (event) => {
       // after transition or update
-      console.log(event)
     })
   })
 

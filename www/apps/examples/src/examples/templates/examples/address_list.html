@@ -55,17 +55,18 @@ More complex example demonstrating forms
   }
 }
 :active-view-transition-type(modal) {
-  .modal {
-    view-transition-class: modal;
+  .modal-bg::backdrop {
+    view-transition-class: modal-backdrop;
     view-transition-name: match-element;
   }
-  .modal::backdrop {
-    view-transition-class: modal-backdrop;
+  .modal {
+    view-transition-class: modal;
     view-transition-name: match-element;
   }
 }
 
 ::view-transition-group(zoom-in-dialog) {
+  z-index: 1;
 }
 ::view-transition-old(zoom-in-dialog),
 ::view-transition-new(zoom-in-dialog) {

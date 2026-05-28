@@ -27,7 +27,7 @@
     >
     {% for value, label in field.field.choices %}
       {% if value %}
-      <option class="checked:hidden"
+      <option
         {% if field.value == value %}selected{% endif %}
         value="{{ value }}">{{ label }}</option>
       {% else %}

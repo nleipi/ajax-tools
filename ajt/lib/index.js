@@ -199,9 +199,18 @@ export default function ajt(urlOrEvent, context) {
     if (canceled) {
       return false
     }
-    await domModule.default(doc, Object.assign({
-      origin: urlOrEvent
+    const domProcess = new domModule.DomProcess(doc, Object.assign({
+      data: { origin: urlOrEvent },
+      handleDom: window.ajtHandleDom,
+      scriptNonceReplacement: window.ajtNonce,
     }, nonces))
+    document.body.append(domProcess)
+    document.dispatchEvent(new CustomEvent('ajtDomProcess', {
+      detail: domProcess
+    }))
+
+    domProcess.run()
+    await domProcess.finished
     return true
   }
 

@@ -3,7 +3,7 @@
 {% block example_description %}
 {% load example_helpers %}
 {% filter markdown %}
-# Froms
+# Address book
 More complex example demonstrating forms
 {% endfilter %}
 {% endblock %}
@@ -155,29 +155,62 @@ More complex example demonstrating forms
     }
   }
 
-  window.ajtElementRemovedHandlers = window.ajtElementRemovedHandlers || []
-  window.ajtElementRemovedHandlers.push((el) => {
-    if (el.matches?.('.address')) {
-      el.style.viewTransitionName = `${el.id}`
-      el.dataset.appClearTransitionName = true
+  document.addEventListener('ajtDomEvent', (event) => {
+    if (event.detail.type === 'addElement') {
+      console.log('global', event)
     }
   })
 
-  window.ajtElementPreAddHandlers = window.ajtElementPreAddHandlers || []
-  window.ajtElementPreAddHandlers.push((el) => {
-    if (el.matches?.('.address')) {
-      el.style.viewTransitionName = `${el.id}`
-      el.dataset.appClearTransitionName = true
-    }
-  })
+  document.addEventListener('ajtDomProcess', (event) => {
+    console.log(event)
+    // whole roundtrip here?
+    const domProcess = event.detail
 
-  document.addEventListener('ajtTransition', (event) => {
-    const transition = event.detail.transition
-    transition.finished.then(() => {
-      document.querySelectorAll('[data-app-clear-transition-name]').forEach((el) => {
-        el.style.viewTransitionName = null
-        delete el.dataset.appClearTransitionName
+    domProcess.addEventListener('removeElement', (event) => {
+      // elements to be removed from dom
+      console.log(event)
+      const el = event.detail
+      if (el.matches?.('.address')) {
+        el.style.viewTransitionName = `${el.id}`
+        el.dataset.appClearTransitionName = true
+      }
+    })
+    domProcess.addEventListener('addElement', (event) => {
+      // elements to be added to dom
+      console.log(event)
+      const el = event.detail
+      if (el.matches?.('.address')) {
+        el.style.viewTransitionName = `${el.id}`
+        el.dataset.appClearTransitionName = true
+      }
+    })
+    domProcess.addEventListener('beforeUpdate', (event) => {
+      // before transition or update
+      console.log(event)
+    })
+    domProcess.addEventListener('transition', (event) => {
+      // transition
+      console.log(event)
+      const transition = event.detail
+      transition.finished.then(() => {
+        console.log('transition finished')
+        document.querySelectorAll('[data-app-clear-transition-name]').forEach((el) => {
+          el.style.viewTransitionName = null
+          delete el.dataset.appClearTransitionName
+        })
       })
+    })
+    domProcess.addEventListener('beforeApplyDomChanges', (event) => {
+      // inside transition callback before dom changes are applied
+      console.log(event)
+    })
+    domProcess.addEventListener('afterApplyDomChanges', (event) => {
+      // inside transition callback after dom changes are applied
+      console.log(event)
+    })
+    domProcess.addEventListener('afterUpdate', (event) => {
+      // after transition or update
+      console.log(event)
     })
   })
 

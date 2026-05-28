@@ -43,87 +43,88 @@ View transitions are not a part of ajt. The example showcases how ajt allows you
 </style>
 {% include "examples/show-more/list.html" %}
 <script type="module" nonce="{{ csp_nonce }}">
-let lastElement;
-let lastPosition;
-const productList = document.getElementById('product-list')
-document.addEventListener('ajtBeforeDomChange', (event) => {
-  const triggerEl = event.detail?.origin.target.closest('[data-app-direction]')
-  if (triggerEl?.dataset.appDirection === 'up') {
-    lastElement = productList.querySelector('li')
-    lastPosition = lastElement.getBoundingClientRect().top
-  }
-})
-document.addEventListener('ajtAfterDomChange', (event) => {
-  if (lastElement) {
-    window.scrollBy(0, lastElement.getBoundingClientRect().top - lastPosition)
-    lastElement = null
-  }
-})
+  const productList = document.getElementById('product-list')
+  let productItemCounter = 0
 
-let productItemCounter = 0
-window.ajtElementRemovedHandlers = window.ajtElementRemovedHandlers || []
-window.ajtElementRemovedHandlers.push((el) => {
-  if (el.matches?.('.btn')) {
-    el.style.viewTransitionName = 'btn'
-    el.dataset.appClearTransitionName = true
-  }
-})
+  document.addEventListener('ajtDomProcess', (event) => {
+    let lastElement;
+    let lastPosition;
+    const domProcess = event.detail
 
-window.ajtElementPreAddHandlers = window.ajtElementPreAddHandlers || []
-window.ajtElementPreAddHandlers.push((el) => {
-  if (el.matches?.('.product-item')) {
-    el.style.viewTransitionName = `product-item-${productItemCounter}`
-    el.dataset.appClearTransitionName = true
-    productItemCounter += 1;
-    const img = el.querySelector('img')
-    if (img && !img.complete) {
-      el.ajtTransitionPromise = new Promise((resolve, reject) => {
-        img.onload = () => {
-          resolve()
+    domProcess.addEventListener('removeElement', (event) => {
+      const el = event.detail
+      if (el.matches?.('.btn')) {
+        el.style.viewTransitionName = 'btn'
+        el.dataset.appClearTransitionName = true
+      }
+    })
+    domProcess.addEventListener('addElement', (event) => {
+      const el = event.detail
+      if (el.matches?.('.product-item')) {
+        el.style.viewTransitionName = `product-item-${productItemCounter}`
+        el.dataset.appClearTransitionName = true
+        productItemCounter += 1;
+        const img = el.querySelector('img')
+        if (img && !img.complete) {
+          el.ajtTransitionPromise = new Promise((resolve, reject) => {
+            img.onload = () => {
+              resolve()
+            }
+            img.onerror = reject
+          })
         }
-        img.onerror = reject
+      } else if (el.matches?.('.btn')) {
+        el.style.viewTransitionName = 'btn'
+        el.dataset.appClearTransitionName = true
+      }
+    })
+    domProcess.addEventListener('beforeApplyDomChanges', (event) => {
+      const triggerEl = event.target.data.origin.target?.closest('[data-app-direction]')
+      if (triggerEl?.dataset.appDirection === 'up') {
+        lastElement = productList.querySelector('li')
+        lastPosition = lastElement.getBoundingClientRect().top
+      }
+    })
+    domProcess.addEventListener('afterApplyDomChanges', (event) => {
+      if (lastElement) {
+        window.scrollBy(0, lastElement.getBoundingClientRect().top - lastPosition)
+        lastElement = null
+      }
+    })
+    domProcess.addEventListener('transition', (event) => {
+      const transition = event.detail
+      const columns = 3
+      transition.ready.then(() => {
+        document.querySelectorAll('.product-item').forEach((el, index) => {
+          document.documentElement.animate(
+            [
+              {
+                transform: 'translateY(-50px) scale(1.1)',
+                opacity: 0
+              },
+              {
+                transform: 'translateY(0px) scale(1)',
+                opacity: 1
+              },
+            ], {
+              duration: 300,
+              delay: Math.floor(index / columns) * 100 + (index % columns * 50),
+              easing: 'ease-in-out',
+              fill: 'both',
+              pseudoElement: `::view-transition-new(${el.style.viewTransitionName})`,
+            }
+          )
+          el.classList.remove('product-item')
+          el.style.viewTransitionName = null
+        })
       })
-    }
-  } else if (el.matches?.('.btn')) {
-    el.style.viewTransitionName = 'btn'
-    el.dataset.appClearTransitionName = true
-  }
-})
-
-document.addEventListener('ajtTransition', (event) => {
-  const transition = event.detail.transition
-  const columns = 3
-  transition.ready.then(() => {
-    document.querySelectorAll('.product-item').forEach((el, index) => {
-      document.documentElement.animate(
-        [
-          {
-            transform: 'translateY(-50px) scale(1.1)',
-            opacity: 0
-          },
-          {
-            transform: 'translateY(0px) scale(1)',
-            opacity: 1
-          },
-        ], {
-          duration: 300,
-          delay: Math.floor(index / columns) * 100 + (index % columns * 50),
-          easing: 'ease-in-out',
-          fill: 'both',
-          pseudoElement: `::view-transition-new(${el.style.viewTransitionName})`,
-        }
-      )
-      el.classList.remove('product-item')
-      el.style.viewTransitionName = null
+      transition.finished.then(() => {
+        document.querySelectorAll('[data-app-clear-transition-name]').forEach((el) => {
+          el.style.viewTransitionName = null
+          delete el.dataset.appClearTransitionName
+        })
+      })
     })
   })
-  transition.finished.then(() => {
-    document.querySelectorAll('[data-app-clear-transition-name]').forEach((el) => {
-      el.style.viewTransitionName = null
-      delete el.dataset.appClearTransitionName
-    })
-  })
-})
-
 </script>
 {% endblock %}

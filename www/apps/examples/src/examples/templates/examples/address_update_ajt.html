@@ -1,11 +1,14 @@
 {% if request.method == 'GET' %}
-<dialog class="w-full max-w-[min(var(--container-md),_calc(100vw_-_var(--spacing)_*_8))] m-auto p-6 rounded-ui-md shadow-xl bg-ui-modal-bg backdrop:bg-black/50 overscroll-contain modal-bg"
-  closedby="any"
-  data-ajt-mode="dialog"
-  data-app-init-dialog
->
-  {% include 'examples/addresses/update_form.html' %}
-</dialog>
+<div data-ajt-target="body" data-ajt-mode="appendContent" data-ajt-view-transition-types="open-dialog">
+  <dialog id="update-address-dialog" class="w-full max-w-[min(var(--container-md),_calc(100vw_-_var(--spacing)_*_8))] m-auto p-6 rounded-ui-md shadow-xl bg-ui-modal-bg backdrop:bg-black/50 overscroll-contain"
+    closedby="any"
+    data-app-dialog-open="showModal"
+    data-app-view-transition-name="open-in-dialog"
+    data-app-view-transition-from="address-{{ object.id }}"
+  >
+    {% include 'examples/addresses/update_form.html' %}
+  </dialog>
+</div>
 {% else %}
   {% include 'examples/addresses/create_form.html' %}
 {% endif %}

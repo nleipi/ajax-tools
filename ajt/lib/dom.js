@@ -180,16 +180,6 @@ export class DomProcess extends EventTarget {
         if (this.#transitionPromises.length > 0) {
           return Promise.all(this.#transitionPromises)
         }
-        // const promises = []
-        // addedElements.forEach((el) => {
-        //   if (el.ajtTransitionPromise) {
-        //     promises.push(el.ajtTransitionPromise)
-        //     el.ajtTransitionPromise = null
-        //   }
-        // })
-        // if (promises.length > 0) {
-        //   return Promise.all(promises)
-        // }
       }
       this.dispatchEvent(new Event('beforeUpdate'))
       if (!document.startViewTransition) {

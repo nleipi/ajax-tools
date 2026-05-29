@@ -1,2 +1,4 @@
-{% include 'examples/addresses/list_item.html' with ajt_mode="replace" ajt_transition="delete-address" %}
+{% with object_id=object.id|stringformat:"s" %}
+  {% include 'examples/addresses/list_item.html' with ajt_mode="replace" view_transition_name="delete-address" view_transition_from="address-"|add:object_id %}
+{% endwith %}
 {% for message in messages %}{% endfor %}

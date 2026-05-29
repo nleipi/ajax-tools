@@ -197,7 +197,16 @@ class AddressCreateView(SuccessMessageMixin, AjtTemplateResponseMixin, CreateVie
         if not self.request.session.session_key:
             self.request.session.create()
         form.instance.session_id = self.request.session.session_key
-        return super().form_valid(form)
+        res = super().form_valid(form)
+        if getattr(self.request, 'is_ajt', False):
+            if res.status_code == 302:
+                return self.response_class(
+                    request=self.request,
+                    template='examples/addresses/create_address_success_ajt.html',
+                    context=self.get_context_data(),
+                    using=self.template_engine,
+                )
+        return res
 
 class AddressUpdateView(SuccessMessageMixin, AjtTemplateResponseMixin, UpdateView):
     model = models.Address
@@ -207,8 +216,8 @@ class AddressUpdateView(SuccessMessageMixin, AjtTemplateResponseMixin, UpdateVie
     success_message = 'Address saved'
 
     def form_valid(self, form):
+        res = super().form_valid(form)
         if getattr(self.request, 'is_ajt', False):
-            res = super().form_valid(form)
             if res.status_code == 302:
                 return self.response_class(
                     request=self.request,
@@ -216,7 +225,7 @@ class AddressUpdateView(SuccessMessageMixin, AjtTemplateResponseMixin, UpdateVie
                     context=self.get_context_data(),
                     using=self.template_engine,
                 )
-            return res
+        return res
 
 class SoftDeleteMixin:
     def form_valid(self, form):

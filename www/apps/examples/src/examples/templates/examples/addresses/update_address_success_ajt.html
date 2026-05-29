@@ -1,10 +1,10 @@
-{% include 'examples/addresses/list_item.html' with ajt_mode="replaceContent" %}
+{% include 'examples/addresses/list_item.html' with ajt_mode="replace" ajt_transition="update-address" view_transition_name="update-address" view_transition_from="update-address-dialog" %}
 {% for message in messages %}{% endfor %}
 
-<script nonce="{{ csp_nonce }}" data-ajt-script="after-dom">
-  (function () {
-    document.querySelectorAll('dialog').forEach((dialog) => {
-      window.closeDialog(dialog)
-    })
-  }())
-</script>
+<div data-ajt-target="body" data-ajt-mode="appendContent">
+  <script nonce="{{ csp_nonce }}" data-ajt-script="after-dom">
+    (function () {
+      document.getElementById('update-address-dialog')?.remove()
+    }())
+  </script>
+</div>

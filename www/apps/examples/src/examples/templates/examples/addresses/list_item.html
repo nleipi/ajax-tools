@@ -29,6 +29,12 @@
   {% if ajt_transition %}
   data-ajt-view-transition-types="{{ ajt_transition }}"
   {% endif %}
+  {% if view_transition_name %}
+  data-app-view-transition-name="{{ view_transition_name }}"
+  {% endif %}
+  {% if view_transition_from %}
+  data-app-view-transition-from="{{ view_transition_from }}"
+  {% endif %}
   data-app-dialog-trigger>
   {% if undo %}
   <form class="flex flex-col justify-center gap-4 h-full"

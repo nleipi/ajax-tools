@@ -1,4 +1,4 @@
-{% include 'examples/addresses/list_item.html' with ajt_mode="replace" ajt_transition="update-address" view_transition_name="update-address" view_transition_from="update-address-dialog" %}
+{% include 'examples/addresses/list_item.html' with ajt_mode="replace" view_transition_name="open-in-dialog" view_transition_from="update-address-dialog" %}
 {% for message in messages %}{% endfor %}
 
 <div data-ajt-target="body" data-ajt-mode="appendContent">

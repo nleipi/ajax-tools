@@ -61,9 +61,11 @@ More complex example demonstrating forms
   animation: 0.3s ease-in-out reverse both flip;
 }
 
+::view-transition-group(close-dialog),
 ::view-transition-group(open-dialog) {
+  animation: none;
 }
-::view-transition-old(open-dialog) {
+::view-transition-old(close-dialog) {
   animation: 0.3s ease-in-out both close-modal;
 }
 ::view-transition-new(open-dialog) {
@@ -73,22 +75,22 @@ More complex example demonstrating forms
 @keyframes open-modal {
   from {
     opacity: 0;
-    transform: translateY(80px) scale(1);
+    translate: 0 80px;
   }
   to {
     opacity: 1;
-    transform: translateY(0px) scale(1);
+    translate: 0 0;
   }
 }
 
 @keyframes close-modal {
   from {
     opacity: 1;
-    transform: translateY(0px) scale(1);
+    translate: 0 0;
   }
   to {
     opacity: 0;
-    transform: translateY(-80px) scale(1);
+    translate: 0 -80px;
   }
 }
 
@@ -128,7 +130,11 @@ More complex example demonstrating forms
 
   function closeDialog(el) {
     if (el.dataset.appViewTransitionName) {
-      el.style.viewTransitionName = el.dataset.appViewTransitionName
+      el.style.viewTransitionName = 'close-dialog'//el.dataset.appViewTransitionName
+      // this is a fix for iOS, because of course there is a fix for iOS. If the name of the transition stays the same, the transition is cached or whatever, the -old animation won't play and the -new animation won't play when opening dialog second time
+      if (el.style.viewTransitionName === 'open-dialog') {
+        el.style.viewTransitionName = 'close-dialog'
+      }
       let fromEl
       document.startViewTransition(() => {
         if (el.dataset.appViewTransitionFrom) {

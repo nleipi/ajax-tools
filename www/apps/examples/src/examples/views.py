@@ -194,9 +194,13 @@ class AddressCreateView(SuccessMessageMixin, AjtTemplateResponseMixin, CreateVie
     success_message = 'New address added'
 
     def form_valid(self, form):
+        if self.request.POST.get('validate', None) == 'yes':
+            return self.form_invalid(form)
+
         if not self.request.session.session_key:
             self.request.session.create()
         form.instance.session_id = self.request.session.session_key
+
         res = super().form_valid(form)
         if getattr(self.request, 'is_ajt', False):
             if res.status_code == 302:

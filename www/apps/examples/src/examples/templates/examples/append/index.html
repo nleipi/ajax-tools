@@ -14,9 +14,9 @@ The example showcases how `data-ajt-mode="appendContent"` can be utilized to sho
 
 {% block example %}
     <h2>append</h2>
-<a class="link" href="{% url 'examples:append:more' %}{% querystring mode='prependContent' %}" data-ajt-trigger="click">Prepend</a>
+<a class="link" href="{% url 'examples:append:more' %}{% querystring mode='prependContent' %}" data-via-ajt>Prepend</a>
     {% include "examples/append/list.html" %}
-    <a class="link" href="{% url 'examples:append:more' %}{% querystring mode='appendContent' %}" data-ajt-trigger="click">Append</a>
+    <a class="link" href="{% url 'examples:append:more' %}{% querystring mode='appendContent' %}" data-via-ajt>Append</a>
 {% endblock %}
 
 

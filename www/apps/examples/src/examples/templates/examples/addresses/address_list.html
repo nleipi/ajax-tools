@@ -1,18 +1,9 @@
-<div id="address-view" data-ajt-mode="update" data-ajt-view-transition-types="update-list modal">
-  {% if object_list %}
+<div id="address-view" data-ajt-mode="update" data-ajt-view-transition-types="update-list">
   <ul id="address-list" class="grid sm:grid-cols-[repeat(auto-fill,_minmax(var(--container-xs),_1fr))] auto-rows-fr gap-4">
     {% for object in object_list %}
     {% include 'examples/addresses/list_item.html' %}
+    {% empty %}
+      <li class="not-first:hidden">No addresses stored</li>
     {% endfor %}
-    {% if is_ajt %}
-    <script nonce="{{ csp_nonce }}">
-      (function () {
-        document.querySelectorAll('dialog').forEach((dialog) => dialog.remove())
-      }())
-    </script>
-    {% endif %}
   </ul>
-  {% else %}
-  <div>No addresses stored</div>
-  {% endif %}
 </div>

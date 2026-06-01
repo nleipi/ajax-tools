@@ -194,10 +194,23 @@ class AddressCreateView(SuccessMessageMixin, AjtTemplateResponseMixin, CreateVie
     success_message = 'New address added'
 
     def form_valid(self, form):
+        if self.request.POST.get('validate', None) == 'yes':
+            return self.form_invalid(form)
+
         if not self.request.session.session_key:
             self.request.session.create()
         form.instance.session_id = self.request.session.session_key
-        return super().form_valid(form)
+
+        res = super().form_valid(form)
+        if getattr(self.request, 'is_ajt', False):
+            if res.status_code == 302:
+                return self.response_class(
+                    request=self.request,
+                    template='examples/addresses/create_address_success_ajt.html',
+                    context=self.get_context_data(),
+                    using=self.template_engine,
+                )
+        return res
 
 class AddressUpdateView(SuccessMessageMixin, AjtTemplateResponseMixin, UpdateView):
     model = models.Address
@@ -206,6 +219,17 @@ class AddressUpdateView(SuccessMessageMixin, AjtTemplateResponseMixin, UpdateVie
     template_name_suffix = '_update'
     success_message = 'Address saved'
 
+    def form_valid(self, form):
+        res = super().form_valid(form)
+        if getattr(self.request, 'is_ajt', False):
+            if res.status_code == 302:
+                return self.response_class(
+                    request=self.request,
+                    template='examples/addresses/update_address_success_ajt.html',
+                    context=self.get_context_data(),
+                    using=self.template_engine,
+                )
+        return res
 
 class SoftDeleteMixin:
     def form_valid(self, form):
@@ -222,7 +246,7 @@ class SoftDeleteMixin:
         if getattr(request, 'is_ajt', False):
             return response_class(
                 request=request,
-                template='examples/addresses/list_item.html',
+                template='examples/addresses/delete_address_success_ajt.html',
                 context=get_context_data(undo=True),
                 using=template_engine,
             )
@@ -238,13 +262,13 @@ class AddressDeleteView(SuccessMessageMixin, AjtTemplateResponseMixin, SoftDelet
 
     def form_valid(self, form):
         if getattr(self.request, 'is_ajt', False):
-            return super(AjtTemplateResponseMixin, self).form_valid(form)
+            return super().form_valid(form)
         return super().form_valid(form)
 
 
 class AddressRestoreView(TemplateResponseMixin, SingleObjectMixin, View):
     model = models.Address
-    template_name = 'examples/addresses/list_item.html'
+    template_name = 'examples/addresses/restore_address_success_ajt.html'
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()

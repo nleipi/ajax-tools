@@ -11,7 +11,7 @@
     "test": "dotenv -- npx playwright test",
     "test:ui": "npm run test -- --ui",
     "lint": "eslint .",
-    "start-pw-remote": "docker run --add-host=hostmachine:host-gateway -p 3000:3000 --rm --init -it --workdir /home/pwuser --user pwuser mcr.microsoft.com/playwright:v1.59.1-noble /bin/sh -c \"npx -y playwright@1.59.1 run-server --port 3000 --host 0.0.0.0\""
+    "start-pw-remote": "docker run --add-host=hostmachine:host-gateway -p 3000:3000 --rm --init -it --workdir /home/pwuser --user pwuser mcr.microsoft.com/playwright:v1.60.0-noble /bin/sh -c \"npx -y playwright@1.60.0 run-server --port 3000 --host 0.0.0.0\""
   },
   "repository": {
     "type": "git",
@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/nleipi/ajax-tools#readme",
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
+    "@playwright/test": "1.60.0",
     "dotenv-cli": "^11.0.0",
     "express": "^5.2.1"
   }

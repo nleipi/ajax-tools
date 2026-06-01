@@ -1,66 +1,3 @@
-function copyScript (original, options) {
-  const copy = document.createElement('script')
-  const attributes = original.attributes
-  for (let i = 0, len = attributes.length; i < len; i++) {
-    const attr = attributes[i]
-    copy.setAttribute(attr.name, attr.value)
-  }
-
-  if (original.type === 'application/x-ajt-script') {
-    copy.type = original.dataset.ajtScriptType || ''
-  }
-  if (!window.ajtAllowUnsafeScripts) {
-    const valid = options?.scriptNonces.find((nonce) => original.nonce === nonce)
-    if (!valid) {
-      return original
-    }
-    copy.nonce = window.ajtNonce
-  }
-  copy.textContent = original.textContent
-  return copy
-}
-
-function handleScriptNodes (element, options) {
-  if (element instanceof HTMLScriptElement) {
-    return copyScript(element, options)
-  }
-  const nodes = element.querySelectorAll('script')
-  for (let original of nodes) {
-    const copy = copyScript(original, options)
-    original.replaceWith(copy)
-  }
-  return element
-}
-
-function handleRemoveContent (element) {
-  for (let i = 0, len = window.ajtElementRemovedHandlers.length; i < len; i++) {
-    try {
-      window.ajtElementRemovedHandlers[i](element)
-    } catch (e) {
-      console.warn(e)
-    }
-  }
-}
-
-function handleAddContent (element) {
-  for (let i = 0, len = window.ajtElementPreAddHandlers.length; i < len; i++) {
-    try {
-      window.ajtElementPreAddHandlers[i](element)
-    } catch (e) {
-      console.warn(e)
-    }
-  }
-}
-
-function handleContentAdded (element, options) {
-  for (let i = 0, len = window.ajtElementAddedHandlers.length; i < len; i++) {
-    try {
-      window.ajtElementAddedHandlers[i](element, options)
-    } catch (e) {
-      console.warn(e)
-    }
-  }
-}
 
 function createInsertContentHandler (strategy) {
   return (node, target, handleRemoveContent, handleContentAdded, handleAddContent) => {
@@ -100,92 +37,170 @@ function createForEachTargetHandler (strategy) {
   }
 }
 
-export default async function processContent (doc, options) {
-  if (window.ajtDomHandlers) {
-    window.ajtDomHandlers.forEach((handler) => {
-      handler(doc)
+export class DomProcess extends EventTarget {
+  #html
+  #scriptNonces
+  #scriptNonceReplacement
+  #styleNonces
+  #handleDom
+  #finished
+  #resolveFinished
+  #rejectFinished
+  #transitionPromises = []
+  #beforePromises = []
+
+  static parser = new DOMParser()
+
+  constructor(html, options) {
+    super()
+    this.#html = html
+    this.#scriptNonces = options.scriptNonces
+    this.#scriptNonceReplacement = options.scriptNonceReplacement
+    this.#styleNonces = options.styleNonces
+    this.#handleDom = options.handleDom
+    this.data = options.data
+    this.#finished = new Promise((resolve, reject) => {
+      this.#resolveFinished = resolve
+      this.#rejectFinished = reject
     })
   }
-  let element
-  const handlerCallbacks = []
-  const addedElements = []
-  const viewTransitionTypes = new Set()
-  while ((element = doc.querySelector('[data-ajt-mode]'))) {
-    element = document.adoptNode(element)
-    const handler = window.ajtContentHandlers[element.dataset.ajtMode]
-    if (handler) {
-      try {
-        element = handleScriptNodes(element, options)
-        element.dataset.ajtViewTransitionTypes?.split(/ +/)
-          .forEach(type => {
-            viewTransitionTypes.add(type)
-          })
-        const result = handler(
-          element,
-          handleRemoveContent,
-          (el) => {
-            addedElements.push(el)
-          },
-          handleAddContent
-        )
-        if (typeof result === 'function') {
-          handlerCallbacks.push(result)
-        } else {
-          handlerCallbacks.push(...result)
-        }
-      } catch (e) {
-        console.error(e)
-      }
-    } else {
-      console.warn('Unknown ajt mode: ' + element.dataset.ajtMode)
-    }
+
+  get finished() {
+    return this.#finished
   }
-  if (handlerCallbacks.length > 0) {
-    const update = () => {
-      document.dispatchEvent(new CustomEvent('ajtBeforeDomChange', {
-        detail: { options }
-      }))
-      for (let callback of handlerCallbacks) {
+
+  #copyScript (original) {
+    const copy = document.createElement('script')
+    const attributes = original.attributes
+    for (let i = 0, len = attributes.length; i < len; i++) {
+      const attr = attributes[i]
+      copy.setAttribute(attr.name, attr.value)
+    }
+
+    if (original.type === 'application/x-ajt-script') {
+      copy.type = original.dataset.ajtScriptType || ''
+    }
+    if (!window.ajtAllowUnsafeScripts) {
+      const valid = this.#scriptNonces?.find((nonce) => original.nonce === nonce)
+      if (!valid) {
+        return original
+      }
+      copy.nonce = this.#scriptNonceReplacement
+    }
+    copy.textContent = original.textContent
+    return copy
+  }
+
+  #handleScriptNodes (element) {
+    if (element instanceof HTMLScriptElement) {
+      return this.#copyScript(element)
+    }
+    const nodes = element.querySelectorAll('script')
+    for (let original of nodes) {
+      const copy = this.#copyScript(original)
+      original.replaceWith(copy)
+    }
+    return element
+  }
+
+  addTransitionPromise(promise) {
+    this.#transitionPromises.push(promise)
+  }
+
+  addBeforePromise(promise) {
+    this.#beforePromises.push(promise)
+  }
+
+  async run() {
+    const doc = this.#html
+    this.#handleDom?.(doc)
+
+    let element
+    const handlerCallbacks = []
+    const addedElements = []
+    const viewTransitionTypes = new Set()
+    while ((element = doc.querySelector('script[data-ajt-script=before-dom]'))) {
+      element = document.adoptNode(element)
+      element = this.#handleScriptNodes(element)
+      document.body.append(element)
+    }
+    if (this.#beforePromises.length > 0) {
+      await Promise.all(this.#beforePromises)
+    }
+    while ((element = doc.querySelector('[data-ajt-mode]'))) {
+      element = document.adoptNode(element)
+      const handler = window.ajtContentHandlers[element.dataset.ajtMode]
+      if (handler) {
         try {
-          callback()
+          element = this.#handleScriptNodes(element)
+          element.dataset.ajtViewTransitionTypes?.split(/ +/)
+            .forEach(type => {
+              viewTransitionTypes.add(type)
+            })
+          const result = handler(
+            element,
+            (el) => {
+              this.dispatchEvent(new CustomEvent('removeElement', {
+                detail: el
+              }))
+            },
+            (el) => {
+              addedElements.push(el)
+            },
+            (el) => {
+              this.dispatchEvent(new CustomEvent('addElement', {
+                detail: el,
+                bubbles: true
+              }))
+            },
+          )
+          if (typeof result === 'function') {
+            handlerCallbacks.push(result)
+          } else {
+            handlerCallbacks.push(...result)
+          }
         } catch (e) {
           console.error(e)
         }
+      } else {
+        console.warn('Unknown ajt mode: ' + element.dataset.ajtMode)
       }
-      document.dispatchEvent(new CustomEvent('ajtAfterDomChange', {
-        detail: { options }
-      }))
-      const promises = []
-      addedElements.forEach((el) => {
-        if (el.ajtTransitionPromise) {
-          promises.push(el.ajtTransitionPromise)
-          el.ajtTransitionPromise = null
+    }
+    if (handlerCallbacks.length > 0) {
+      const update = () => {
+        this.dispatchEvent(new Event('beforeApplyDomChanges'))
+        for (let callback of handlerCallbacks) {
+          try {
+            callback()
+          } catch (e) {
+            console.error(e)
+          }
         }
-      })
-      if (promises.length > 0) {
-        return Promise.all(promises)
+        this.dispatchEvent(new Event('afterApplyDomChanges'))
+        if (this.#transitionPromises.length > 0) {
+          return Promise.all(this.#transitionPromises)
+        }
       }
+      this.dispatchEvent(new Event('beforeUpdate'))
+      if (!document.startViewTransition) {
+        await update()
+      } else {
+        const transition = viewTransitionTypes.size > 0
+          ? document.startViewTransition({ update, types: Array.from(viewTransitionTypes) })
+          : document.startViewTransition(update)
+        this.dispatchEvent(new CustomEvent('transition', {
+          detail: transition
+        }))
+        await transition.finished
+      }
+      this.dispatchEvent(new Event('afterUpdate'))
     }
-    document.dispatchEvent(new CustomEvent('ajtBeforeUpdate', {
-      detail: { options }
-    }))
-    if (!document.startViewTransition) {
-      update()
-    } else {
-      const transition = viewTransitionTypes.size > 0
-        ? document.startViewTransition({ update, types: Array.from(viewTransitionTypes) })
-        : document.startViewTransition(update)
-      document.dispatchEvent(new CustomEvent('ajtTransition', {
-        detail: { options, transition }
-      }))
-      await transition.ready
+    while ((element = doc.querySelector('script[data-ajt-script=after-dom]'))) {
+      element = document.adoptNode(element)
+      element = this.#handleScriptNodes(element)
+      document.body.append(element)
     }
-    document.dispatchEvent(new CustomEvent('ajtAfterUpdate', {
-      detail: { options }
-    }))
-    for (let element of addedElements) {
-      handleContentAdded(element, options)
-    }
+    this.#resolveFinished()
   }
 }
 

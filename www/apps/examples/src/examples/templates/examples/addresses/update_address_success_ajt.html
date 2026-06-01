@@ -1,0 +1,10 @@
+{% include 'examples/addresses/list_item.html' with ajt_mode="replace" view_transition_name="open-in-dialog" view_transition_from="update-address-dialog" %}
+{% for message in messages %}{% endfor %}
+
+<div data-ajt-target="body" data-ajt-mode="appendContent">
+  <script nonce="{{ csp_nonce }}" data-ajt-script="after-dom">
+    (function () {
+      document.getElementById('update-address-dialog')?.remove()
+    }())
+  </script>
+</div>

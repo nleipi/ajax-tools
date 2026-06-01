@@ -21,12 +21,26 @@
 {% endpartialdef %}
 
 
-<li id="address-{{ object.id }}" class="flex justify-between gap-4 p-3 border-2 border-ui-bg rounded-ui-md address" data-ajt-mode="replace" data-ajt-view-transition-types="address-item">
+<li id="address-{{ object.id }}"
+  class="flex justify-between gap-4 p-3 border-2 border-ui-bg rounded-ui-md address"
+  {% if ajt_mode %}
+  data-ajt-mode="{{ ajt_mode }}"
+  {% endif %}
+  {% if ajt_transition %}
+  data-ajt-view-transition-types="{{ ajt_transition }}"
+  {% endif %}
+  {% if view_transition_name %}
+  data-app-view-transition-name="{{ view_transition_name }}"
+  {% endif %}
+  {% if view_transition_from %}
+  data-app-view-transition-from="{{ view_transition_from }}"
+  {% endif %}
+  data-app-dialog-trigger>
   {% if undo %}
   <form class="flex flex-col justify-center gap-4 h-full"
     action="{% url 'examples:addresses:restore' pk=address.id %}"
     method="POST"
-    data-ajt-trigger="submit"
+    data-via-ajt
   >
     <div class="text-center">You deleted this address. Would you like to <button class="inline link cursor-pointer" type="submit">undo</button>?</div>
     {% csrf_token %}
@@ -34,7 +48,7 @@
   <div class="flex flex-col gap-2">
     <a class="w-10 h-10 p-1 cursor-pointer"
       href="{% url 'examples:addresses:Addresses' %}"
-      data-ajt-trigger="click"
+      data-via-ajt
     >{% partial close_icon %}</a>
   </div>
   {% else %}
@@ -47,7 +61,7 @@
   </div>
   <form class="flex flex-col gap-2"
     action="{% url 'examples:addresses:update' pk=object.id %}"
-    data-ajt-trigger="submit"
+    data-via-ajt
   >
     <button class="w-10 h-10 p-1 cursor-pointer"
       type="submit"

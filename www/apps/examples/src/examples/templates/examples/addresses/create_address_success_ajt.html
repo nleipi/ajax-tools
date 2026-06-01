@@ -1,0 +1,12 @@
+<ul id="address-list" data-ajt-mode="prependContent" data-ajt-view-transition-types="update-list new-address">
+  {% include 'examples/addresses/list_item.html' with ajt_mode="replace" view_transition_name="open-in-dialog" view_transition_from="create-address-dialog" %}
+</ul>
+{% for message in messages %}{% endfor %}
+
+<div data-ajt-target="body" data-ajt-mode="appendContent">
+  <script nonce="{{ csp_nonce }}" data-ajt-script="after-dom">
+    (function () {
+      document.getElementById('create-address-dialog')?.remove()
+    }())
+  </script>
+</div>

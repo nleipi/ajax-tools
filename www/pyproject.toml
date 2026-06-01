@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "django>=6.0.3",
     "examples",
+    "whitenoise>=6.12.0",
 ]
 
 [tool.uv.workspace]

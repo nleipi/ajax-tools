@@ -27,7 +27,7 @@
     >
     {% for value, label in field.field.choices %}
       {% if value %}
-      <option class="checked:hidden"
+      <option
         {% if field.value == value %}selected{% endif %}
         value="{{ value }}">{{ label }}</option>
       {% else %}
@@ -63,4 +63,9 @@
   {% with field=form.state css="flex-1" %}{% partial input %}{% endwith %}
   {% with field=form.country_code %}{% partial input %}{% endwith %}
   </div>
+  {% if request.method == 'POST' %}
+  <input class="hidden" type="submit" name="validate" value="yes"
+    data-ajt-delay="500" data-ajt-cancel-running
+  />
+  {% endif %}
 </div>

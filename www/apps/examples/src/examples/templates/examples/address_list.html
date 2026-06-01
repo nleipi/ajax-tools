@@ -3,16 +3,13 @@
 {% block example_description %}
 {% load example_helpers %}
 {% filter markdown %}
-# Froms
+# Address book
 More complex example demonstrating forms
 {% endfilter %}
 {% endblock %}
 
 {% block example %}
 <style nonce="{{ csp_nonce }}">
-.error-transitionn {
-  view-transition-name: match-element;
-}
 
 :active-view-transition-type(update-list) {
   .address {
@@ -20,69 +17,80 @@ More complex example demonstrating forms
     view-transition-name: match-element;
   }
 }
-
-:active-view-transition-type(address-item) {
-  .address {
-    view-transition-class: address;
-  }
-  &::view-transition-group(.address) {
-    animation: none;
-  }
-  &::view-transition-image-pair(.address) {
-    perspective: 800px;
-    transform-style: preserve-3d;
-  }
-  &::view-transition-old(.address) {
-    animation: 0.3s ease-in-out both flip;
-    backface-visibility: hidden;
-  }
-  &::view-transition-new(.address) {
-    animation: 0.3s ease-in-out both flip-back;
-    backface-visibility: hidden;
-  }
-  &::view-transition-new(.address):only-child {
-    animation-delay: 0.3s;
-  }
-}
-:active-view-transition-type(modal) {
-  .modal {
-    view-transition-class: modal;
-    view-transition-name: match-element;
-  }
-  .modal::backdrop {
-    view-transition-class: modal-backdrop;
-    view-transition-name: match-element;
+:active-view-transition-type(new-address) {
+  &::view-transition-group(open-in-dialog),
+  &::view-transition-old(open-in-dialog),
+  &::view-transition-new(open-in-dialog) {
+    animation-delay: 0.1s;
   }
 }
 
-::view-transition-group(.modal) {
+::view-transition-old(open-in-dialog),
+::view-transition-new(open-in-dialog) {
+  width: 100%;
+  height: 100%;
 }
-::view-transition-old(.modal) {
+
+::view-transition-group(restore-address),
+::view-transition-group(delete-address) {
+  animation: none;
+}
+::view-transition-image-pair(restore-address),
+::view-transition-image-pair(delete-address) {
+  perspective: 800px;
+  transform-style: preserve-3d;
+}
+
+::view-transition-old(restore-address),
+::view-transition-new(restore-address),
+::view-transition-old(delete-address),
+::view-transition-new(delete-address) {
+  backface-visibility: hidden;
+}
+::view-transition-old(delete-address) {
+  animation: 0.3s ease-in-out both flip;
+}
+::view-transition-new(delete-address) {
+  animation: 0.3s ease-in-out both flip-back;
+}
+
+::view-transition-old(restore-address) {
+  animation: 0.3s ease-in-out reverse both flip-back;
+}
+::view-transition-new(restore-address) {
+  animation: 0.3s ease-in-out reverse both flip;
+}
+
+::view-transition-group(close-dialog),
+::view-transition-group(open-dialog) {
+  animation: none;
+}
+::view-transition-old(close-dialog) {
   animation: 0.3s ease-in-out both close-modal;
 }
-::view-transition-new(.modal) {
+::view-transition-new(open-dialog) {
   animation: 0.3s ease-in-out both open-modal;
 }
 
 @keyframes open-modal {
   from {
     opacity: 0;
-    transform: translateY(80px) scale(1);
+    translate: 0 80px;
   }
   to {
     opacity: 1;
-    transform: translateY(0px) scale(1);
+    translate: 0 0;
   }
 }
 
 @keyframes close-modal {
   from {
     opacity: 1;
-    transform: translateY(0px) scale(1);
+    translate: 0 0;
   }
   to {
     opacity: 0;
-    transform: translateY(-80px) scale(1);
+    translate: 0 -80px;
   }
 }
 
@@ -105,88 +113,98 @@ More complex example demonstrating forms
 }
 </style>
 <script type="module" nonce="{{ csp_nonce }}">
-  window.ajtContentHandlers = Object.assign({
-    dialog(element, handleRemoveContent, handleContentAdded, handleAddContent) {
-      const dialog = document.createElement('dialog')
-      dialog.closedBy = element.dataset.appModalClosedBy || 'any'
-      dialog.classList = 'w-full max-w-[min(var(--container-md),_calc(100vw_-_var(--spacing)_*_8))] m-auto p-6 rounded-ui-md shadow-xl bg-ui-modal-bg backdrop:bg-black/50 overscroll-contain modal'
-      dialog.addEventListener('cancel', (event) => {
+  function openDialog(dialog) {
+    dialog.addEventListener('cancel', (event) => {
+      event.preventDefault()
+      closeDialog(event.target)
+    })
+    dialog.addEventListener('click', (event) => {
+      const closeBtn = event.target.closest('[data-role=close-dialog-btn]')
+      if (closeBtn && dialog.contains(closeBtn)) {
         event.preventDefault()
-        closeDialog(event.target)
-      })
-      dialog.addEventListener('click', (event) => {
-        const closeBtn = event.target.closest('[data-role=close-dialog-btn]')
-        if (closeBtn && dialog.contains(closeBtn)) {
-          event.preventDefault()
-          closeDialog(dialog)
-        }
-      })
-
-      const fragment = document.createDocumentFragment()
-      while (element.firstChild) {
-        handleAddContent(element.firstChild)
-        fragment.appendChild(element.firstChild)
+        closeDialog(dialog)
       }
-      return () => {
-        dialog.append(fragment)
-        document.body.append(dialog)
-        dialog.showModal()
-        for (let child = dialog.firstChild; child; child = child.nextSibling) {
-          try {
-            handleContentAdded(child)
-          } catch (e) {
-            console.error(e)
-          }
-        }
-      }
-    }
-  }, window.ajtContentHandlers)
+    })
+    dialog[dialog.dataset.appDialogOpen]()
+  }
 
   function closeDialog(el) {
-    if (!document.startViewTransition) {
-      el.remove()
-    } else {
-      document.startViewTransition({
-        types:['modal'],
-        update: () => {
-          el.remove()
+    if (el.dataset.appViewTransitionName) {
+      el.style.viewTransitionName = el.dataset.appViewTransitionName
+      // this is a fix for iOS, because of course there is a fix for iOS. If the name of the transition stays the same, the transition is cached or whatever, the -old animation won't play and the -new animation won't play when opening dialog second time
+      if (el.style.viewTransitionName === 'open-dialog') {
+        el.style.viewTransitionName = 'close-dialog'
+      }
+      let fromEl
+      document.startViewTransition(() => {
+        if (el.dataset.appViewTransitionFrom) {
+          fromEl = document.getElementById(el.dataset.appViewTransitionFrom)
+          if (fromEl) {
+            fromEl.style.viewTransitionName = el.dataset.appViewTransitionName
+            fromEl.style.opacity = null
+          }
         }
+        el.remove()
+      }).finished.then(() => {
+          if (fromEl) {
+            fromEl.style.viewTransitionName = null
+          }
       })
     }
   }
+  window.closeDialog = closeDialog
 
-  window.ajtElementRemovedHandlers = window.ajtElementRemovedHandlers || []
-  window.ajtElementRemovedHandlers.push((el) => {
-    if (el.matches?.('.address')) {
-      el.style.viewTransitionName = `${el.id}`
-      el.dataset.appClearTransitionName = true
-    }
-  })
+  document.addEventListener('ajtDomProcess', (event) => {
+    const domProcess = event.detail
 
-  window.ajtElementPreAddHandlers = window.ajtElementPreAddHandlers || []
-  window.ajtElementPreAddHandlers.push((el) => {
-    if (el.matches?.('.address')) {
-      el.style.viewTransitionName = `${el.id}`
-      el.dataset.appClearTransitionName = true
-    }
-  })
+    domProcess.addEventListener('addElement', (event) => {
+      const el = event.detail
+      if (el.dataset?.appViewTransitionName) {
+        el.style.viewTransitionName = el.dataset.appViewTransitionName
+        el.dataset.appClearTransitionName = true
 
-  document.addEventListener('ajtTransition', (event) => {
-    const transition = event.detail.transition
-    transition.finished.then(() => {
+        if (el.dataset.appViewTransitionFrom) {
+          const fromEl = document.getElementById(el.dataset.appViewTransitionFrom)
+          if (fromEl) {
+            fromEl.style.viewTransitionName = el.dataset.appViewTransitionName
+            domProcess.addEventListener('afterApplyDomChanges', () => {
+              fromEl.style.opacity = 0
+              fromEl.style.viewTransitionName = null
+            })
+          }
+        }
+      }
+      if (el.dataset?.appDialogOpen) {
+        domProcess.addEventListener('afterApplyDomChanges', () => {
+          openDialog(el)
+        })
+      }
+    })
+    domProcess.addEventListener('afterUpdate', (event) => {
       document.querySelectorAll('[data-app-clear-transition-name]').forEach((el) => {
+        console.log('clear', el)
         el.style.viewTransitionName = null
         delete el.dataset.appClearTransitionName
       })
     })
   })
 
+  function revalidateForm(event) {
+    const form = event.target.form
+    if (form) {
+      const validateInput = form.elements['validate']
+      if (validateInput) {
+        validateInput.click()
+      }
+    }
+  }
+  document.addEventListener('input', revalidateForm)
 </script>
 <div class="flex flex-col gap-7">
   {% include 'examples/messages.html' %}
   <a class="flex flex-col justify-center items-center h-10 px-4 border-2 border-ui-primary rounded-ui-md bg-ui-bg w-fit"
     href="{% url 'examples:addresses:create-new' %}"
-    data-ajt-trigger="click"
+    data-via-ajt
   >new address</a>
   {% include 'examples/addresses/address_list.html' %}
 </div>

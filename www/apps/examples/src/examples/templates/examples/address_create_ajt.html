@@ -1,6 +1,13 @@
 {% if request.method == 'GET' %}
-<div data-ajt-mode="dialog" data-ajt-view-transition-types="modal">
-  {% include 'examples/addresses/create_form.html' %}
+<div data-ajt-mode="appendContent" data-ajt-target="body">
+  <dialog id="create-address-dialog" class="w-full max-w-[min(var(--container-md),_calc(100vw_-_var(--spacing)_*_8))] m-auto p-6 rounded-ui-md shadow-xl bg-ui-modal-bg backdrop:bg-black/50 overscroll-contain" 
+    closedby="any"
+    data-app-init-dialog
+    data-app-dialog-open="showModal"
+    data-app-view-transition-name="open-dialog"
+  >
+    {% include 'examples/addresses/create_form.html' %}
+  </dialog>
 </div>
 {% else %}
   {% include 'examples/addresses/create_form.html' %}

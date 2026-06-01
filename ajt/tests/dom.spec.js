@@ -2,15 +2,55 @@ import { expect } from '@playwright/test';
 import { test } from './fixtures'
 
 test.describe('data-ajt-mode', () => {
+  function getExpectedDomProcessEvents(viewTransitionTypes = []) {
+    return [
+      ['beforeUpdate'],
+      ['transition', viewTransitionTypes],
+      ['beforeApplyDomChanges'],
+      ['afterApplyDomChanges'],
+      ['transition.updateCallbackDone'],
+      ['transition.ready'],
+      ['transition.finished'],
+      ['afterUpdate'],
+    ]
+  }
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
-      window.handlersHistory = []
-      function pushAjtHistory(el, type) {
-        window.handlersHistory.push([type, el.outerHTML || el.textContent])
+      window.eventHistory = []
+
+      function pushEvent(event) {
+        const arr = [event.type]
+        if (event.detail instanceof Node) {
+          arr.push(event.detail.outerHTML || event.detail.textContent)
+        } else if (event.detail instanceof ViewTransition) {
+          arr.push(Array.from(event.detail.types))
+        }
+        window.eventHistory.push(arr)
       }
-      window.ajtElementAddedHandlers = [(el) => pushAjtHistory(el, 'added')]
-      window.ajtElementRemovedHandlers = [(el) => pushAjtHistory(el, 'removed')]
-      window.ajtElementPreAddHandlers = [(el) => pushAjtHistory(el, 'preadd')]
+
+      document.addEventListener('ajtDomProcess', (event) => {
+        const domProcess = event.detail
+        window.domProcess = domProcess
+
+        domProcess.addEventListener('removeElement', pushEvent)
+        domProcess.addEventListener('addElement', pushEvent)
+        domProcess.addEventListener('beforeUpdate', pushEvent)
+        domProcess.addEventListener('transition', (event) => {
+          pushEvent(event)
+          event.detail.updateCallbackDone.then(() => {
+            pushEvent({ type: 'transition.updateCallbackDone' })
+          })
+          event.detail.ready.then(() => {
+            pushEvent({ type: 'transition.ready' })
+          })
+          event.detail.finished.then(() => {
+            pushEvent({ type: 'transition.finished' })
+          })
+        })
+        domProcess.addEventListener('beforeApplyDomChanges', pushEvent)
+        domProcess.addEventListener('afterApplyDomChanges', pushEvent)
+        domProcess.addEventListener('afterUpdate', pushEvent)
+      })
     });
   })
 
@@ -39,14 +79,14 @@ test.describe('data-ajt-mode', () => {
     await page.goto('/test')
     await page.getByTestId('el').evaluate((el) => window.oldElement = el)
 
-    await page.evaluate(() => window.ajt('/submit'))
+    await page.evaluate(() => window.ajt('/submit').finished)
 
     await page.getByTestId('el').evaluate((el) => window.newElement = el)
 
-    expect(await page.evaluate(() => window.handlersHistory)).toEqual([
-      ['removed', '<div id="test" data-testid="el">Div before ajt call</div>'],
-      ['preadd', '<div id="test" data-testid="el" data-ajt-mode="replace">Div after ajt call</div>'],
-      ['added', '<div id="test" data-testid="el" data-ajt-mode="replace">Div after ajt call</div>'],
+    expect(await page.evaluate(() => window.eventHistory)).toEqual([
+      ['removeElement', '<div id="test" data-testid="el">Div before ajt call</div>'],
+      ['addElement', '<div id="test" data-testid="el" data-ajt-mode="replace">Div after ajt call</div>'],
+      ...getExpectedDomProcessEvents()
     ])
     await expect(page.getByText('Div after ajt call')).toBeAttached()
     expect(await page.evaluate(() => {
@@ -79,20 +119,18 @@ test.describe('data-ajt-mode', () => {
     await page.goto('/test')
     await page.getByTestId('el').evaluate((el) => window.oldElement = el)
 
-    await page.evaluate(() => window.ajt('/submit'))
+    await page.evaluate(() => window.ajt('/submit').finished)
 
     await page.getByTestId('el').evaluate((el) => window.newElement = el)
 
-    expect(await page.evaluate(() => window.handlersHistory)).toEqual([
-      ['removed', 'Lorem '],
-      ['removed', '<span>Div before ajt call<span>inner</span></span>'],
-      ['removed', ' ipsum'],
-      ['preadd', 'Dolor '],
-      ['preadd', '<span>Div after ajt call</span>'],
-      ['preadd', ' sit'],
-      ['added', 'Dolor '],
-      ['added', '<span>Div after ajt call</span>'],
-      ['added', ' sit'],
+    expect(await page.evaluate(() => window.eventHistory)).toEqual([
+      ['removeElement', 'Lorem '],
+      ['removeElement', '<span>Div before ajt call<span>inner</span></span>'],
+      ['removeElement', ' ipsum'],
+      ['addElement', 'Dolor '],
+      ['addElement', '<span>Div after ajt call</span>'],
+      ['addElement', ' sit'],
+      ...getExpectedDomProcessEvents()
     ])
     expect(await page.getByTestId('el').innerHTML()).toBe('Dolor <span>Div after ajt call</span> sit')
     expect(await page.evaluate(() => {
@@ -129,17 +167,15 @@ test.describe('data-ajt-mode', () => {
       await page.goto('/test')
       await page.getByTestId('el').evaluate((el) => window.oldElement = el)
 
-      await page.evaluate(() => window.ajt('/submit'))
+      await page.evaluate(() => window.ajt('/submit').finished)
 
       await page.getByTestId('el').evaluate((el) => window.newElement = el)
 
-      expect(await page.evaluate(() => window.handlersHistory)).toEqual([
-        ['preadd', 'Dolor '],
-        ['preadd', '<span>Div after ajt call</span>'],
-        ['preadd', ' sit'],
-        ['added', 'Dolor '],
-        ['added', '<span>Div after ajt call</span>'],
-        ['added', ' sit'],
+      expect(await page.evaluate(() => window.eventHistory)).toEqual([
+        ['addElement', 'Dolor '],
+        ['addElement', '<span>Div after ajt call</span>'],
+        ['addElement', ' sit'],
+          ...getExpectedDomProcessEvents()
       ])
       expect(await page.getByTestId('el').innerHTML()).toBe(expected)
       expect(await page.evaluate(() => {
@@ -171,10 +207,11 @@ test.describe('data-ajt-mode', () => {
       res.send(html)
     })
     await page.goto('/test')
-    await page.evaluate(() => window.ajt('/submit'))
+    await page.evaluate(() => window.ajt('/submit').finished)
 
-    expect(await page.evaluate(() => window.handlersHistory)).toEqual([
-      ['removed', '<div id="test" data-testid="el">Div before ajt call</div>'],
+    expect(await page.evaluate(() => window.eventHistory)).toEqual([
+      ['removeElement', '<div id="test" data-testid="el">Div before ajt call</div>'],
+      ...getExpectedDomProcessEvents(),
     ])
     await expect(page.getByText('Div after ajt call')).not.toBeAttached()
     await expect(page.getByText('Div before ajt call')).not.toBeAttached()
@@ -213,18 +250,104 @@ test.describe('data-ajt-mode', () => {
     await page.goto('/test')
     await page.getByTestId('el').evaluate((el) => window.oldElement = el)
 
-    await page.evaluate(() => window.ajt('/submit'))
+    await page.evaluate(() => window.ajt('/submit').finished)
 
     await page.getByTestId('el').evaluate((el) => window.newElement = el)
 
-    expect(await page.evaluate(() => window.handlersHistory)).toEqual([
-      ['removed', '<span>Div before ajt call</span>'],
-      ['preadd', '<span>Div after ajt call</span>'],
-      ['added', '<span>Div after ajt call</span>'],
+    expect(await page.evaluate(() => window.eventHistory)).toEqual([
+      ['removeElement', '<span>Div before ajt call</span>'],
+      ['addElement', '<span>Div after ajt call</span>'],
+      ...getExpectedDomProcessEvents()
     ])
     await expect(page.getByText('Div after ajt call')).toBeAttached()
     expect(await page.evaluate(() => {
       return window.oldElement === window.newElement
+    })).toBe(true)
+  })
+
+  test('without startViewTransition support', async ({ page, app }) => {
+    await page.addInitScript(() => {
+      document.startViewTransition = null
+    })
+    app.get('/test', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module" src="./index.js"></script>
+  </head>
+  <body>
+    <div id="test" data-testid="el">Div before ajt call</div>
+  </body>
+</html>
+`
+      res.send(html)
+    })
+    app.get('/submit', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<div id="test" data-testid="el" data-ajt-mode="replace">Div after ajt call</div>
+`
+      res.send(html)
+    })
+    await page.goto('/test')
+    await page.getByTestId('el').evaluate((el) => window.oldElement = el)
+
+    await page.evaluate(() => window.ajt('/submit').finished)
+
+    await page.getByTestId('el').evaluate((el) => window.newElement = el)
+
+    expect(await page.evaluate(() => window.eventHistory)).toEqual([
+      ['removeElement', '<div id="test" data-testid="el">Div before ajt call</div>'],
+      ['addElement', '<div id="test" data-testid="el" data-ajt-mode="replace">Div after ajt call</div>'],
+      ['beforeUpdate'],
+      ['beforeApplyDomChanges'],
+      ['afterApplyDomChanges'],
+      ['afterUpdate'],
+    ])
+    await expect(page.getByText('Div after ajt call')).toBeAttached()
+    expect(await page.evaluate(() => {
+      return window.oldElement !== window.newElement
+    })).toBe(true)
+  })
+
+  test('viewTransition types', async ({ page, app }) => {
+    app.get('/test', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module" src="./index.js"></script>
+  </head>
+  <body>
+    <div id="test" data-testid="el">Div before ajt call</div>
+  </body>
+</html>
+`
+      res.send(html)
+    })
+    app.get('/submit', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<div id="test" data-testid="el" data-ajt-mode="replace" data-ajt-view-transition-types="a b  c">Div after ajt call</div>
+`
+      res.send(html)
+    })
+    await page.goto('/test')
+    await page.getByTestId('el').evaluate((el) => window.oldElement = el)
+
+    await page.evaluate(() => window.ajt('/submit').finished)
+
+    await page.getByTestId('el').evaluate((el) => window.newElement = el)
+
+    expect(await page.evaluate(() => window.eventHistory)).toEqual([
+      ['removeElement', '<div id="test" data-testid="el">Div before ajt call</div>'],
+      ['addElement', '<div id="test" data-testid="el" data-ajt-mode="replace" data-ajt-view-transition-types="a b  c">Div after ajt call</div>'],
+      ...getExpectedDomProcessEvents(['a', 'b', 'c'])
+    ])
+    await expect(page.getByText('Div after ajt call')).toBeAttached()
+    expect(await page.evaluate(() => {
+      return window.oldElement !== window.newElement
     })).toBe(true)
   })
 })
@@ -266,7 +389,7 @@ test.describe('scripts', () => {
         })
         await page.goto('/test')
 
-        await page.evaluate(() => window.ajt('/submit'))
+        await page.evaluate(() => window.ajt('/submit').finished)
 
         expect(await page.evaluate(() => window.results)).toEqual([true])
       })
@@ -306,7 +429,7 @@ test.describe('scripts', () => {
     })
     await page.goto('/test')
 
-    await page.evaluate(() => window.ajt('/submit'))
+    await page.evaluate(() => window.ajt('/submit').finished)
 
     expect(await page.evaluate(() => window.results)).toEqual([true])
   })
@@ -348,7 +471,7 @@ test.describe('scripts', () => {
           })
           await page.goto('/test')
 
-          await page.evaluate(() => window.ajt('/submit'))
+          await page.evaluate(() => window.ajt('/submit').finished)
 
           expect(await page.evaluate(() => window.results)).toEqual([true])
           expect(await page.getByTestId('script').evaluate(
@@ -410,87 +533,10 @@ test.describe('scripts', () => {
           })
           await page.goto('/test')
 
-          await page.evaluate(() => window.ajt('/submit'))
+          await page.evaluate(() => window.ajt('/submit').finished)
 
           expect(await page.evaluate(() => window.results)).toEqual(expected)
         })
       })
   })
-//   test('valid nonce', async ({ page, app }) => {
-//     app.get('/test', (req, res) => {
-//       res.append('Content-Security-Policy', "script-src 'nonce-foo'")
-//       const html = `
-// <!DOCTYPE html>
-// <html>
-//   <head>
-//     <script type="module" src="./index.js" nonce="foo"></script>
-//     <script nonce="foo">
-//       window.ajtNonce = 'foo'
-//       window.results = []
-//     </script>
-//   </head>
-//   <body>
-//     <div id="test" data-testid="el">Div before ajt call</div>
-//   </body>
-// </html>
-// `
-//       res.send(html)
-//     })
-//     app.get('/submit', (req, res) => {
-//       res.append('Content-Security-Policy', "script-src 'nonce-bar'")
-//       const html = `
-// <!DOCTYPE html>
-// <div id="test" data-testid="el" data-ajt-mode="replace">
-//   <script nonce="bar">
-//     window.results.push(true)
-//   </script>
-// </div>
-// `
-//       res.send(html)
-//     })
-//     await page.goto('/test')
-//
-//     await page.evaluate(() => window.ajt('/submit'))
-//
-//     expect(await page.evaluate(() => window.results)).toEqual([true])
-//   })
-
-//   test('invalid nonce', async ({ page, app }) => {
-//     app.get('/test', (req, res) => {
-//       res.append('Content-Security-Policy', "script-src 'nonce-foo'")
-//       const html = `
-// <!DOCTYPE html>
-// <html>
-//   <head>
-//     <script type="module" src="./index.js" nonce="foo"></script>
-//     <script nonce="foo">
-//       window.ajtNonce = 'foo'
-//       window.results = []
-//     </script>
-//   </head>
-//   <body>
-//     <div id="test" data-testid="el">Div before ajt call</div>
-//   </body>
-// </html>
-// `
-//       res.send(html)
-//     })
-//     app.get('/submit', (req, res) => {
-//       res.append('Content-Security-Policy', "script-src 'nonce-bar'")
-//       const html = `
-// <!DOCTYPE html>
-// <div id="test" data-testid="el" data-ajt-mode="replace">
-//   <script nonce="bar">
-//     window.results.push(true)
-//   </script>
-// </div>
-// `
-//       res.send(html)
-//     })
-//     await page.goto('/test')
-//
-//     await page.evaluate(() => window.ajt('/submit'))
-//
-//     expect(await page.evaluate(() => window.results)).toEqual([])
-//   })
 })

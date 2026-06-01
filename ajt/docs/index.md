@@ -45,13 +45,13 @@ processed via ajt
             <!-- product image and description -->
         </div>
         <a href="/product?color=red"
-           data-ajt-trigger="click">Red<a><!-- (1)! -->
+           data-via-ajt>Red<a><!-- (1)! -->
         <a href="/product?color=green"
-           data-ajt-trigger="click">Green<a><!-- (2)! -->
+           data-via-ajt>Green<a><!-- (2)! -->
         <form id="cart-form"
               action="/cart"
               method="post"
-              data-ajt-trigger="submit"><!-- (3)! -->
+              data-via-ajt><!-- (3)! -->
             <input type="hidden" name="product-id" value="prod_0001" />
             <input type="number" name="quantity" />
             <button>Add product to cart</button>
@@ -73,7 +73,7 @@ with the data of green product
 <form id="cart-form"
       action="/cart"
       method="post"
-      data-ajt-trigger="submit"
+      data-via-ajt
       data-ajt-mode="update"><!-- (2)! -->
     <input type="hidden" name="product-id" value="prod_0001_red" />
     <input type="number" name="quantity" />
@@ -93,7 +93,7 @@ the html.
 <form id="cart-form"
       action="/cart"
       method="post"
-      data-ajt-trigger="submit"
+      data-via-ajt
       data-ajt-mode="update"><!-- (2)! -->
     <input type="hidden" name="product-id" value="prod_0001_green" />
     <input type="number" name="quantity" />

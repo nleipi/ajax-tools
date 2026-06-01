@@ -14,7 +14,7 @@ This example showcases how `data-ajt-mode="replaceWithContent"` can be utilized 
     <div class="flex flex-col gap-3">
         {{ text }}
         {% if show_more %}
-        <a class="block link" href="{% url 'examples:replace_with_content:more' %}" data-ajt-trigger="click">Show more</a>
+        <a class="block link" href="{% url 'examples:replace_with_content:more' %}" data-via-ajt>Show more</a>
     <div id="show-more" class="empty:hidden"></div>
         {% endif %}
     </div>

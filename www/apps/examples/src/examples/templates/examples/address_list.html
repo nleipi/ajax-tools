@@ -155,14 +155,9 @@ More complex example demonstrating forms
   window.closeDialog = closeDialog
 
   document.addEventListener('ajtDomProcess', (event) => {
-    // whole roundtrip here?
     const domProcess = event.detail
 
-    domProcess.addEventListener('removeElement', (event) => {
-      // elements to be removed from dom
-    })
     domProcess.addEventListener('addElement', (event) => {
-      // elements to be added to dom
       const el = event.detail
       if (el.dataset?.appViewTransitionName) {
         el.style.viewTransitionName = el.dataset.appViewTransitionName
@@ -185,27 +180,12 @@ More complex example demonstrating forms
         })
       }
     })
-    domProcess.addEventListener('beforeUpdate', (event) => {
-      // before transition or update
-    })
-    domProcess.addEventListener('transition', (event) => {
-      // transition
-      const transition = event.detail
-      transition.finished.then(() => {
-        document.querySelectorAll('[data-app-clear-transition-name]').forEach((el) => {
-          el.style.viewTransitionName = null
-          delete el.dataset.appClearTransitionName
-        })
-      })
-    })
-    domProcess.addEventListener('beforeApplyDomChanges', (event) => {
-      // inside transition callback before dom changes are applied
-    })
-    domProcess.addEventListener('afterApplyDomChanges', (event) => {
-      // inside transition callback after dom changes are applied
-    })
     domProcess.addEventListener('afterUpdate', (event) => {
-      // after transition or update
+      document.querySelectorAll('[data-app-clear-transition-name]').forEach((el) => {
+        console.log('clear', el)
+        el.style.viewTransitionName = null
+        delete el.dataset.appClearTransitionName
+      })
     })
   })
 

@@ -27,7 +27,7 @@ in the ajax response with the script's `nonce` attribute. If they match, the non
 
     <div class="flex flex-col gap-5">
         {% include "examples/script/partial.html" %}
-        <a class="link" href="{% url 'examples:script:reload' %}" data-ajt-trigger="click">Reload</a>
+        <a class="link" href="{% url 'examples:script:reload' %}" data-via-ajt>Reload</a>
     </div>
 
     {% load example_helpers %}

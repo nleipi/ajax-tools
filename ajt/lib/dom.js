@@ -191,7 +191,7 @@ export class DomProcess extends EventTarget {
         this.dispatchEvent(new CustomEvent('transition', {
           detail: transition
         }))
-        await transition.ready
+        await transition.finished
       }
       this.dispatchEvent(new Event('afterUpdate'))
     }

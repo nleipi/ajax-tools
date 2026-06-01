@@ -11,7 +11,8 @@
     "test": "dotenv -- npx playwright test",
     "test:ui": "npm run test -- --ui",
     "lint": "eslint .",
-    "start-pw-remote": "docker run --add-host=hostmachine:host-gateway -p 3000:3000 --rm --init -it --workdir /home/pwuser --user pwuser mcr.microsoft.com/playwright:v1.60.0-noble /bin/sh -c \"npx -y playwright@1.60.0 run-server --port 3000 --host 0.0.0.0\""
+    "start-pw-remote": "docker run --add-host=hostmachine:host-gateway -p 3000:3000 --rm --init -it --workdir /home/pwuser --user pwuser mcr.microsoft.com/playwright:v1.60.0-noble /bin/sh -c \"npx -y playwright@1.60.0 run-server --port 3000 --host 0.0.0.0\"",
+    "docs:dev": "docker run --rm -it -v .:/docs -p 8080:8000 squidfunk/mkdocs-material serve --dev-addr=0.0.0.0:8000 --livereload"
   },
   "repository": {
     "type": "git",

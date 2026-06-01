@@ -6,33 +6,14 @@ it with ease.
 
 ## TL;DR;
 
-Following example shows an oversimplified product page with mini cart icon,
-'add to cart' form and links to different product color variations.
-Click on 'add to cart' button should update the mini cart icon with the new amount
-and click on color variation links updates the product data and the form.
-While the example if oversimplified it contains all client-side js you'll need
-to implement these features.
-
-``` js title="main.js"
-import ajt from './ajt/index.js'
-document.querySelectorAll('[data-ajt-trigger]').forEach(el => {/* (1)! */
-    el.addEventListener(el.dataset.ajtTrigger, (event) => {
-        event.preventDefault();
-        ajt(event);
-    }
-});
-document.getElementById('mini-cart').addEventListener('click', () => {/* (2)! */
-});
-```
-
-1. Global setup. All events defined in attribute `data-ajt-trigger` will be intercepted and
-processed via ajt
-2. `click` event listener used for demonstraction purpose
+Add `data-via-ajt` attribute to `<form>` and `<a>` elements to send the requests
+via ajax. Respond with html and use `data-ajt-mode="..."` attributes to control
+how the page is updated.
 
 ``` html title="/product"
 <html>
     <head>
-        <script type="module" src"/js/main.js"></script>
+        <script type="module" src"./ajt/index.js"></script>
     </head>
     <body>
         <header>
@@ -118,8 +99,10 @@ Useful to keep the listeners.
 
 ## Rationale
 
-There are myriads of ways to add ajax to a SSR page in a modern web. Most of them
-share same downsides:
+### You don't always need SPA
+
+SPA frameworks are great for SPA, but they come with great complexity.
+Also not every web page has to be SPA.
 
 ### Boilerplate code
 

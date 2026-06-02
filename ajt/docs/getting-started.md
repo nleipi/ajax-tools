@@ -78,6 +78,9 @@ The reponse template might look more like this:
     {% endif %}
 {% endif %}
 ```
+You will notice that the client-side of the process does not care about the
+result of the request. All the 'add to cart' form knows is that it has to send
+a `POST` request to `/cart`. 
 
 ### Nesting
 

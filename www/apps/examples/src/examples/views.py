@@ -1,3 +1,5 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
 from django.views import View
 from django.views.generic.detail import BaseDetailView, SingleObjectMixin
 from django.views.generic.edit import FormMixin
@@ -177,6 +179,7 @@ class ShowMoreView(AjtTemplateResponseMixin, ListView):
         context['direction'] = self.request.GET.get('direction', 'down')
         return context
 
+@method_decorator(never_cache, name="dispatch")
 class AddressesView(AjtTemplateResponseMixin, ListView):
     """More complex example demonstating forms
     """
@@ -186,6 +189,7 @@ class AddressesView(AjtTemplateResponseMixin, ListView):
         return super().get_queryset().for_session(
             self.request.session.session_key)
 
+@method_decorator(never_cache, name="dispatch")
 class AddressCreateView(SuccessMessageMixin, AjtTemplateResponseMixin, CreateView):
     model = models.Address
     fields = ['address', 'city', 'state', 'postal_code', 'country_code']
@@ -212,6 +216,7 @@ class AddressCreateView(SuccessMessageMixin, AjtTemplateResponseMixin, CreateVie
                 )
         return res
 
+@method_decorator(never_cache, name="dispatch")
 class AddressUpdateView(SuccessMessageMixin, AjtTemplateResponseMixin, UpdateView):
     model = models.Address
     fields = ['address', 'city', 'state', 'postal_code', 'country_code']
@@ -254,7 +259,7 @@ class SoftDeleteMixin:
         success_url = get_success_url()
         return HttpResponseRedirect(success_url)
 
-
+@method_decorator(never_cache, name="dispatch")
 class AddressDeleteView(SuccessMessageMixin, AjtTemplateResponseMixin, SoftDeleteMixin, DeleteView):
     model = models.Address
     success_url = reverse_lazy('examples:addresses:Addresses')
@@ -265,7 +270,7 @@ class AddressDeleteView(SuccessMessageMixin, AjtTemplateResponseMixin, SoftDelet
             return super().form_valid(form)
         return super().form_valid(form)
 
-
+@method_decorator(never_cache, name="dispatch")
 class AddressRestoreView(TemplateResponseMixin, SingleObjectMixin, View):
     model = models.Address
     template_name = 'examples/addresses/restore_address_success_ajt.html'

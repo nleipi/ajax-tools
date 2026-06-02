@@ -6,30 +6,19 @@ import { html } from 'diff2html'
 import hljs from 'highlight.js'
 
 
-let removed = []
-;(window.ajtElementRemovedHandlers = window.ajtElementRemovedHandlers || []).push((el) => {
-  removed.push((el.outerHTML || el.textContent).replace(' data-ajt-status="loading"', ''))
-})
-
-let added = []
-;(window.ajtElementAddedHandlers = window.ajtElementAddedHandlers || []).push((el) => {
-  added.push(el.outerHTML || el.textContent)
-})
-
 ;(window.ajtResponseHandlers = window.ajtResponseHandlers || []).push((str) => {
   window.lastAjtResponse = str
   return str
 })
 
 export function ajtWithDiff(...args) {
-  removed = []
-  added = []
   const changeMap = {}
   const exampleRoot = document.documentElement
   markNodes(exampleRoot, 'old')
   const rootClone = exampleRoot.cloneNode(true)
   markNodes(rootClone, 'old')
-  return ajt(...args).then(() => {
+  const ajtProcess = ajt(...args)
+  ajtProcess.finished.then(() => {
     diffChanges(rootClone, exampleRoot)
     const changes = collectChanges(rootClone, 0, 2)
     const patch = createPatch(changes, 2)
@@ -60,6 +49,7 @@ export function ajtWithDiff(...args) {
       .join('\n')
     el.innerHTML = hljs.highlight(resp, { language: 'html' }).value
   })
+  return ajtProcess
 }
 
 function createChange(value, state, padding) {

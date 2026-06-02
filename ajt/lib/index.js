@@ -53,6 +53,11 @@ export function createListener(createBuilder) {
     if (targets.every(el => typeof el.dataset.viaAjt === 'undefined')) {
       return
     }
+    if (typeof window.ajtProcessEvent === 'function') {
+      if (!window.ajtProcessEvent(event)) {
+        return
+      }
+    }
     event.preventDefault()
 
     const cancelRunning = targets.some(el => typeof el.dataset.ajtCancelRunning !== 'undefined')

@@ -1,6 +1,6 @@
 
 function createInsertContentHandler (strategy) {
-  return (node, target, handleRemoveContent, handleContentAdded, handleAddContent) => {
+  return (node, target, handleRemoveContent, handleAddContent) => {
     const fragment = document.createDocumentFragment()
     const nodes = []
     while (node.firstChild) {
@@ -11,15 +11,12 @@ function createInsertContentHandler (strategy) {
     }
     return () => {
       strategy(target, fragment)
-      for (let i = 0, len = nodes.length; i < len; i++) {
-        handleContentAdded(nodes[i])
-      }
     }
   }
 }
 
 function createForEachTargetHandler (strategy) {
-  return (element, handleRemoveContent, handleContentAdded, handleAddContent) => {
+  return (element, handleRemoveContent, handleAddContent) => {
     const targets = window.ajtGetTargets(element)
     if (targets.length === 0) {
       console.warn(`No data-ajt-target or id is defined for element ${element}`)
@@ -30,8 +27,7 @@ function createForEachTargetHandler (strategy) {
         clone ? element.cloneNode(true) : element,
         target,
         handleRemoveContent,
-        handleContentAdded,
-        handleAddContent
+        handleAddContent,
       )
     })
   }
@@ -117,7 +113,6 @@ export class DomProcess extends EventTarget {
 
     let element
     const handlerCallbacks = []
-    const addedElements = []
     const viewTransitionTypes = new Set()
     while ((element = doc.querySelector('script[data-ajt-script=before-dom]'))) {
       element = document.adoptNode(element)
@@ -143,9 +138,6 @@ export class DomProcess extends EventTarget {
               this.dispatchEvent(new CustomEvent('removeElement', {
                 detail: el
               }))
-            },
-            (el) => {
-              addedElements.push(el)
             },
             (el) => {
               this.dispatchEvent(new CustomEvent('addElement', {
@@ -315,7 +307,7 @@ function replaceAttributes (node, target) {
   }
 }
 
-function merge (node, target, handleRemoveContent, handleContentAdded, handleAddContent) {
+function merge (node, target, handleRemoveContent, handleAddContent) {
   const callbacks = []
   callbacks.push(() => {
     replaceAttributes(node, target)
@@ -331,7 +323,6 @@ function merge (node, target, handleRemoveContent, handleContentAdded, handleAdd
       handleAddContent(newNode)
       callbacks.push(() => {
         target.insertBefore(newNode, oldNode)
-        handleContentAdded(newNode)
       })
     } else if (op.name === 'delete') {
       const oldNode = oldNodes[op.at]
@@ -346,7 +337,6 @@ function merge (node, target, handleRemoveContent, handleContentAdded, handleAdd
       handleAddContent(newNode)
       callbacks.push(() => {
         target.replaceChild(newNode, oldNode)
-        handleContentAdded(newNode)
       })
     } else if (op.name === 'keep') {
       const fromOld = op.fromOld
@@ -359,8 +349,7 @@ function merge (node, target, handleRemoveContent, handleContentAdded, handleAdd
             newNode,
             oldNode,
             handleRemoveContent,
-            handleContentAdded,
-            handleAddContent
+            handleAddContent,
           ))
         }
       }
@@ -378,15 +367,14 @@ function merge (node, target, handleRemoveContent, handleContentAdded, handleAdd
 }
 
 window.ajtContentHandlers = Object.assign({
-  replace: createForEachTargetHandler((node, target, handleRemoveContent, handleContentAdded, handleAddContent) => {
+  replace: createForEachTargetHandler((node, target, handleRemoveContent, handleAddContent) => {
     handleRemoveContent(target)
     handleAddContent(node)
     return () => {
       target.parentNode.replaceChild(node, target)
-      handleContentAdded(node)
     }
   }),
-  replaceContent: createForEachTargetHandler((node, target, handleRemoveContent, handleContentAdded, handleAddContent) => {
+  replaceContent: createForEachTargetHandler((node, target, handleRemoveContent, handleAddContent) => {
     for (let child = target.firstChild; child; child = child.nextSibling) {
       handleRemoveContent(child)
     }
@@ -397,16 +385,9 @@ window.ajtContentHandlers = Object.assign({
     }
     return () => {
       target.replaceChildren(fragment)
-      for (let child = target.firstChild; child; child = child.nextSibling) {
-        try {
-          handleContentAdded(child)
-        } catch (e) {
-          console.error(e)
-        }
-      }
     }
   }),
-  replaceWithContent: createForEachTargetHandler((node, target, handleRemoveContent, handleContentAdded, handleAddContent) => {
+  replaceWithContent: createForEachTargetHandler((node, target, handleRemoveContent, handleAddContent) => {
     handleRemoveContent(target)
     const fragment = document.createDocumentFragment()
     const nodes = []
@@ -419,13 +400,6 @@ window.ajtContentHandlers = Object.assign({
     }
     return () => {
       target.replaceWith(fragment)
-      for (let child = target.firstChild; child; child = child.nextSibling) {
-        try {
-          handleContentAdded(child)
-        } catch (e) {
-          console.error(e)
-        }
-      }
     }
   }),
   prependContent: createForEachTargetHandler(createInsertContentHandler((target, fragment) => {

@@ -1,8 +1,36 @@
-<div id="text" data-ajt-mode="replace">
-    <div>
+<div id="text" data-ajt-mode="replace"
+  data-app-view-transition-name="foo"
+  data-app-view-transition-from="text">
+  <div>
     {{ text }}
-    </div>
-    {% if show_more %}
-    <a class="link" href="{% url 'examples:replace:full' %}" data-via-ajt>Show more</a>
-    {% endif %}
+  </div>
+  <div id="batch-1-target"></div>
+  <div id="batch-4-target"></div>
+  {% if show_more %}
+  <a class="link" href="{% url 'examples:replace:full' %}" data-via-ajt>Show more</a>
+  {% endif %}
 </div>
+{% if is_ajt %}
+<div id="batch-1-target" data-ajt-mode="replace" data-ajt-batch="1"
+  data-app-view-transition-name="foo"
+>
+  batch 1
+  <div id="batch-2-target"></div>
+</div>
+<div id="batch-2-target" data-ajt-mode="replace" data-ajt-batch="2"
+  data-app-view-transition-name="foo"
+>
+  batch 2
+  <div id="batch-3-target"></div>
+</div>
+<div id="batch-3-target" data-ajt-mode="replace" data-ajt-batch="3"
+  data-app-view-transition-name="foo"
+>
+  batch 3
+</div>
+<div id="batch-4-target" data-ajt-mode="replace" data-ajt-batch="4"
+  data-app-view-transition-name="foo"
+>
+  batch 4
+</div>
+{% endif %}

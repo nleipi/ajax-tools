@@ -33,101 +33,35 @@ function createForEachTargetHandler (strategy) {
   }
 }
 
-export class DomProcess extends EventTarget {
-  #html
-  #scriptNonces
-  #scriptNonceReplacement
-  #styleNonces
-  #handleDom
-  #finished
-  #resolveFinished
-  #rejectFinished
+class Batch extends EventTarget {
+  #id
+  #elements
   #transitionPromises = []
-  #beforePromises = []
-
-  static parser = new DOMParser()
-
-  constructor(html, options) {
+  
+  constructor(id, elements) {
     super()
-    this.#html = html
-    this.#scriptNonces = options.scriptNonces
-    this.#scriptNonceReplacement = options.scriptNonceReplacement
-    this.#styleNonces = options.styleNonces
-    this.#handleDom = options.handleDom
-    this.data = options.data
-    this.#finished = new Promise((resolve, reject) => {
-      this.#resolveFinished = resolve
-      this.#rejectFinished = reject
-    })
+    this.#id = id
+    this.#elements = elements
   }
 
-  get finished() {
-    return this.#finished
-  }
-
-  #copyScript (original) {
-    const copy = document.createElement('script')
-    const attributes = original.attributes
-    for (let i = 0, len = attributes.length; i < len; i++) {
-      const attr = attributes[i]
-      copy.setAttribute(attr.name, attr.value)
-    }
-
-    if (original.type === 'application/x-ajt-script') {
-      copy.type = original.dataset.ajtScriptType || ''
-    }
-    if (!window.ajtAllowUnsafeScripts) {
-      const valid = this.#scriptNonces?.find((nonce) => original.nonce === nonce)
-      if (!valid) {
-        return original
-      }
-      copy.nonce = this.#scriptNonceReplacement
-    }
-    copy.textContent = original.textContent
-    return copy
-  }
-
-  #handleScriptNodes (element) {
-    if (element instanceof HTMLScriptElement) {
-      return this.#copyScript(element)
-    }
-    const nodes = element.querySelectorAll('script')
-    for (let original of nodes) {
-      const copy = this.#copyScript(original)
-      original.replaceWith(copy)
-    }
-    return element
+  get id() {
+    return this.#id
   }
 
   addTransitionPromise(promise) {
     this.#transitionPromises.push(promise)
   }
 
-  addBeforePromise(promise) {
-    this.#beforePromises.push(promise)
-  }
-
-  async run() {
-    const doc = this.#html
-    this.#handleDom?.(doc)
-
-    let element
+  async run(nodesHandler) {
+    console.log('run')
     const handlerCallbacks = []
     const viewTransitionTypes = new Set()
-    while ((element = doc.querySelector('script[data-ajt-script=before-dom]'))) {
-      element = document.adoptNode(element)
-      element = this.#handleScriptNodes(element)
-      document.body.append(element)
-    }
-    if (this.#beforePromises.length > 0) {
-      await Promise.all(this.#beforePromises)
-    }
-    while ((element = doc.querySelector('[data-ajt-mode]'))) {
-      element = document.adoptNode(element)
+    for (let element of this.#elements) {
+      console.log('element', element)
       const handler = window.ajtContentHandlers[element.dataset.ajtMode]
       if (handler) {
         try {
-          element = this.#handleScriptNodes(element)
+          element = nodesHandler(element)
           element.dataset.ajtViewTransitionTypes?.split(/ +/)
             .forEach(type => {
               viewTransitionTypes.add(type)
@@ -186,6 +120,121 @@ export class DomProcess extends EventTarget {
         await transition.finished
       }
       this.dispatchEvent(new Event('afterUpdate'))
+    }
+  }
+}
+
+export class DomProcess extends EventTarget {
+  #html
+  #scriptNonces
+  #scriptNonceReplacement
+  #styleNonces
+  #handleDom
+  #finished
+  #resolveFinished
+  #rejectFinished
+  #beforePromises = []
+
+  static parser = new DOMParser()
+
+  constructor(html, options) {
+    super()
+    this.#html = html
+    this.#scriptNonces = options.scriptNonces
+    this.#scriptNonceReplacement = options.scriptNonceReplacement
+    this.#styleNonces = options.styleNonces
+    this.#handleDom = options.handleDom
+    this.data = options.data
+    this.#finished = new Promise((resolve, reject) => {
+      this.#resolveFinished = resolve
+      this.#rejectFinished = reject
+    })
+  }
+
+  get finished() {
+    return this.#finished
+  }
+
+  #copyScript (original) {
+    const copy = document.createElement('script')
+    const attributes = original.attributes
+    for (let i = 0, len = attributes.length; i < len; i++) {
+      const attr = attributes[i]
+      copy.setAttribute(attr.name, attr.value)
+    }
+
+    if (original.type === 'application/x-ajt-script') {
+      copy.type = original.dataset.ajtScriptType || ''
+    }
+    if (!window.ajtAllowUnsafeScripts) {
+      const valid = this.#scriptNonces?.find((nonce) => original.nonce === nonce)
+      if (!valid) {
+        return original
+      }
+      copy.nonce = this.#scriptNonceReplacement
+    }
+    copy.textContent = original.textContent
+    return copy
+  }
+
+  #handleScriptNodes (element) {
+    if (element instanceof HTMLScriptElement) {
+      return this.#copyScript(element)
+    }
+    const nodes = element.querySelectorAll('script')
+    for (let original of nodes) {
+      const copy = this.#copyScript(original)
+      original.replaceWith(copy)
+    }
+    return element
+  }
+
+  addBeforePromise(promise) {
+    this.#beforePromises.push(promise)
+  }
+
+  async run() {
+    const doc = this.#html
+    this.#handleDom?.(doc)
+
+    let element
+    while ((element = doc.querySelector('script[data-ajt-script=before-dom]'))) {
+      element = document.adoptNode(element)
+      element = this.#handleScriptNodes(element)
+      document.body.append(element)
+    }
+    if (this.#beforePromises.length > 0) {
+      await Promise.all(this.#beforePromises)
+    }
+    const elements = []
+    while ((element = doc.querySelector('[data-ajt-mode]'))) {
+      elements.push(document.adoptNode(element))
+    }
+    const batches = elements.reduce((batches, element) => {
+      let batchOrder;
+      if (typeof element.dataset.ajtBatch === 'string') {
+        batchOrder = parseInt(element.dataset.ajtBatch)
+        if (Number.isNaN(batchOrder)) {
+          console.warn(`data-ajt-batch="${element.dataset.ajtBatch}" is not a valid number`)
+        }
+      }
+      if (!batchOrder) {
+        batchOrder = 0
+      }
+      let batch = batches.get(batchOrder)
+      if (!batch) {
+        batch = []
+        batches.set(batchOrder, batch)
+      }
+      batch.push(element)
+      return batches
+    }, new Map())
+    const sortedBatches = Array.from(batches.keys())
+      .sort()
+      .map(key => new Batch(key, batches.get(key)))
+    for (const batch of sortedBatches) {
+      this.dispatchEvent(new CustomEvent('batch', { detail: batch }))
+      await batch.run((...args) => this.#handleScriptNodes(...args))
     }
     while ((element = doc.querySelector('script[data-ajt-script=after-dom]'))) {
       element = document.adoptNode(element)

@@ -37,8 +37,8 @@ allows for multiple targets.
 The responses are not limited to one element annotated with `data-ajt-mode`.
 Imagine a typical product details page with 'add to cart' functionality. When
 user clicks on 'add to cart' button, you want to update the cart icon in the
-corner, but you also might want to apply so visual feedback to the button, or
-show the cart in an overlay. Then there are all sort of edge cases. You want
+corner, but you also might want to apply a visual feedback to the button or
+to show the cart in an overlay. Then there are all sort of edge cases. You want
 show an error message in case the desired quantity exeeds the stock. And for
 every 1000th 'add to cart' interaction the marketing department wants you show
 a popup in addition to all the other stuff. Your response might look like this:
@@ -107,7 +107,7 @@ In the example `form-container` element won't play any role. Also the
 `data-ajt-mode` of the `add-to-cart` button is ignored, because it is child of
 the form with `data-ajt-mode` attribute.
 
-### Inline scripts
+### Scripts
 
 Ajt allows you to execute `<script>` nodes. To make it safe(r) it takes the
 same `nonce` approach many other libraries take (more on it later). In order
@@ -156,3 +156,64 @@ server-side form validation.
 
 #### `remove`
 Removes target element.
+
+## Events
+
+Ajt allows you to extend it's functionality via events and hooks.
+
+### Document
+
+#### ajtDomProcess
+
+This is the main event dipatched when the response has been parsed and the
+process of updating DOM is about to start. The `detail` property of the event
+object contains the DomProcess object, which is an EventTarget itself and
+dispatches events in the scope of the current update process.
+
+### DomProcess
+
+#### addElement
+
+This event is dipatched for every Node, that will be added to the DOM later in
+the process. The `detail` property of the event object contains the node.
+This is a good place to do some initialization, adding event listeners, css
+classes or styles on the element etc.
+
+#### removeElement
+
+This event is dipatched for every Node, that will be removed fromthe DOM later
+in the process. The `detail` property of the event object contains the node.
+This is a good place to do some de-initialization, removing event listeners etc.
+
+#### beforeUpdate
+
+This event is dipatched after all addElement/removeElement events but before
+the view transition starts.
+You can use this event if you need to do some processing on all the elements,
+which are about to be added/removed.
+
+#### afterUpdate
+
+This event is dispatched after the view transition.
+This event can be useful to clean up the state of the DOM after the transition.
+E.g. removing `view-transition-name` or css classes.
+
+#### transition
+
+This event is dispatched when the `ViewTransition` object has been created via
+`window.startViewTransition`
+If view transitions are not supported by the browser the event is not dispatched.
+The `detail` property of the event contains the `ViewTransition` object.
+
+#### beforeApplyDomChanges
+This event is dispatched inside the view transition update function before the
+dom changes are applied.
+If view transitions are not supported by the browser the event is still
+dispatched.
+
+#### afterApplyDomChanges
+
+This event is dispatched inside the view transition update function after the
+dom changes are applied.
+If view transitions are not supported by the browser the event is still
+dispatched.

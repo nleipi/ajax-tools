@@ -34,14 +34,20 @@ function createForEachTargetHandler (strategy) {
 }
 
 class Batch extends EventTarget {
+  #process
   #id
   #elements
   #transitionPromises = []
   
-  constructor(id, elements) {
+  constructor(process, id, elements) {
     super()
+    this.#process = process
     this.#id = id
     this.#elements = elements
+  }
+
+  get process() {
+    return this.#process
   }
 
   get id() {
@@ -231,7 +237,7 @@ export class DomProcess extends EventTarget {
     }, new Map())
     const sortedBatches = Array.from(batches.keys())
       .sort()
-      .map(key => new Batch(key, batches.get(key)))
+      .map(key => new Batch(this, key, batches.get(key)))
     for (const batch of sortedBatches) {
       this.dispatchEvent(new CustomEvent('batch', { detail: batch }))
       await batch.run((...args) => this.#handleScriptNodes(...args))

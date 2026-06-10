@@ -81,7 +81,7 @@ View transitions are not a part of ajt. The example showcases how ajt allows you
         }
       })
       batch.addEventListener('beforeApplyDomChanges', (event) => {
-        const triggerEl = event.target.data.origin.target?.closest('[data-app-direction]')
+        const triggerEl = domProcess.data.origin.target?.closest('[data-app-direction]')
         if (triggerEl?.dataset.appDirection === 'up') {
           lastElement = productList.querySelector('li')
           lastPosition = lastElement.getBoundingClientRect().top

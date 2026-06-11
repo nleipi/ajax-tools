@@ -59,11 +59,9 @@ class Batch extends EventTarget {
   }
 
   async run(nodesHandler) {
-    console.log('run')
     const handlerCallbacks = []
     const viewTransitionTypes = new Set()
     for (let element of this.#elements) {
-      console.log('element', element)
       const handler = window.ajtContentHandlers[element.dataset.ajtMode]
       if (handler) {
         try {

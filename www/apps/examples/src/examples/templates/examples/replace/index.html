@@ -11,10 +11,52 @@ Simple `data-ajt-mode="replace"` example.
 {% endblock %}
 
 {% block example %}
+<style nonce="{{ csp_nonce }}">
+::view-transition-group(foo),
+::view-transition-old(foo),
+::view-transition-new(foo) {
+  animation-duration: 1s;
+}
+</style>
+<script type="module" nonce="{{ csp_nonce }}">
+  document.addEventListener('ajtDomProcess', (event) => {
+    const domProcess = event.detail
 
+    domProcess.addEventListener('batch', (event) => {
+      const batch = event.detail
+      batch.addEventListener('addElement', (event) => {
+        const el = event.detail
+        if (el.dataset?.appViewTransitionName) {
+          el.style.viewTransitionName = el.dataset.appViewTransitionName
+          el.dataset.appClearTransitionName = true
+
+          if (el.dataset.appViewTransitionFrom) {
+            const fromEl = document.getElementById(el.dataset.appViewTransitionFrom)
+            if (fromEl) {
+              fromEl.style.viewTransitionName = el.dataset.appViewTransitionName
+              batch.addEventListener('afterApplyDomChanges', () => {
+                fromEl.style.opacity = 0
+                fromEl.style.viewTransitionName = null
+              })
+            }
+          }
+        }
+        if (el.dataset?.appDialogOpen) {
+          batch.addEventListener('afterApplyDomChanges', () => {
+            openDialog(el)
+          })
+        }
+      })
+      batch.addEventListener('afterUpdate', (event) => {
+        document.querySelectorAll('[data-app-clear-transition-name]').forEach((el) => {
+          el.style.viewTransitionName = null
+          delete el.dataset.appClearTransitionName
+        })
+      })
+    })
+  })
+</script>
     <div id="example">
         {% include "examples/replace/text.html" %}
     </div>
-
-    {% load example_helpers %}
 {% endblock %}

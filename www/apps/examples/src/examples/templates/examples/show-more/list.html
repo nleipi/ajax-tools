@@ -21,7 +21,16 @@
   {% endwith %}
 {% endpartialdef %}
 
-<div id="product-list-container" class="flex flex-col gap-7 items-center max-w-xl data-[ajt-status=loading]:opacity-80 transition-opacity">
+{% if is_ajt %}
+<div data-ajt-target="body" data-ajt-mode="appendContent">
+  <script nonce="{{ csp_nonce }}">
+    console.log('before')
+    window.storeListPosition()
+  </script>
+</div>
+{% endif %}
+
+<div id="product-list-container" class="flex flex-col gap-7 items-center max-w-xl">
   {% if is_ajt and direction == 'up' %}
     {% if page_obj.has_previous %}
       {% partial prev_btn %}
@@ -33,15 +42,16 @@
   {% endif %}
   <ul id="product-list" class="grid grid-cols-3 gap-5 product-list" data-ajt-mode="{% if direction == 'up' %}prependContent{% else %}appendContent{% endif %}">
     {% for product in page_obj %}
-    <li class="flex flex-col items-center{% if is_ajt %} product-item{% endif %}">
+    <li class="flex flex-col items-center product-item"
+      data-app-view-transition-name="product-{{ product.id }}"
+      data-app-view-transition-fn="product-item"
+      data-app-view-transition-fn-index="{{ forloop.counter0 }}"
+    >
       <img class="bg-ajt-ui-bg"
         src="{{ product.image.url }}" width="{{ product.image.width }}" height="{{ product.image.height }}" />
       <span class="p-4">{{ product.name }}</span>
     </li>
     {% endfor %}
-    <script type="module" nonce="{{ csp_nonce }}">
-      window.history.replaceState(null, '', '{% url 'examples:show-more:Show more' %}{% querystring direction=None%}')
-    </script>
   </ul>
   {% if is_ajt and direction == 'down' %}
     {% if page_obj.has_next %}
@@ -53,3 +63,13 @@
     {% partial next_btn %}
   {% endif %}
 </div>
+
+{% if is_ajt %}
+<div data-ajt-target="body" data-ajt-mode="appendContent">
+  <script nonce="{{ csp_nonce }}">
+    console.log('after')
+    window.restoreListPosition()
+    window.history.replaceState(null, '', '{% url 'examples:show-more:Show more' %}{% querystring direction=None%}')
+  </script>
+</div>
+{% endif %}

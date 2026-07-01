@@ -11,46 +11,57 @@ import hljs from 'highlight.js'
   return str
 })
 
-export function ajtWithDiff(...args) {
-  const changeMap = {}
-  const exampleRoot = document.documentElement
-  markNodes(exampleRoot, 'old')
-  const rootClone = exampleRoot.cloneNode(true)
-  markNodes(rootClone, 'old')
-  const ajtProcess = ajt(...args)
-  ajtProcess.finished.then(() => {
-    diffChanges(rootClone, exampleRoot)
-    const changes = collectChanges(rootClone, 0, 2)
-    const patch = createPatch(changes, 2)
-    const targetElement = document.getElementById('diff');
-    const configuration = {
-      drawFileList: false,
-      matching: 'lines',
-      diffStyle: 'char',
-      highlight: true,
-      outputFormat: 'side-by-side',
-      synchronisedScroll: true,
-      highlight: true,
-      renderNothingWhenEmpty: false,
-      colorScheme: 'auto',
-      maxLineLengthHighlight: 0,
-      highlight: true,
-      synchronisedScroll: true,
-    }
+document.addEventListener('ajtDomProcess', (event) => {
+  if (!(document.getElementById('show-diff')?.checked)) {
+    return
+  }
+  const diffContainer = document.getElementById('diff');
+  diffContainer.replaceChildren()
 
-    const diff2htmlUI = new Diff2HtmlUI(targetElement, patch, configuration)
-    diff2htmlUI.draw()
-    diff2htmlUI.highlightCode()
+  const domProcess = event.detail
+  domProcess.addEventListener('batch', (event) => {
+    const batch = event.detail
+    
+    const changeMap = {}
+    const exampleRoot = document.documentElement
+    markNodes(exampleRoot, 'old')
+    const rootClone = exampleRoot.cloneNode(true)
+    markNodes(rootClone, 'old')
 
-    const el = document.getElementById('response')
-    const resp = diffable(window.lastAjtResponse)
-      .split('\n')
-      .filter((line) => line.trim())
-      .join('\n')
-    el.innerHTML = hljs.highlight(resp, { language: 'html' }).value
+    batch.addEventListener('afterUpdate', (event) => {
+      diffChanges(rootClone, exampleRoot)
+      const changes = collectChanges(rootClone, 0, 2)
+      const patch = createPatch(`batch ${batch.id}`, changes, 2)
+      const targetElement = document.createElement('div')
+      diffContainer.append(targetElement)
+      const configuration = {
+        drawFileList: false,
+        matching: 'lines',
+        diffStyle: 'char',
+        highlight: true,
+        outputFormat: 'side-by-side',
+        synchronisedScroll: true,
+        highlight: true,
+        renderNothingWhenEmpty: false,
+        colorScheme: 'auto',
+        maxLineLengthHighlight: 0,
+        highlight: true,
+        synchronisedScroll: true,
+      }
+
+      const diff2htmlUI = new Diff2HtmlUI(targetElement, patch, configuration)
+      diff2htmlUI.draw()
+      diff2htmlUI.highlightCode()
+
+      const el = document.getElementById('response')
+      const resp = diffable(window.lastAjtResponse)
+        .split('\n')
+        .filter((line) => line.trim())
+        .join('\n')
+      el.innerHTML = hljs.highlight(resp, { language: 'html' }).value
+    })
   })
-  return ajtProcess
-}
+})
 
 function createChange(value, state, padding) {
   const lines = value.split('\n')
@@ -119,10 +130,10 @@ function createHunk(hunks, i) {
   return hunk
 }
 
-function createPatch(changes, contextSize = 3) {
+function createPatch(name, changes, contextSize = 3) {
   const buffer = [
-    '--- document.html',
-    '+++ document.html',
+    `--- ${name}.html`,
+    `+++ ${name}.html`,
   ]
 
   let currentHunk = null

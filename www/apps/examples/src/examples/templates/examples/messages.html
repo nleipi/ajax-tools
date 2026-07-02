@@ -1,7 +1,9 @@
 {% if messages %}
-<ul id="messages"
+<ul id="{{ element_id|default:'messages' }}"
   class="flex flex-col gap-4"
   data-ajt-mode="replace"
+  data-ajt-batch="-1"
+  data-app-view-transition-name="message"
   data-ajt-view-transition-types="messages">
   {% for message in messages %}
   <li class="p-4 rounded-ui-md border-2 border-ui-level bg-ui-level-bg message"
@@ -9,5 +11,5 @@
   {% endfor %}
 </ul>
 {% else %}
-<ul id="messages" class="empty:hidden"></ul>
+<ul id="{{ element_id|default:'messages' }}" class="empty:hidden"></ul>
 {% endif %}

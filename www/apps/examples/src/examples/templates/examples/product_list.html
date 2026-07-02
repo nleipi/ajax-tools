@@ -45,86 +45,19 @@ View transitions are not a part of ajt. The example showcases how ajt allows you
 <script type="module" nonce="{{ csp_nonce }}">
   const productList = document.getElementById('product-list')
   let productItemCounter = 0
+  let lastElement;
+  let lastPosition;
 
-  document.addEventListener('ajtDomProcess', (event) => {
-    const domProcess = event.detail
-    let lastElement;
-    let lastPosition;
+  window.storeListPosition = function () {
+    lastElement = productList.querySelector('li')
+    lastPosition = lastElement.getBoundingClientRect().top
+  }
 
-    domProcess.addEventListener('removeElement', (event) => {
-      const el = event.detail
-      if (el.matches?.('.btn')) {
-        el.style.viewTransitionName = 'btn'
-        el.dataset.appClearTransitionName = true
-      }
-    })
-    domProcess.addEventListener('addElement', (event) => {
-      const el = event.detail
-      if (el.matches?.('.product-item')) {
-        el.style.viewTransitionName = `product-item-${productItemCounter}`
-        el.dataset.appClearTransitionName = true
-        productItemCounter += 1;
-        const img = el.querySelector('img')
-        if (img && !img.complete) {
-          event.target.addTransitionPromise(new Promise((resolve, reject) => {
-            img.onload = () => {
-              resolve()
-            }
-            img.onerror = reject
-          }))
-        }
-      } else if (el.matches?.('.btn')) {
-        el.style.viewTransitionName = 'btn'
-        el.dataset.appClearTransitionName = true
-      }
-    })
-    domProcess.addEventListener('beforeApplyDomChanges', (event) => {
-      const triggerEl = event.target.data.origin.target?.closest('[data-app-direction]')
-      if (triggerEl?.dataset.appDirection === 'up') {
-        lastElement = productList.querySelector('li')
-        lastPosition = lastElement.getBoundingClientRect().top
-      }
-    })
-    domProcess.addEventListener('afterApplyDomChanges', (event) => {
-      if (lastElement) {
-        window.scrollBy(0, lastElement.getBoundingClientRect().top - lastPosition)
-        lastElement = null
-      }
-    })
-    domProcess.addEventListener('transition', (event) => {
-      const transition = event.detail
-      const columns = 3
-      transition.ready.then(() => {
-        document.querySelectorAll('.product-item').forEach((el, index) => {
-          document.documentElement.animate(
-            [
-              {
-                transform: 'translateY(-50px) scale(1.1)',
-                opacity: 0
-              },
-              {
-                transform: 'translateY(0px) scale(1)',
-                opacity: 1
-              },
-            ], {
-              duration: 300,
-              delay: Math.floor(index / columns) * 100 + (index % columns * 50),
-              easing: 'ease-in-out',
-              fill: 'both',
-              pseudoElement: `::view-transition-new(${el.style.viewTransitionName})`,
-            }
-          )
-          el.classList.remove('product-item')
-          el.style.viewTransitionName = null
-        })
-      })
-      transition.finished.then(() => {
-        document.querySelectorAll('[data-app-clear-transition-name]').forEach((el) => {
-          el.style.viewTransitionName = null
-          delete el.dataset.appClearTransitionName
-        })
-      })
-    })
-  })
+  window.restoreListPosition = function () {
+    if (lastElement) {
+      window.scrollBy(0, lastElement.getBoundingClientRect().top - lastPosition)
+      lastElement = null
+    }
+  }
 </script>
 {% endblock %}

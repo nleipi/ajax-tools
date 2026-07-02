@@ -25,6 +25,8 @@ test.describe('data-ajt-mode', () => {
           arr.push(event.detail.outerHTML || event.detail.textContent)
         } else if (event.detail instanceof ViewTransition) {
           arr.push(Array.from(event.detail.types))
+        } else if (event.detail?.constructor?.name === 'Batch') {
+          arr.push(event.detail.id)
         }
         window.eventHistory.push(arr)
       }
@@ -33,24 +35,28 @@ test.describe('data-ajt-mode', () => {
         const domProcess = event.detail
         window.domProcess = domProcess
 
-        domProcess.addEventListener('removeElement', pushEvent)
-        domProcess.addEventListener('addElement', pushEvent)
-        domProcess.addEventListener('beforeUpdate', pushEvent)
-        domProcess.addEventListener('transition', (event) => {
+        domProcess.addEventListener('batch', (event) => {
+          const batch = event.detail
           pushEvent(event)
-          event.detail.updateCallbackDone.then(() => {
-            pushEvent({ type: 'transition.updateCallbackDone' })
+          batch.addEventListener('removeElement', pushEvent)
+          batch.addEventListener('addElement', pushEvent)
+          batch.addEventListener('beforeUpdate', pushEvent)
+          batch.addEventListener('transition', (event) => {
+            pushEvent(event)
+            event.detail.updateCallbackDone.then(() => {
+              pushEvent({ type: 'transition.updateCallbackDone' })
+            })
+            event.detail.ready.then(() => {
+              pushEvent({ type: 'transition.ready' })
+            })
+            event.detail.finished.then(() => {
+              pushEvent({ type: 'transition.finished' })
+            })
           })
-          event.detail.ready.then(() => {
-            pushEvent({ type: 'transition.ready' })
-          })
-          event.detail.finished.then(() => {
-            pushEvent({ type: 'transition.finished' })
-          })
+          batch.addEventListener('beforeApplyDomChanges', pushEvent)
+          batch.addEventListener('afterApplyDomChanges', pushEvent)
+          batch.addEventListener('afterUpdate', pushEvent)
         })
-        domProcess.addEventListener('beforeApplyDomChanges', pushEvent)
-        domProcess.addEventListener('afterApplyDomChanges', pushEvent)
-        domProcess.addEventListener('afterUpdate', pushEvent)
       })
     });
   })
@@ -85,6 +91,7 @@ test.describe('data-ajt-mode', () => {
     await page.getByTestId('el').evaluate((el) => window.newElement = el)
 
     expect(await page.evaluate(() => window.eventHistory)).toEqual([
+      ['batch', 0],
       ['removeElement', '<div id="test" data-testid="el">Div before ajt call</div>'],
       ['addElement', '<div id="test" data-testid="el" data-ajt-mode="replace">Div after ajt call</div>'],
       ...getExpectedDomProcessEvents()
@@ -125,6 +132,7 @@ test.describe('data-ajt-mode', () => {
     await page.getByTestId('el').evaluate((el) => window.newElement = el)
 
     expect(await page.evaluate(() => window.eventHistory)).toEqual([
+      ['batch', 0],
       ['removeElement', 'Lorem '],
       ['removeElement', '<span>Div before ajt call<span>inner</span></span>'],
       ['removeElement', ' ipsum'],
@@ -173,6 +181,7 @@ test.describe('data-ajt-mode', () => {
       await page.getByTestId('el').evaluate((el) => window.newElement = el)
 
       expect(await page.evaluate(() => window.eventHistory)).toEqual([
+        ['batch', 0],
         ['addElement', 'Dolor '],
         ['addElement', '<span>Div after ajt call</span>'],
         ['addElement', ' sit'],
@@ -211,6 +220,7 @@ test.describe('data-ajt-mode', () => {
     await page.evaluate(() => window.ajt('/submit').finished)
 
     expect(await page.evaluate(() => window.eventHistory)).toEqual([
+      ['batch', 0],
       ['removeElement', '<div id="test" data-testid="el">Div before ajt call</div>'],
       ...getExpectedDomProcessEvents(),
     ])
@@ -291,6 +301,7 @@ test.describe('data-ajt-mode', () => {
         await page.getByTestId('el').evaluate((el) => window.newElement = el)
 
         expect(await page.evaluate(() => window.eventHistory)).toEqual([
+          ['batch', 0],
           ...expected,
           ...getExpectedDomProcessEvents()
         ])
@@ -374,6 +385,7 @@ test.describe('data-ajt-mode', () => {
       await page.getByTestId('deep-nested').evaluate((el) => window.newDeepNested = el)
 
       expect(await page.evaluate(() => window.eventHistory)).toEqual([
+        ['batch', 0],
         ['removeElement', '<div>Div before ajt call</div>'],
         ['addElement', '<div>Div after ajt call</div>'],
         ['removeElement', '<div>ipsum</div>'],
@@ -450,6 +462,7 @@ test.describe('data-ajt-mode', () => {
     await page.getByTestId('el').evaluate((el) => window.newElement = el)
 
     expect(await page.evaluate(() => window.eventHistory)).toEqual([
+      ['batch', 0],
       ['removeElement', '<div id="test" data-testid="el">Div before ajt call</div>'],
       ['addElement', '<div id="test" data-testid="el" data-ajt-mode="replace">Div after ajt call</div>'],
       ['beforeUpdate'],
@@ -493,6 +506,7 @@ test.describe('data-ajt-mode', () => {
     await page.getByTestId('el').evaluate((el) => window.newElement = el)
 
     expect(await page.evaluate(() => window.eventHistory)).toEqual([
+      ['batch', 0],
       ['removeElement', '<div id="test" data-testid="el">Div before ajt call</div>'],
       ['addElement', '<div id="test" data-testid="el" data-ajt-mode="replace" data-ajt-view-transition-types="a b  c">Div after ajt call</div>'],
       ...getExpectedDomProcessEvents(['a', 'b', 'c'])
@@ -501,6 +515,57 @@ test.describe('data-ajt-mode', () => {
     expect(await page.evaluate(() => {
       return window.oldElement !== window.newElement
     })).toBe(true)
+  })
+
+  test.describe('batching', () => {
+    test('nested target', async ({ page, app }) => {
+      app.get('/test', (req, res) => {
+        const html = `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <script type="module" src="./index.js"></script>
+    </head>
+    <body>
+      <div id="target" data-testid="el">Div before ajt call</div>
+    </body>
+  </html>
+  `
+        res.send(html)
+      })
+      app.get('/submit', (req, res) => {
+        const html = `
+  <!DOCTYPE html>
+  <div id="target" data-testid="target" data-ajt-mode="replace">
+    <div>Div after ajt call</div>
+    <div data-testid="nested-target" id="nested-target"></div>
+  </div>
+  <div id="nested-target" data-ajt-batch="1" data-ajt-mode="replace">Nested target content</div>
+  `
+        res.send(html)
+      })
+      await page.goto('/test')
+
+      await page.evaluate(() => window.ajt('/submit').finished)
+
+      expect(await page.evaluate(() => window.eventHistory)).toEqual([
+        ['batch', 0],
+        ['removeElement', '<div id="target" data-testid="el">Div before ajt call</div>'],
+        ['addElement', `<div id="target" data-testid="target" data-ajt-mode="replace">
+    <div>Div after ajt call</div>
+    <div data-testid="nested-target" id="nested-target"></div>
+  </div>`],
+        ...getExpectedDomProcessEvents(),
+        ['batch', 1],
+        ['removeElement', '<div data-testid="nested-target" id="nested-target"></div>'],
+        ['addElement', '<div id="nested-target" data-ajt-batch="1" data-ajt-mode="replace">Nested target content</div>'],
+        ...getExpectedDomProcessEvents(),
+      ])
+      const target = page.getByTestId('target')
+      await expect(target).toBeAttached()
+      await expect(target).toContainText('Div after ajt call')
+      await expect(target).toContainText('Nested target content')
+    })
   })
 })
 
@@ -692,3 +757,4 @@ test.describe('scripts', () => {
       })
   })
 })
+

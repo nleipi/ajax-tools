@@ -1,6 +1,6 @@
 
 function createInsertContentHandler (strategy) {
-  return (node, target, handleRemoveContent, handleContentAdded, handleAddContent) => {
+  return (node, target, handleRemoveContent, handleAddContent) => {
     const fragment = document.createDocumentFragment()
     const nodes = []
     while (node.firstChild) {
@@ -11,15 +11,12 @@ function createInsertContentHandler (strategy) {
     }
     return () => {
       strategy(target, fragment)
-      for (let i = 0, len = nodes.length; i < len; i++) {
-        handleContentAdded(nodes[i])
-      }
     }
   }
 }
 
 function createForEachTargetHandler (strategy) {
-  return (element, handleRemoveContent, handleContentAdded, handleAddContent) => {
+  return (element, handleRemoveContent, handleAddContent) => {
     const targets = window.ajtGetTargets(element)
     if (targets.length === 0) {
       console.warn(`No data-ajt-target or id is defined for element ${element}`)
@@ -30,10 +27,104 @@ function createForEachTargetHandler (strategy) {
         clone ? element.cloneNode(true) : element,
         target,
         handleRemoveContent,
-        handleContentAdded,
-        handleAddContent
+        handleAddContent,
       )
     })
+  }
+}
+
+class Batch extends EventTarget {
+  #process
+  #id
+  #elements
+  #transitionPromises = []
+  
+  constructor(process, id, elements) {
+    super()
+    this.#process = process
+    this.#id = id
+    this.#elements = elements
+  }
+
+  get process() {
+    return this.#process
+  }
+
+  get id() {
+    return this.#id
+  }
+
+  addTransitionPromise(promise) {
+    this.#transitionPromises.push(promise)
+  }
+
+  async run(nodesHandler) {
+    const handlerCallbacks = []
+    const viewTransitionTypes = new Set()
+    for (let element of this.#elements) {
+      const handler = window.ajtContentHandlers[element.dataset.ajtMode]
+      if (handler) {
+        try {
+          element = nodesHandler(element)
+          element.dataset.ajtViewTransitionTypes?.split(/ +/)
+            .forEach(type => {
+              viewTransitionTypes.add(type)
+            })
+          const result = handler(
+            element,
+            (el) => {
+              this.dispatchEvent(new CustomEvent('removeElement', {
+                detail: el
+              }))
+            },
+            (el) => {
+              this.dispatchEvent(new CustomEvent('addElement', {
+                detail: el,
+                bubbles: true
+              }))
+            },
+          )
+          if (typeof result === 'function') {
+            handlerCallbacks.push(result)
+          } else {
+            handlerCallbacks.push(...result)
+          }
+        } catch (e) {
+          console.error(e)
+        }
+      } else {
+        console.warn('Unknown ajt mode: ' + element.dataset.ajtMode)
+      }
+    }
+    if (handlerCallbacks.length > 0) {
+      const update = () => {
+        this.dispatchEvent(new Event('beforeApplyDomChanges'))
+        for (let callback of handlerCallbacks) {
+          try {
+            callback()
+          } catch (e) {
+            console.error(e)
+          }
+        }
+        this.dispatchEvent(new Event('afterApplyDomChanges'))
+        if (this.#transitionPromises.length > 0) {
+          return Promise.all(this.#transitionPromises)
+        }
+      }
+      this.dispatchEvent(new Event('beforeUpdate'))
+      if (!document.startViewTransition) {
+        await update()
+      } else {
+        const transition = viewTransitionTypes.size > 0
+          ? document.startViewTransition({ update, types: Array.from(viewTransitionTypes) })
+          : document.startViewTransition(update)
+        this.dispatchEvent(new CustomEvent('transition', {
+          detail: transition
+        }))
+        await transition.finished
+      }
+      this.dispatchEvent(new Event('afterUpdate'))
+    }
   }
 }
 
@@ -46,7 +137,6 @@ export class DomProcess extends EventTarget {
   #finished
   #resolveFinished
   #rejectFinished
-  #transitionPromises = []
   #beforePromises = []
 
   static parser = new DOMParser()
@@ -103,10 +193,6 @@ export class DomProcess extends EventTarget {
     return element
   }
 
-  addTransitionPromise(promise) {
-    this.#transitionPromises.push(promise)
-  }
-
   addBeforePromise(promise) {
     this.#beforePromises.push(promise)
   }
@@ -116,9 +202,6 @@ export class DomProcess extends EventTarget {
     this.#handleDom?.(doc)
 
     let element
-    const handlerCallbacks = []
-    const addedElements = []
-    const viewTransitionTypes = new Set()
     while ((element = doc.querySelector('script[data-ajt-script=before-dom]'))) {
       element = document.adoptNode(element)
       element = this.#handleScriptNodes(element)
@@ -127,73 +210,35 @@ export class DomProcess extends EventTarget {
     if (this.#beforePromises.length > 0) {
       await Promise.all(this.#beforePromises)
     }
+    const elements = []
     while ((element = doc.querySelector('[data-ajt-mode]'))) {
-      element = document.adoptNode(element)
-      const handler = window.ajtContentHandlers[element.dataset.ajtMode]
-      if (handler) {
-        try {
-          element = this.#handleScriptNodes(element)
-          element.dataset.ajtViewTransitionTypes?.split(/ +/)
-            .forEach(type => {
-              viewTransitionTypes.add(type)
-            })
-          const result = handler(
-            element,
-            (el) => {
-              this.dispatchEvent(new CustomEvent('removeElement', {
-                detail: el
-              }))
-            },
-            (el) => {
-              addedElements.push(el)
-            },
-            (el) => {
-              this.dispatchEvent(new CustomEvent('addElement', {
-                detail: el,
-                bubbles: true
-              }))
-            },
-          )
-          if (typeof result === 'function') {
-            handlerCallbacks.push(result)
-          } else {
-            handlerCallbacks.push(...result)
-          }
-        } catch (e) {
-          console.error(e)
-        }
-      } else {
-        console.warn('Unknown ajt mode: ' + element.dataset.ajtMode)
-      }
+      elements.push(document.adoptNode(element))
     }
-    if (handlerCallbacks.length > 0) {
-      const update = () => {
-        this.dispatchEvent(new Event('beforeApplyDomChanges'))
-        for (let callback of handlerCallbacks) {
-          try {
-            callback()
-          } catch (e) {
-            console.error(e)
-          }
-        }
-        this.dispatchEvent(new Event('afterApplyDomChanges'))
-        if (this.#transitionPromises.length > 0) {
-          return Promise.all(this.#transitionPromises)
+    const batches = elements.reduce((batches, element) => {
+      let batchOrder;
+      if (typeof element.dataset.ajtBatch === 'string') {
+        batchOrder = parseInt(element.dataset.ajtBatch)
+        if (Number.isNaN(batchOrder)) {
+          console.warn(`data-ajt-batch="${element.dataset.ajtBatch}" is not a valid number`)
         }
       }
-      this.dispatchEvent(new Event('beforeUpdate'))
-      if (!document.startViewTransition) {
-        await update()
-      } else {
-        const transition = viewTransitionTypes.size > 0
-          ? document.startViewTransition({ update, types: Array.from(viewTransitionTypes) })
-          : document.startViewTransition(update)
-        this.dispatchEvent(new CustomEvent('transition', {
-          detail: transition
-        }))
-        await transition.finished
+      if (!batchOrder) {
+        batchOrder = 0
       }
-      this.dispatchEvent(new Event('afterUpdate'))
+      let batch = batches.get(batchOrder)
+      if (!batch) {
+        batch = []
+        batches.set(batchOrder, batch)
+      }
+      batch.push(element)
+      return batches
+    }, new Map())
+    const sortedBatches = Array.from(batches.keys())
+      .sort()
+      .map(key => new Batch(this, key, batches.get(key)))
+    for (const batch of sortedBatches) {
+      this.dispatchEvent(new CustomEvent('batch', { detail: batch }))
+      await batch.run((...args) => this.#handleScriptNodes(...args))
     }
     while ((element = doc.querySelector('script[data-ajt-script=after-dom]'))) {
       element = document.adoptNode(element)
@@ -355,7 +400,7 @@ function replaceAttributes (node, target) {
   }
 }
 
-function merge (node, target, handleRemoveContent, handleContentAdded, handleAddContent) {
+function merge (node, target, handleRemoveContent, handleAddContent) {
   const callbacks = []
   callbacks.push(() => {
     replaceAttributes(node, target)
@@ -371,7 +416,6 @@ function merge (node, target, handleRemoveContent, handleContentAdded, handleAdd
       handleAddContent(newNode)
       callbacks.push(() => {
         target.insertBefore(newNode, oldNode)
-        handleContentAdded(newNode)
       })
     } else if (op.name === 'delete') {
       const oldNode = oldNodes[op.at]
@@ -386,7 +430,6 @@ function merge (node, target, handleRemoveContent, handleContentAdded, handleAdd
       handleAddContent(newNode)
       callbacks.push(() => {
         target.replaceChild(newNode, oldNode)
-        handleContentAdded(newNode)
       })
     } else if (op.name === 'keep') {
       const fromOld = op.fromOld
@@ -399,8 +442,7 @@ function merge (node, target, handleRemoveContent, handleContentAdded, handleAdd
             newNode,
             oldNode,
             handleRemoveContent,
-            handleContentAdded,
-            handleAddContent
+            handleAddContent,
           ))
         }
       }
@@ -418,15 +460,14 @@ function merge (node, target, handleRemoveContent, handleContentAdded, handleAdd
 }
 
 window.ajtContentHandlers = Object.assign({
-  replace: createForEachTargetHandler((node, target, handleRemoveContent, handleContentAdded, handleAddContent) => {
+  replace: createForEachTargetHandler((node, target, handleRemoveContent, handleAddContent) => {
     handleRemoveContent(target)
     handleAddContent(node)
     return () => {
       target.parentNode.replaceChild(node, target)
-      handleContentAdded(node)
     }
   }),
-  replaceContent: createForEachTargetHandler((node, target, handleRemoveContent, handleContentAdded, handleAddContent) => {
+  replaceContent: createForEachTargetHandler((node, target, handleRemoveContent, handleAddContent) => {
     for (let child = target.firstChild; child; child = child.nextSibling) {
       handleRemoveContent(child)
     }
@@ -437,16 +478,9 @@ window.ajtContentHandlers = Object.assign({
     }
     return () => {
       target.replaceChildren(fragment)
-      for (let child = target.firstChild; child; child = child.nextSibling) {
-        try {
-          handleContentAdded(child)
-        } catch (e) {
-          console.error(e)
-        }
-      }
     }
   }),
-  replaceWithContent: createForEachTargetHandler((node, target, handleRemoveContent, handleContentAdded, handleAddContent) => {
+  replaceWithContent: createForEachTargetHandler((node, target, handleRemoveContent, handleAddContent) => {
     handleRemoveContent(target)
     const fragment = document.createDocumentFragment()
     const nodes = []
@@ -459,13 +493,6 @@ window.ajtContentHandlers = Object.assign({
     }
     return () => {
       target.replaceWith(fragment)
-      for (let child = target.firstChild; child; child = child.nextSibling) {
-        try {
-          handleContentAdded(child)
-        } catch (e) {
-          console.error(e)
-        }
-      }
     }
   }),
   prependContent: createForEachTargetHandler(createInsertContentHandler((target, fragment) => {

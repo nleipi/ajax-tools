@@ -25,6 +25,12 @@ More complex example demonstrating forms
   }
 }
 
+::view-transition-group(message),
+::view-transition-old(message),
+::view-transition-new(message) {
+  animation-duration: 1s;
+}
+
 ::view-transition-old(open-in-dialog),
 ::view-transition-new(open-in-dialog) {
   width: 100%;
@@ -112,94 +118,6 @@ More complex example demonstrating forms
   }
 }
 </style>
-<script type="module" nonce="{{ csp_nonce }}">
-  function openDialog(dialog) {
-    dialog.addEventListener('cancel', (event) => {
-      event.preventDefault()
-      closeDialog(event.target)
-    })
-    dialog.addEventListener('click', (event) => {
-      const closeBtn = event.target.closest('[data-role=close-dialog-btn]')
-      if (closeBtn && dialog.contains(closeBtn)) {
-        event.preventDefault()
-        closeDialog(dialog)
-      }
-    })
-    dialog[dialog.dataset.appDialogOpen]()
-  }
-
-  function closeDialog(el) {
-    if (el.dataset.appViewTransitionName) {
-      el.style.viewTransitionName = el.dataset.appViewTransitionName
-      // this is a fix for iOS, because of course there is a fix for iOS. If the name of the transition stays the same, the transition is cached or whatever, the -old animation won't play and the -new animation won't play when opening dialog second time
-      if (el.style.viewTransitionName === 'open-dialog') {
-        el.style.viewTransitionName = 'close-dialog'
-      }
-      let fromEl
-      document.startViewTransition(() => {
-        if (el.dataset.appViewTransitionFrom) {
-          fromEl = document.getElementById(el.dataset.appViewTransitionFrom)
-          if (fromEl) {
-            fromEl.style.viewTransitionName = el.dataset.appViewTransitionName
-            fromEl.style.opacity = null
-          }
-        }
-        el.remove()
-      }).finished.then(() => {
-          if (fromEl) {
-            fromEl.style.viewTransitionName = null
-          }
-      })
-    }
-  }
-  window.closeDialog = closeDialog
-
-  document.addEventListener('ajtDomProcess', (event) => {
-    const domProcess = event.detail
-
-    domProcess.addEventListener('addElement', (event) => {
-      const el = event.detail
-      if (el.dataset?.appViewTransitionName) {
-        el.style.viewTransitionName = el.dataset.appViewTransitionName
-        el.dataset.appClearTransitionName = true
-
-        if (el.dataset.appViewTransitionFrom) {
-          const fromEl = document.getElementById(el.dataset.appViewTransitionFrom)
-          if (fromEl) {
-            fromEl.style.viewTransitionName = el.dataset.appViewTransitionName
-            domProcess.addEventListener('afterApplyDomChanges', () => {
-              fromEl.style.opacity = 0
-              fromEl.style.viewTransitionName = null
-            })
-          }
-        }
-      }
-      if (el.dataset?.appDialogOpen) {
-        domProcess.addEventListener('afterApplyDomChanges', () => {
-          openDialog(el)
-        })
-      }
-    })
-    domProcess.addEventListener('afterUpdate', (event) => {
-      document.querySelectorAll('[data-app-clear-transition-name]').forEach((el) => {
-        console.log('clear', el)
-        el.style.viewTransitionName = null
-        delete el.dataset.appClearTransitionName
-      })
-    })
-  })
-
-  function revalidateForm(event) {
-    const form = event.target.form
-    if (form) {
-      const validateInput = form.elements['validate']
-      if (validateInput) {
-        validateInput.click()
-      }
-    }
-  }
-  document.addEventListener('input', revalidateForm)
-</script>
 <div class="flex flex-col gap-7">
   {% include 'examples/messages.html' %}
   <a class="flex flex-col justify-center items-center h-10 px-4 border-2 border-ui-primary rounded-ui-md bg-ui-bg w-fit"

@@ -390,16 +390,8 @@ test.describe('data-ajt-mode', () => {
         ['addElement', '<div>Div after ajt call</div>'],
         ['removeElement', '<div>ipsum</div>'],
         ['addElement', '<div>not ipsum</div>'],
-        ["removeElement", `<div>
-        <div>
-          <div id="deep-nested-2">replace me</div>
-        </div>
-      </div>`],
-        ["addElement", `<div>
-    <div>
-      <div><div id="deep-nested-2">replace me</div></div>
-    </div>
-  </div>`],
+        ["removeElement", '<div id="deep-nested-2">replace me</div>'],
+        ["addElement", '<div><div id="deep-nested-2">replace me</div></div>'],
         ...getExpectedDomProcessEvents()
       ])
       expect(toDiffableHtml(await page.getByTestId('el').innerHTML())).toEqual(toDiffableHtml(`

@@ -270,11 +270,7 @@ function compareElements (a, b) {
   for (const childB of b.querySelectorAll('[id]')) {
     const childA = document.getElementById(childB.id)
     if (childA !== a && a.contains(childA)) {
-      const pathA = getPath(childA, a)
-      const pathB = getPath(childB, b)
-      if (pathA.length === pathB.length) {
-        return true
-      }
+      return true
     }
   }
   if (a.isEqualNode(b)) {

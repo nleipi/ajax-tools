@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from './fixtures'
+import toDiffableHtml from 'diffable-html'
 
 test.describe('data-ajt-mode', () => {
   function getExpectedDomProcessEvents(viewTransitionTypes = []) {
@@ -217,9 +218,46 @@ test.describe('data-ajt-mode', () => {
     await expect(page.getByText('Div before ajt call')).not.toBeAttached()
   })
 
-  test('update', async ({ page, app }) => {
-    app.get('/test', (req, res) => {
-      const html = `
+  test.describe('update', () => {
+    [
+      {
+        name: 'replace element',
+        content: `
+      <div>Same content 1</div>
+      <div>Div after ajt call</div>
+      <div>Same content 2</div>
+`,
+        expected: [
+          ['removeElement', '<div>Div before ajt call</div>'],
+          ['addElement', '<div>Div after ajt call</div>'],
+        ]
+      },
+      {
+        name: 'add element',
+        content: `
+<div>Same content 1</div>
+<div>new element</div>
+<div>Div before ajt call</div>
+<div>Same content 2</div>
+`,
+        expected: [
+          ['addElement', '<div>new element</div>'],
+        ]
+      },
+      {
+        name: 'remove element',
+        content: `
+<div>Same content 1</div>
+<div>Same content 2</div>
+`,
+        expected: [
+          ['removeElement', '<div>Div before ajt call</div>'],
+        ]
+      },
+    ].forEach(({ name, content, expected }) => {
+      test(name, async ({ page, app }) => {
+        app.get('/test', (req, res) => {
+          const html = `
 <!DOCTYPE html>
 <html>
   <head>
@@ -227,42 +265,156 @@ test.describe('data-ajt-mode', () => {
   </head>
   <body>
     <div id="test" data-testid="el">
-      Same content 1
-      <span>Div before ajt call</span>
+      <div>Same content 1</div>
+      <div>Div before ajt call</div>
       <div>Same content 2</div>
     </div>
   </body>
 </html>
 `
-      res.send(html)
-    })
-    app.get('/submit', (req, res) => {
-      const html = `
+          res.send(html)
+        })
+        app.get('/submit', (req, res) => {
+          const html = `
 <!DOCTYPE html>
 <div id="test" data-ajt-mode="update">
-  Same content 1
-  <span>Div after ajt call</span>
+  ${content}
+</div>
+`
+          res.send(html)
+        })
+        await page.goto('/test')
+        await page.getByTestId('el').evaluate((el) => window.oldElement = el)
+
+        await page.evaluate(() => window.ajt('/submit').finished)
+
+        await page.getByTestId('el').evaluate((el) => window.newElement = el)
+
+        expect(await page.evaluate(() => window.eventHistory)).toEqual([
+          ...expected,
+          ...getExpectedDomProcessEvents()
+        ])
+        expect(toDiffableHtml(await page.getByTestId('el').innerHTML())).toEqual(toDiffableHtml(content))
+        expect(await page.evaluate(() => window.oldElement === window.newElement)).toBe(true)
+      })
+    })
+    test('update with ids', async ({ page, app }) => {
+      app.get('/test', (req, res) => {
+        const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module" src="./index.js"></script>
+  </head>
+  <body>
+    <div id="test" data-testid="el" >
+      <div>Same content 1</div>
+      <div id="my-div" class="old-class" data-testid="my-div" data-old-attribute="val">
+        <div>Div before ajt call</div>
+        <div><div>my nested div</div>
+        </div>
+      </div>
+      <div data-old-attribute="42">
+        <div>Lorem</div>
+        <div>
+          <div>ipsum</div>
+          <div id="deep-nested" data-testid="deep-nested" data-old-attr="42"><span>i stay</span></div>
+        </div>
+        <div>dolor</div>
+      </div>
+      <div>
+        <div>
+          <div id="deep-nested-2">replace me</div>
+        </div>
+      </div>
+      <div>Same content 2</div>
+    </div>
+  </body>
+</html>
+`
+        res.send(html)
+      })
+      app.get('/submit', (req, res) => {
+        const html = `
+<!DOCTYPE html>
+<div id="test" data-ajt-mode="update">
+  <div>Same content 1</div>
+  <div id="my-div" class="new-class" data-testid="my-div" data-new-attribute="val" data-ajt-update-attr-mode="replace">
+    <div>Div after ajt call</div>
+    <div>
+<div>my nested div</div></div>
+  </div>
+  <div data-old-attribute="42">
+    <div>Lorem</div>
+    <div>
+      <div>not ipsum</div>
+      <div id="deep-nested" data-testid="deep-nested" data-new-attr="42"><span>i stay</span></div>
+    </div>
+    <div>dolor</div>
+  </div>
+  <div>
+    <div>
+      <div><div id="deep-nested-2">replace me</div></div>
+    </div>
+  </div>
   <div>Same content 2</div>
 </div>
 `
-      res.send(html)
+        res.send(html)
+      })
+      await page.goto('/test')
+      await page.getByTestId('el').evaluate((el) => window.oldElement = el)
+      await page.getByTestId('my-div').evaluate((el) => window.oldMyDiv = el)
+      await page.getByTestId('deep-nested').evaluate((el) => window.oldDeepNested = el)
+
+      await page.evaluate(() => window.ajt('/submit').finished)
+
+      await page.getByTestId('el').evaluate((el) => window.newElement = el)
+      await page.getByTestId('my-div').evaluate((el) => window.newMyDiv = el)
+      await page.getByTestId('deep-nested').evaluate((el) => window.newDeepNested = el)
+
+      expect(await page.evaluate(() => window.eventHistory)).toEqual([
+        ['removeElement', '<div>Div before ajt call</div>'],
+        ['addElement', '<div>Div after ajt call</div>'],
+        ['removeElement', '<div>ipsum</div>'],
+        ['addElement', '<div>not ipsum</div>'],
+        ["removeElement", `<div>
+        <div>
+          <div id="deep-nested-2">replace me</div>
+        </div>
+      </div>`],
+        ["addElement", `<div>
+    <div>
+      <div><div id="deep-nested-2">replace me</div></div>
+    </div>
+  </div>`],
+        ...getExpectedDomProcessEvents()
+      ])
+      expect(toDiffableHtml(await page.getByTestId('el').innerHTML())).toEqual(toDiffableHtml(`
+<div>Same content 1</div>
+<div id="my-div" class="new-class" data-testid="my-div" data-new-attribute="val" data-ajt-update-attr-mode="replace">
+  <div>Div after ajt call</div>
+  <div><div>my nested div</div></div>
+</div>
+<div data-old-attribute="42">
+  <div>Lorem</div>
+  <div>
+    <div>not ipsum</div>
+    <div id="deep-nested" data-testid="deep-nested" data-old-attr="42" data-new-attr="42"><span>i stay</span></div>
+  </div>
+  <div>dolor</div>
+</div>
+<div>
+  <div>
+    <div><div id="deep-nested-2">replace me</div></div>
+  </div>
+</div>
+<div>Same content 2</div>
+`))
+      expect(await page.evaluate(() => window.oldElement === window.newElement)).toBe(true)
+      expect(await page.evaluate(() => window.oldMyDiv === window.newMyDiv)).toBe(true)
+      expect(await page.evaluate(() => window.oldDeepNested === window.newDeepNested)).toBe(true)
     })
-    await page.goto('/test')
-    await page.getByTestId('el').evaluate((el) => window.oldElement = el)
-
-    await page.evaluate(() => window.ajt('/submit').finished)
-
-    await page.getByTestId('el').evaluate((el) => window.newElement = el)
-
-    expect(await page.evaluate(() => window.eventHistory)).toEqual([
-      ['removeElement', '<span>Div before ajt call</span>'],
-      ['addElement', '<span>Div after ajt call</span>'],
-      ...getExpectedDomProcessEvents()
-    ])
-    await expect(page.getByText('Div after ajt call')).toBeAttached()
-    expect(await page.evaluate(() => {
-      return window.oldElement === window.newElement
-    })).toBe(true)
   })
 
   test('without startViewTransition support', async ({ page, app }) => {

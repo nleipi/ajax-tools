@@ -250,14 +250,41 @@ export class DomProcess extends EventTarget {
 }
 
 function compareNodes (a, b) {
-  if (!a.isEqualNode(b)) {
-    if (a.dataset.ajtCompare || b.dataset.ajtCompare) {
-      return a.dataset.ajtCompare === b.dataset.ajtCompare
-    }
-    if (a.id || b.id) {
-      return a.id === b.id
-    }
+  if (a.nodeName !== b.nodeName) {
     return false
+  }
+  if (a.id || b.id) {
+    if (a.id === b.id) {
+      return true
+    }
+  }
+  if (a.nodeType === Node.ELEMENT_NODE) {
+    for (const childB of b.querySelectorAll('[id]')) {
+      const childA = document.getElementById(childB.id)
+      if (childA !== a && a.contains(childA)) {
+        return true
+      }
+    }
+  }
+  if (a.isEqualNode(b)) {
+    return true
+  }
+  const filter = (node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      if (!node.nodeValue.trim()) {
+        return NodeFilter.FILTER_SKIP
+      }
+    }
+    return NodeFilter.FILTER_ACCEPT
+  }
+  const whatToShow = NodeFilter.SHOW_ALL
+  const twa = document.createTreeWalker(a, whatToShow, filter)
+  const twb = document.createTreeWalker(b, whatToShow, filter)
+  while (twa.nextNode()) {
+    twb.nextNode()
+    if (!twa.currentNode.isEqualNode(twb.currentNode)) {
+      return false
+    }
   }
   return true
 }
@@ -345,28 +372,32 @@ export function diff (from, to, compare) {
   }
 }
 
-function replaceAttributes (node, target) {
-  if (node.dataset.ajtRemoveAttr) {
-    const removeAttributes = node.dataset.ajtRemoveAttr.split(/\W+/);
-    for (let i = 0, len = removeAttributes.length; i < len; i++) {
-      const attr = removeAttributes[i]
-      target.removeAttribute(attr)
+function mergeNode (node, target) {
+  if (node.nodeType === Node.ELEMENT_NODE) {
+    const newAttributes = node.attributes
+    const oldAttributes = target.attributes
+    for (const attr of newAttributes) {
+      oldAttributes.setNamedItem(attr.cloneNode())
     }
-  }
-  const attributes = node.attributes
-  for (let i = 0, len = attributes.length; i < len; i++) {
-    const attr = attributes[i]
-    target.setAttribute(attr.name, attr.value)
+    if (node.dataset.ajtUpdateAttrMode === 'replace') {
+      const oldAttributesCopy = Array.from(target.attributes)
+      for (let i = 0, len = oldAttributesCopy.length; i < len; i++) {
+        const { name } = oldAttributesCopy[i]
+        if (newAttributes.getNamedItem(name) === null) {
+          oldAttributes.removeNamedItem(name)
+        }
+      }
+    }
   }
 }
 
 function merge (node, target, handleRemoveContent, handleAddContent) {
   const callbacks = []
   callbacks.push(() => {
-    replaceAttributes(node, target)
+    mergeNode(node, target)
   })
-  const newNodes = Array.from(node.children)
-  const oldNodes = Array.from(target.children)
+  const newNodes = Array.from(node.childNodes)
+  const oldNodes = Array.from(target.childNodes)
   const operations = diff(oldNodes, newNodes, window.ajtCompare || compareNodes)
   for (let i = 0; i < operations.length; i++) {
     const op = operations[i]

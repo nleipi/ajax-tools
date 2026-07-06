@@ -252,6 +252,8 @@ test.describe('data-ajt-mode', () => {
 `,
         expected: [
           ['addElement', '<div>new element</div>'],
+          ['addElement', `
+`],
         ]
       },
       {
@@ -262,6 +264,8 @@ test.describe('data-ajt-mode', () => {
 `,
         expected: [
           ['removeElement', '<div>Div before ajt call</div>'],
+          ['removeElement', `
+      `],
         ]
       },
     ].forEach(({ name, content, expected }) => {
@@ -322,7 +326,8 @@ test.describe('data-ajt-mode', () => {
       <div>Same content 1</div>
       <div id="my-div" class="old-class" data-testid="my-div" data-old-attribute="val">
         <div>Div before ajt call</div>
-        <div><div>my nested div</div>
+        <div>
+          <div>my nested div</div>
         </div>
       </div>
       <div data-old-attribute="42">
@@ -353,7 +358,8 @@ test.describe('data-ajt-mode', () => {
   <div id="my-div" class="new-class" data-testid="my-div" data-new-attribute="val" data-ajt-update-attr-mode="replace">
     <div>Div after ajt call</div>
     <div>
-<div>my nested div</div></div>
+      <div>my nested div</div>
+    </div>
   </div>
   <div data-old-attribute="42">
     <div>Lorem</div>

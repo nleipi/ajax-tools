@@ -1,7 +1,6 @@
 {% partialdef input %}
 {% firstof field.auto_id field_id as id %}
-<div id="{{id}}-container"
-  class="relative group {{ css }}">
+<div class="relative group {{ css }}">
   {% if field.widget_type == 'text' %}
   <input id="{{id}}"
     type="text"
@@ -55,11 +54,11 @@
 <div id="address-form" class="flex flex-col gap-5">
   {{ form.non_field_errors }}
   {% with field=form.address %}{% partial input %}{% endwith %}
-  <div id="city-and-zip" class="contents @sm:flex gap-4 w-full">
+  <div class="contents @sm:flex gap-4 w-full">
   {% with field=form.city css="flex-1" %}{% partial input %}{% endwith %}
   {% with field=form.postal_code size='6' %}{% partial input %}{% endwith %}
   </div>
-  <div id="state-and-country" class="contents @sm:flex gap-4 w-full">
+  <div class="contents @sm:flex gap-4 w-full">
   {% with field=form.state css="flex-1" %}{% partial input %}{% endwith %}
   {% with field=form.country_code %}{% partial input %}{% endwith %}
   </div>

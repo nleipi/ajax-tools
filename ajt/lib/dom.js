@@ -249,16 +249,7 @@ export class DomProcess extends EventTarget {
   }
 }
 
-function getPath(from, to) {
-  const path = []
-  while (from.parentNode !== to) {
-    path.push(from)
-    from = from.parentNode
-  }
-  return path
-}
-
-function compareElements (a, b) {
+function compareNodes (a, b) {
   if (a.nodeName !== b.nodeName) {
     return false
   }
@@ -267,10 +258,12 @@ function compareElements (a, b) {
       return true
     }
   }
-  for (const childB of b.querySelectorAll('[id]')) {
-    const childA = document.getElementById(childB.id)
-    if (childA !== a && a.contains(childA)) {
-      return true
+  if (a.nodeType === Node.ELEMENT_NODE) {
+    for (const childB of b.querySelectorAll('[id]')) {
+      const childA = document.getElementById(childB.id)
+      if (childA !== a && a.contains(childA)) {
+        return true
+      }
     }
   }
   if (a.isEqualNode(b)) {
@@ -284,7 +277,7 @@ function compareElements (a, b) {
     }
     return NodeFilter.FILTER_ACCEPT
   }
-  const whatToShow = NodeFilter.SHOW_ATTRIBUTE | NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT
+  const whatToShow = NodeFilter.SHOW_ALL
   const twa = document.createTreeWalker(a, whatToShow, filter)
   const twb = document.createTreeWalker(b, whatToShow, filter)
   while (twa.nextNode()) {
@@ -379,18 +372,20 @@ export function diff (from, to, compare) {
   }
 }
 
-function replaceAttributes (node, target) {
-  const newAttributes = node.attributes
-  const oldAttributes = target.attributes
-  for (const attr of newAttributes) {
-    oldAttributes.setNamedItem(attr.cloneNode())
-  }
-  if (node.dataset.ajtUpdateAttrMode === 'replace') {
-    const oldAttributesCopy = Array.from(target.attributes)
-    for (let i = 0, len = oldAttributesCopy.length; i < len; i++) {
-      const { name } = oldAttributesCopy[i]
-      if (newAttributes.getNamedItem(name) === null) {
-        oldAttributes.removeNamedItem(name)
+function mergeNode (node, target) {
+  if (node.nodeType === Node.ELEMENT_NODE) {
+    const newAttributes = node.attributes
+    const oldAttributes = target.attributes
+    for (const attr of newAttributes) {
+      oldAttributes.setNamedItem(attr.cloneNode())
+    }
+    if (node.dataset.ajtUpdateAttrMode === 'replace') {
+      const oldAttributesCopy = Array.from(target.attributes)
+      for (let i = 0, len = oldAttributesCopy.length; i < len; i++) {
+        const { name } = oldAttributesCopy[i]
+        if (newAttributes.getNamedItem(name) === null) {
+          oldAttributes.removeNamedItem(name)
+        }
       }
     }
   }
@@ -399,11 +394,11 @@ function replaceAttributes (node, target) {
 function merge (node, target, handleRemoveContent, handleAddContent) {
   const callbacks = []
   callbacks.push(() => {
-    replaceAttributes(node, target)
+    mergeNode(node, target)
   })
-  const newNodes = Array.from(node.children)
-  const oldNodes = Array.from(target.children)
-  const operations = diff(oldNodes, newNodes, window.ajtCompare || compareElements)
+  const newNodes = Array.from(node.childNodes)
+  const oldNodes = Array.from(target.childNodes)
+  const operations = diff(oldNodes, newNodes, window.ajtCompare || compareNodes)
   for (let i = 0; i < operations.length; i++) {
     const op = operations[i]
     if (op.name === 'insert') {

@@ -1,4 +1,4 @@
-import ajt from '@ajax-tools/ajt'
+import ajt from 'ajax-tools'
 
 import('./dom-diff.js')
 

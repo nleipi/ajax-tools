@@ -1,5 +1,4 @@
 {
-  "name": "ajax-tools",
   "private": true,
   "workspaces": [
     "ajt",

@@ -1,5 +1,5 @@
 {
-  "name": "@ajax-tools/ajt",
+  "name": "ajax-tools",
   "version": "0.1.0",
   "description": "A set of tools allowing to use ajax in server-side rendered web-sites in simple declarative manner.",
   "main": "lib/index.js",
@@ -16,13 +16,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nleipi/ajax-tools.git"
+    "url": "git+https://github.com/nleipi/ajax-tools.git",
+    "directory": "ajt"
   },
   "keywords": [
-    "ajax"
+    "ajax", "SSR", "server-side rendering"
   ],
   "author": "Nikolay Leipi",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/nleipi/ajax-tools/issues"
   },

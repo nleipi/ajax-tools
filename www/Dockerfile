@@ -44,8 +44,6 @@ RUN npm run build
 
 FROM python:3.12-slim-trixie
 
-RUN apt update -y && apt install less -y
-
 RUN groupadd --system --gid 999 nonroot \
  && useradd --system --gid 999 --uid 999 --create-home nonroot
 

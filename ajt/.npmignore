@@ -1,0 +1,11 @@
+docs/
+node_modules/
+playwright-reports/
+test-results/
+tests/
+
+.env
+.eslintrc.yaml
+eslint.config.mjs
+mkdocs.yml
+playwright.config.js

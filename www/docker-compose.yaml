@@ -26,19 +26,24 @@ services:
           path: ./uv.lock
 
   assets:
-    build:
-      context: ..
-      dockerfile: ./www/assets.Dockerfile
+    image: node:24-trixie
+    working_dir: /app
     volumes:
-      - ../ajt:/app/ajt
-      - .:/app/www
+      - ../:/app
       - /app/node_modules/
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        npm ci
+        npm run watch
     develop:
       watch:
-        - action: rebuild
+        - action: restart
           path: .
           include:
-            - "**/package.json"
+            - ./package.json
+            - ./www/package.json
         - action: restart
           path: .
           include:

@@ -257,7 +257,11 @@ class AjtProcess {
     }))
 
     domProcess.run()
-    await domProcess.finished
+    await domProcess.finished.then(() => {
+      document.querySelectorAll('[data-ajt-apply-trigger]').forEach(el => {
+        el.dataset.viaAjt = el.dataset.ajtApplyTrigger
+      })
+    })
     window.currentDomProcess = null
     return true
   }

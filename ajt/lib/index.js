@@ -246,11 +246,15 @@ class AjtProcess {
     if (this.#canceled) {
       return false
     }
-    const domProcess = new domModule.DomProcess(doc, Object.assign({
-      data: options?.data,
-      handleDom: window.ajtHandleDom,
-      scriptNonceReplacement: window.ajtNonce,
-    }, nonces))
+    const domProcess = new domModule.DomProcess(
+      typeof window.ajtHandleDom === 'function'
+        ? window.ajtHandleDom(doc)
+        : doc,
+      Object.assign({
+        data: options?.data,
+        scriptNonceReplacement: window.ajtNonce,
+      }, nonces)
+    )
     window.currentDomProcess = domProcess
     document.dispatchEvent(new CustomEvent('ajtDomProcess', {
       detail: domProcess

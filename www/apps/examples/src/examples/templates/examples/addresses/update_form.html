@@ -2,10 +2,8 @@
   class="flex flex-col gap-7 max-w-xl @container"
   action="{% url 'examples:addresses:update' pk=object.id %}"
   method="POST"
-  {% if is_ajt %}
   data-ajt-mode="update"
-  data-via-ajt
-  {% endif %}
+  data-ajt-set-data-via-ajt="true"
   novalidate>
   <h2>Update address</h2>
   {% include 'examples/addresses/address_form.html' %}

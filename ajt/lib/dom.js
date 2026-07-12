@@ -452,8 +452,7 @@ function merge (node, target, handleRemoveContent, handleAddContent) {
 window.ajtElementHandlers = window.ajtElementHandlers || []
 window.ajtElementHandlers.push(function handleAttrs (element) {
   const tw = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT)
-  while (tw.nextNode()) {
-    const node = tw.currentNode
+  for (let node = tw.currentNode; node; node = tw.nextNode()) {
     for (let key in node.dataset) {
       if (key.startsWith('ajtSet')) {
         let targetAttr = key

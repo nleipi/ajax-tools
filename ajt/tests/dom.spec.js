@@ -756,3 +756,62 @@ test.describe('scripts', () => {
   })
 })
 
+test.describe('attributes handler', () => {
+  ([
+    {
+      name: 'set data attribute',
+      content: '<div id="test" data-testid="test" data-ajt-mode="replace" data-ajt-set-data-attribute="42">Div ajter ajt call</div>',
+      expected: { name: 'data-attribute', value: '42' },
+    },
+    {
+      name: 'set href',
+      content: '<a id="test" data-testid="test" data-ajt-mode="replace" data-ajt-set-href="/test">Div ajter ajt call</a>',
+      expected: { name: 'href', value: '/test' },
+    },
+    {
+      name: 'override class',
+      content: '<div id="test" data-testid="test" data-ajt-mode="replace" class="a b c" data-ajt-set-class="c d e">Div ajter ajt call</div>',
+      expected: { name: 'class', value: 'c d e' },
+    },
+    {
+      name: 'append class',
+      content: '<div id="test" data-testid="test" data-ajt-mode="replace" class="a b c" data-ajt-append-class="d e">Div ajter ajt call</div>',
+      expected: { name: 'class', value: 'a b c d e' },
+    },
+    {
+      name: 'set nested attribute',
+      content: `<div id="test" data-ajt-mode="replace">
+  <div>
+    <div data-testid="test" data-ajt-set-data-attribute="42">Div after ajt call</div>
+  </div>
+</div>`,
+      expected: { name: 'data-attribute', value: '42' },
+    },
+  ]).forEach(({ name, content, expected }) => {
+    test(name, async ({ page, app }) => {
+      app.get('/test', (req, res) => {
+        const html = `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <script type="module" src="./index.js"></script>
+    </head>
+    <body>
+      <div id="test">Div before ajt call</div>
+    </body>
+  </html>
+  `
+        res.send(html)
+      })
+      app.get('/submit', (req, res) => {
+        const html = `<!DOCTYPE html>${content}`
+        res.send(html)
+      })
+      await page.goto('/test')
+
+      await page.evaluate(() => window.ajt('/submit').finished)
+
+      await expect(page.getByTestId('test')).toHaveAttribute(expected.name, expected.value)
+    })
+  })
+})

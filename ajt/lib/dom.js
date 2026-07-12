@@ -58,14 +58,13 @@ class Batch extends EventTarget {
     this.#transitionPromises.push(promise)
   }
 
-  async run(nodesHandler) {
+  async run() {
     const handlerCallbacks = []
     const viewTransitionTypes = new Set()
     for (let element of this.#elements) {
       const handler = window.ajtContentHandlers[element.dataset.ajtMode]
       if (handler) {
         try {
-          element = nodesHandler(element)
           element.dataset.ajtViewTransitionTypes?.split(/ +/)
             .forEach(type => {
               viewTransitionTypes.add(type)
@@ -133,7 +132,6 @@ export class DomProcess extends EventTarget {
   #scriptNonces
   #scriptNonceReplacement
   #styleNonces
-  #handleDom
   #finished
   #resolveFinished
   #rejectFinished
@@ -147,7 +145,6 @@ export class DomProcess extends EventTarget {
     this.#scriptNonces = options.scriptNonces
     this.#scriptNonceReplacement = options.scriptNonceReplacement
     this.#styleNonces = options.styleNonces
-    this.#handleDom = options.handleDom
     this.data = options.data
     this.#finished = new Promise((resolve, reject) => {
       this.#resolveFinished = resolve
@@ -199,7 +196,6 @@ export class DomProcess extends EventTarget {
 
   async run() {
     const doc = this.#html
-    this.#handleDom?.(doc)
 
     let element
     while ((element = doc.querySelector('script[data-ajt-script=before-dom]'))) {
@@ -212,7 +208,10 @@ export class DomProcess extends EventTarget {
     }
     const elements = []
     while ((element = doc.querySelector('[data-ajt-mode]'))) {
-      elements.push(document.adoptNode(element))
+      element = document.adoptNode(element)
+      element = this.#handleScriptNodes(element)
+      element = window.ajtElementHandlers.reduce((el, handler) => handler(el) || el, element)
+      elements.push(element)
     }
     const batches = elements.reduce((batches, element) => {
       let batchOrder;
@@ -238,7 +237,7 @@ export class DomProcess extends EventTarget {
       .map(key => new Batch(this, key, batches.get(key)))
     for (const batch of sortedBatches) {
       this.dispatchEvent(new CustomEvent('batch', { detail: batch }))
-      await batch.run((...args) => this.#handleScriptNodes(...args))
+      await batch.run()
     }
     while ((element = doc.querySelector('script[data-ajt-script=after-dom]'))) {
       element = document.adoptNode(element)
@@ -450,6 +449,29 @@ function merge (node, target, handleRemoveContent, handleAddContent) {
   }
 }
 
+window.ajtElementHandlers = window.ajtElementHandlers || []
+window.ajtElementHandlers.push(function handleAttrs (element) {
+  const tw = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT)
+  for (let node = tw.currentNode; node; node = tw.nextNode()) {
+    for (let key in node.dataset) {
+      if (key.startsWith('ajtSet')) {
+        let targetAttr = key
+          .replace(/([A-Z])/g, '-$1')
+          .toLowerCase()
+          .replace('ajt-set-', '')
+        node.setAttribute(targetAttr, node.dataset[key])
+      } else if (key.startsWith('ajtAppend')) {
+        let targetAttr = key
+          .replace(/([A-Z])/g, '-$1')
+          .toLowerCase()
+          .replace('ajt-append-', '')
+        const currentValue = node.getAttribute(targetAttr)
+        node.setAttribute(targetAttr, currentValue ? currentValue + ' ' + node.dataset[key] : node.dataset[key])
+      }
+    }
+  }
+})
+
 window.ajtContentHandlers = Object.assign({
   replace: createForEachTargetHandler((node, target, handleRemoveContent, handleAddContent) => {
     handleRemoveContent(target)
@@ -513,18 +535,3 @@ window.ajtGetTargets = window.ajtGetTargets || function getTargets (element) {
   }
   return []
 }
-
-window.ajtElementAddedHandlers = window.ajtElementAddedHandlers || []
-window.ajtElementAddedHandlers.push(function handleAutofocus (element) {
-  if (element instanceof Element) {
-    const node = element.matches('*[autofocus]')
-      ? element
-      : element.querySelector('*[autofocus]')
-    if (node) {
-      node.focus()
-    }
-  }
-})
-
-window.ajtElementRemovedHandlers = window.ajtElementRemovedHandlers || []
-window.ajtElementPreAddHandlers = window.ajtElementPreAddHandlers || []

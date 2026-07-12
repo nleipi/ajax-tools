@@ -3,13 +3,26 @@ import { test } from './fixtures'
 import toDiffableHtml from 'diffable-html'
 
 test.describe('data-ajt-mode', () => {
-  function getExpectedDomProcessEvents() {
-    return [
+  function getExpectedDomProcessEvents(transitionTypes) {
+    const events = [
       ['beforeUpdate'],
+    ]
+    if (transitionTypes) {
+      events.push(['transition', transitionTypes])
+    }
+    events.push(
       ['beforeApplyDomChanges'],
       ['afterApplyDomChanges'],
-      ['afterUpdate'],
-    ]
+    )
+    if (transitionTypes) {
+      events.push(
+        ['transition.updateCallbackDone'],
+        ['transition.ready'],
+        ['transition.finished'],
+      )
+    }
+    events.push(['afterUpdate'])
+    return events
   }
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
@@ -503,14 +516,7 @@ test.describe('data-ajt-mode', () => {
       ['batch', 0],
       ['removeElement', '<div id="test" data-testid="el">Div before ajt call</div>'],
       ['addElement', '<div id="test" data-testid="el" data-ajt-mode="replace" data-ajt-view-transition-types="a b  c">Div after ajt call</div>'],
-      ['beforeUpdate'],
-      ['transition', ['a', 'b', 'c']],
-      ['beforeApplyDomChanges'],
-      ['afterApplyDomChanges'],
-      ['transition.updateCallbackDone'],
-      ['transition.ready'],
-      ['transition.finished'],
-      ['afterUpdate'],
+      ...getExpectedDomProcessEvents(['a', 'b', 'c'])
     ])
     await expect(page.getByText('Div after ajt call')).toBeAttached()
     expect(await page.evaluate(() => {
@@ -551,14 +557,7 @@ test.describe('data-ajt-mode', () => {
       ['batch', 0],
       ['removeElement', '<div id="test" data-testid="el">Div before ajt call</div>'],
       ['addElement', '<div id="test" data-testid="el" data-ajt-mode="replace" data-ajt-use-view-transition="">Div after ajt call</div>'],
-      ['beforeUpdate'],
-      ['transition', []],
-      ['beforeApplyDomChanges'],
-      ['afterApplyDomChanges'],
-      ['transition.updateCallbackDone'],
-      ['transition.ready'],
-      ['transition.finished'],
-      ['afterUpdate'],
+      ...getExpectedDomProcessEvents([])
     ])
     await expect(page.getByText('Div after ajt call')).toBeAttached()
     expect(await page.evaluate(() => {

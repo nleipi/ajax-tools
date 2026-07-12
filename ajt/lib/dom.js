@@ -38,6 +38,7 @@ class Batch extends EventTarget {
   #id
   #elements
   #transitionPromises = []
+  #useViewTransition
   
   constructor(process, id, elements) {
     super()
@@ -54,6 +55,10 @@ class Batch extends EventTarget {
     return this.#id
   }
 
+  enableViewTransition() {
+    this.#useViewTransition = true
+  }
+
   addTransitionPromise(promise) {
     this.#transitionPromises.push(promise)
   }
@@ -61,14 +66,18 @@ class Batch extends EventTarget {
   async run() {
     const handlerCallbacks = []
     const viewTransitionTypes = new Set()
+    let useViewTransition = false
     for (let element of this.#elements) {
       const handler = window.ajtContentHandlers[element.dataset.ajtMode]
       if (handler) {
         try {
-          element.dataset.ajtViewTransitionTypes?.split(/ +/)
+          element.dataset.ajtViewTransitionTypes?.split(/\s+/)
             .forEach(type => {
               viewTransitionTypes.add(type)
             })
+          useViewTransition = useViewTransition
+            || element.dataset.ajtUseViewTransition === 'true'
+            || element.dataset.ajtUseViewTransition === ''
           const result = handler(
             element,
             (el) => {
@@ -111,7 +120,10 @@ class Batch extends EventTarget {
         }
       }
       this.dispatchEvent(new Event('beforeUpdate'))
-      if (!document.startViewTransition) {
+      useViewTransition = useViewTransition
+        || viewTransitionTypes.size > 0
+        || this.#useViewTransition
+      if (!document.startViewTransition || !useViewTransition) {
         await update()
       } else {
         const transition = viewTransitionTypes.size > 0

@@ -1,6 +1,6 @@
 {
   "name": "ajax-tools",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A set of tools allowing to use ajax in server-side rendered web-sites in simple declarative manner.",
   "main": "lib/index.js",
   "exports": {
@@ -20,7 +20,9 @@
     "directory": "ajt"
   },
   "keywords": [
-    "ajax", "SSR", "server-side rendering"
+    "ajax",
+    "SSR",
+    "server-side rendering"
   ],
   "author": "Nikolay Leipi",
   "license": "MIT",

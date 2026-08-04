@@ -2,4 +2,6 @@
 **/.venv
 **/db.sqlite3
 **/Dockerfile
+**/static
 **/staticfiles
+**/__pycache__

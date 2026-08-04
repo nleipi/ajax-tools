@@ -3,17 +3,26 @@ import { test } from './fixtures'
 import toDiffableHtml from 'diffable-html'
 
 test.describe('data-ajt-mode', () => {
-  function getExpectedDomProcessEvents(viewTransitionTypes = []) {
-    return [
+  function getExpectedDomProcessEvents(transitionTypes) {
+    const events = [
       ['beforeUpdate'],
-      ['transition', viewTransitionTypes],
+    ]
+    if (transitionTypes) {
+      events.push(['transition', transitionTypes])
+    }
+    events.push(
       ['beforeApplyDomChanges'],
       ['afterApplyDomChanges'],
-      ['transition.updateCallbackDone'],
-      ['transition.ready'],
-      ['transition.finished'],
-      ['afterUpdate'],
-    ]
+    )
+    if (transitionTypes) {
+      events.push(
+        ['transition.updateCallbackDone'],
+        ['transition.ready'],
+        ['transition.finished'],
+      )
+    }
+    events.push(['afterUpdate'])
+    return events
   }
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
@@ -508,6 +517,47 @@ test.describe('data-ajt-mode', () => {
       ['removeElement', '<div id="test" data-testid="el">Div before ajt call</div>'],
       ['addElement', '<div id="test" data-testid="el" data-ajt-mode="replace" data-ajt-view-transition-types="a b  c">Div after ajt call</div>'],
       ...getExpectedDomProcessEvents(['a', 'b', 'c'])
+    ])
+    await expect(page.getByText('Div after ajt call')).toBeAttached()
+    expect(await page.evaluate(() => {
+      return window.oldElement !== window.newElement
+    })).toBe(true)
+  })
+
+  test('use viewTransition', async ({ page, app }) => {
+    app.get('/test', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module" src="./index.js"></script>
+  </head>
+  <body>
+    <div id="test" data-testid="el">Div before ajt call</div>
+  </body>
+</html>
+`
+      res.send(html)
+    })
+    app.get('/submit', (req, res) => {
+      const html = `
+<!DOCTYPE html>
+<div id="test" data-testid="el" data-ajt-mode="replace" data-ajt-use-view-transition>Div after ajt call</div>
+`
+      res.send(html)
+    })
+    await page.goto('/test')
+    await page.getByTestId('el').evaluate((el) => window.oldElement = el)
+
+    await page.evaluate(() => window.ajt('/submit').finished)
+
+    await page.getByTestId('el').evaluate((el) => window.newElement = el)
+
+    expect(await page.evaluate(() => window.eventHistory)).toEqual([
+      ['batch', 0],
+      ['removeElement', '<div id="test" data-testid="el">Div before ajt call</div>'],
+      ['addElement', '<div id="test" data-testid="el" data-ajt-mode="replace" data-ajt-use-view-transition="">Div after ajt call</div>'],
+      ...getExpectedDomProcessEvents([])
     ])
     await expect(page.getByText('Div after ajt call')).toBeAttached()
     expect(await page.evaluate(() => {

@@ -83,6 +83,7 @@ document.addEventListener('ajtDomProcess', (event) => {
       if (el.dataset?.appViewTransitionName) {
         el.style.viewTransitionName = el.dataset.appViewTransitionName
         el.dataset.appClearTransitionName = true
+        batch.enableViewTransition()
 
         if (el.dataset.appViewTransitionFrom) {
           const fromEl = document.getElementById(el.dataset.appViewTransitionFrom)

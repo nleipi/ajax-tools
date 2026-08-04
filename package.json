@@ -8,7 +8,7 @@
     "lint": "npm run lint --workspaces --if-present",
     "watch": "npm run watch --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "examples:dev": "docker compose -f www/docker-compose.yaml up"
+    "examples:dev": "docker compose -f www/docker-compose.yaml up --build"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

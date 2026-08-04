@@ -47,13 +47,13 @@ FROM python:3.12-slim-trixie
 RUN groupadd --system --gid 999 nonroot \
  && useradd --system --gid 999 --uid 999 --create-home nonroot
 
-COPY --from=libs_builder --chown=nonroot:nonroot --exclude=node_modules/ /app/www /app/www
+COPY --from=libs_builder --chown=nonroot:nonroot /app/www /app/www
 
 COPY --from=app_builder --chown=nonroot:nonroot /app/www/media /app/www/media
 
-COPY --from=app_builder --chown=nonroot:nonroot --exclude=node_modules/ /app/www /app/www
+COPY --from=app_builder --chown=nonroot:nonroot /app/www /app/www
 
-COPY --from=assets_builder --chown=nonroot:nonroot --exclude=node_modules/ /app/www /app/www
+COPY --from=assets_builder --chown=nonroot:nonroot --exclude=**/node_modules /app/www /app/www
 
 ENV PATH="/app/www/.venv/bin:$PATH"
 

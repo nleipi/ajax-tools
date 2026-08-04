@@ -1,3 +1,4 @@
+name: ajt-examples
 services:
   django:
     build:

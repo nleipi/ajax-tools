@@ -65,61 +65,130 @@ test.describe('builtin event handlers', () => {
         await expect(page.getByText('Div after ajt call')).toBeAttached()
       })
     })
+
+    test('additional params', async ({ page, app }) => {
+      app.get('/test', (req, res) => {
+        const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module" src="./index.js"></script>
+  </head>
+  <body>
+    <a data-testid="test" href="/submit" data-via-ajt data-ajt-qs="a=foo&b=bar">Update</a>
+    <div>Original page</div>
+    <div id="test">Div to be replaced</div>
+  </body>
+</html>
+`
+        res.send(html)
+      })
+      app.get('/submit', (req, res) => {
+        const html = `
+<!DOCTYPE html>
+<div id="test" data-ajt-mode="replace">${req.query.a} ${req.query.b}</div>
+`
+        res.send(html)
+      })
+      await page.goto('/test')
+      await page.getByTestId('test').click()
+      await expect(page.getByText('foo bar')).toBeAttached()
+    })
   })
 
-  test.describe('submit event parity', () => {
-    ['get', 'post'].forEach((method) => {
-      test.describe(method, () => {
-        ['submit', 'image', 'btn', 'with_formmethod', 'with_formenctype', 'with_formaction'].forEach((btnId) => {
-          test(btnId, async ({ page, app }) => {
-            app.get('/test', (req, res) => {
-              const useAjax = typeof req.query.ajax !== 'undefined'
-              const html = `
-  <!DOCTYPE html>
-  <html>
-    <head>
-      ${useAjax ? '<script type="module" src="./index.js"></script>' : ''}
-    </head>
-    <body>
-        <form action="submit?param1=42" method="${method}" data-via-ajt>
-          <input type="hidden" name="hidden_input" value="test">
-          <input type="text" name="text_input" value="Lorem ipsum">
-          <input data-testid="submit" type="submit" name="submit_input" value="42">
-          <input data-testid="image" type="image" name="image_input">
-          <button data-testid="btn" name="btn" value="42">Button</button>
-          <button data-testid="with_formmethod" name="btn" value="42" formmethod="POST">Button</button>
-          <button data-testid="with_formenctype" name="btn" value="42" formenctype="text/plain">Button</button>
-          <button data-testid="with_formaction" name="btn" value="42" formaction="/submit2?param1=42">Button</button>
-        </form>
-    </body>
-  </html>
-  `
-              res.send(html)
+  test.describe('submit event', () => {
+    test.describe('parity', () => {
+      ['get', 'post'].forEach((method) => {
+        test.describe(method, () => {
+          ['submit', 'image', 'btn', 'with_formmethod', 'with_formenctype', 'with_formaction'].forEach((btnId) => {
+            test(btnId, async ({ page, app }) => {
+              app.get('/test', (req, res) => {
+                const useAjax = typeof req.query.ajax !== 'undefined'
+                const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    ${useAjax ? '<script type="module" src="./index.js"></script>' : ''}
+  </head>
+  <body>
+      <form action="submit?param1=42" method="${method}" data-via-ajt>
+        <input type="hidden" name="hidden_input" value="test">
+        <input type="text" name="text_input" value="Lorem ipsum">
+        <input data-testid="submit" type="submit" name="submit_input" value="42">
+        <input data-testid="image" type="image" name="image_input">
+        <button data-testid="btn" name="btn" value="42">Button</button>
+        <button data-testid="with_formmethod" name="btn" value="42" formmethod="POST">Button</button>
+        <button data-testid="with_formenctype" name="btn" value="42" formenctype="text/plain">Button</button>
+        <button data-testid="with_formaction" name="btn" value="42" formaction="/submit2?param1=42">Button</button>
+      </form>
+  </body>
+</html>
+`
+                res.send(html)
+              })
+              const results = []
+              function submitHandler (req, res) {
+                results.push(req)
+                res.sendStatus(200)
+              }
+              app.all('/submit', submitHandler)
+              app.all('/submit2', submitHandler)
+
+              await page.goto('/test')
+              await page.getByTestId(btnId).click()
+              await page.waitForURL('**/submit*')
+
+              await page.goto('/test?ajax')
+              const responsePromise = page.waitForResponse('**/submit*')
+              await page.getByTestId(btnId).click()
+              await responsePromise
+              
+              const [origReq, ajaxReq] = results
+              expect(ajaxReq.method).toEqual(origReq.method)
+              expect(ajaxReq.originalUrl).toEqual(origReq.originalUrl)
+              expect(ajaxReq.get('content-type')).toEqual(origReq.get('content-type'))
+              expect(ajaxReq.query).toEqual(origReq.query)
+              expect(ajaxReq.body).toEqual(origReq.body)
             })
-            const results = []
-            function submitHandler (req, res) {
-              results.push(req)
-              res.sendStatus(200)
-            }
-            app.all('/submit', submitHandler)
-            app.all('/submit2', submitHandler)
-
-            await page.goto('/test')
-            await page.getByTestId(btnId).click()
-            await page.waitForURL('**/submit*')
-
-            await page.goto('/test?ajax')
-            const responsePromise = page.waitForResponse('**/submit*')
-            await page.getByTestId(btnId).click()
-            await responsePromise
-            
-            const [origReq, ajaxReq] = results
-            expect(ajaxReq.method).toEqual(origReq.method)
-            expect(ajaxReq.originalUrl).toEqual(origReq.originalUrl)
-            expect(ajaxReq.get('content-type')).toEqual(origReq.get('content-type'))
-            expect(ajaxReq.query).toEqual(origReq.query)
-            expect(ajaxReq.body).toEqual(origReq.body)
           })
+        })
+      })
+    })
+    test.describe('additinal params', () => {
+      ['get', 'post'].forEach((method) => {
+        test(method, async ({ page, app }) => {
+          app.get('/test', (req, res) => {
+            const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module" src="./index.js"></script>
+  </head>
+  <body>
+    <form action="/submit" method="${method}" data-via-ajt data-ajt-qs="a=foo&b=bar">
+      <input name="form_param" value="42"/>
+      <button data-testid="test">Button</button>
+    </form>
+    <div>Original page</div>
+    <div id="test">Div to be replaced</div>
+  </body>
+</html>
+`
+            res.send(html)
+          })
+          app.all('/submit', (req, res) => {
+            const formParam = method === 'get'
+              ? req.query.form_param
+              : req.body.form_param
+            const html = `
+<!DOCTYPE html>
+<div id="test" data-ajt-mode="replace">${formParam} ${req.query.a} ${req.query.b}</div>
+`
+            res.send(html)
+          })
+          await page.goto('/test')
+          await page.getByTestId('test').click()
+          await expect(page.getByText('42 foo bar')).toBeAttached()
         })
       })
     })
@@ -275,8 +344,11 @@ test.describe('context', () => {
       })
       
       const contextLocactor = page.getByTestId(contextId)
+      let respond;
       app.get('/submit', async (req, res) => {
-        await expect(contextLocactor).toHaveAttribute('data-ajt-status', 'loading')
+        await new Promise(resolve => {
+            respond = resolve
+        })
         const html = `
 <!DOCTYPE html>
 <div id="test" data-ajt-mode="replace">Div after ajt call</div>
@@ -286,7 +358,9 @@ test.describe('context', () => {
       await page.goto('/test')
       await expect(contextLocactor).not.toHaveAttribute('data-ajt-status', 'loading')
       await page.getByTestId(btnId).click()
+      await expect(contextLocactor).toHaveAttribute('data-ajt-status', 'loading')
       await expect(page.getByText('Div after ajt call')).not.toBeAttached()
+      respond()
       await expect(contextLocactor).not.toHaveAttribute('data-ajt-status', 'loading')
       await expect(page.getByText('Div after ajt call')).toBeAttached()
     })

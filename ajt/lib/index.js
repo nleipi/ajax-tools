@@ -74,8 +74,13 @@ export function createListener(createBuilder) {
       await context.finished
     }
 
-    const [url, options] = builder.getFetchData()
-
+    let [url, options] = builder.getFetchData()
+    targets.forEach(target => {
+      if (typeof target.dataset.ajtQs === 'string') {
+        const char = url.includes('?') ? '&' : '?'
+        url = [url, char, target.dataset.ajtQs].join('')
+      }
+    })
 
     const ajtProcess = window.ajt(url, Object.assign(options || {}, {
       delay: parseInt(targets.find(el => typeof el.dataset.ajtDelay !== 'undefined')?.dataset.ajtDelay || 0),

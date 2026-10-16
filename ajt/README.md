@@ -244,11 +244,12 @@ No custom JavaScript is needed to manage focus across these updates.
 
 ##### How diff works
 
-The diff process uses simple comparison by the html of the nodes. To tell the process
-that it is in fact the same element, you can assign the elements an id.
-Elements without `id` are considered to be the same element, if they contain
-an element with `id` at same depth.
-Diff process will keep such elements and update their attributes and children if necessary.
+By default, nodes are matched by their HTML.
+To tell the diff process that an element should be treated as the same element,
+even when its content changes, give it an `id`.
+Elements with an `id` can be preserved even when they are nested inside elements without an `id`,
+in this case also the parent element are preserved.
+The diff process keeps the identified element and updates its attributes and children as needed.
 
 ``` html
 <!-- target -->
@@ -286,14 +287,6 @@ Diff process will keep such elements and update their attributes and children if
 +   <div>New</div>
 </div>
 ```
-
-##### How diff works
-
-By default, nodes are matched by their HTML.
-To tell the diff process that an element should be treated as the same element,
-even when its content changes, give it an `id`.
-Elements with an `id` can be preserved even when they are nested inside elements without an `id`.
-The diff process keeps the identified element and updates its attributes and children as needed.
 
 
 

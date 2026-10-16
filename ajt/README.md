@@ -269,7 +269,7 @@ Diff process will keep such elements and update their attributes and children if
 </div>
 <!-- diff -->
 <div id="root">
-    +<div>Before</div>
++   <div>Before</div>
     <div
 -       class="bar"
 +       class="foo"
@@ -286,8 +286,6 @@ Diff process will keep such elements and update their attributes and children if
 +   <div>New</div>
 </div>
 ```
-
-In this example element
 
 ##### How diff works
 

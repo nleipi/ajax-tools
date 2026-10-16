@@ -185,8 +185,119 @@ Diffs the target element and the the response element and applies only
 necessary changes.
 Unlike the other modes, `update` preserves the existing DOM nodes where possible
 and only applies the minimal changes needed to match the response.
+The main purpose of `update` mode is not performance, but keeping the current
+state of the elements, such as focus, value, open etc.
 
-Detailed documentation comming some day..
+``` html
+<!-- target -->
+<form id="my-form">
+    <div>
+        <input id="username" type="text" name="username">
+    </div>
+    <div>
+        <input id="password" type="password" name="password">
+    </div>
+</form>
+...
+<!-- response -->
+<form id="my-form">
+    <div>
+        <input id="username" type="text" name="username">
+    </div>
+    <div>
+        <input id="password" type="password" name="password">
+        <div>
+            <div>Password should contain:</div>
+            <div class="success">Lower case letters</div>
+            <div class="success">Upper case letters</div>
+            <div class="error">Digits</div>
+            <div class="error">Special characters</div>
+        </div>
+    </div>
+</form>
+...
+<!-- result -->
+<form id="my-form">
+    <div>
+        <input id="username" type="text" name="username">
+    </div>
+    <div>
+        <input id="password" type="password" name="password">
+        <div>
+            <div>Password should contain:</div>
+            <div class="success">Lower case letters</div>
+            <div class="success">Upper case letters</div>
+            <div class="error">Digits</div>
+            <div class="error">Special characters</div>
+        </div>
+    </div>
+</form>
+```
+
+The resulting HTML is the same as it would be with `replace`.
+The difference is that `update` reuses the existing input elements instead of replacing them.
+
+This matters when the server validates a password as the user types.
+The server can return updated password constraints,
+and the frontend can apply them without replacing the password input or losing its focus.
+No custom JavaScript is needed to manage focus across these updates.
+
+##### How diff works
+
+The diff process uses simple comparison by the html of the nodes. To tell the process
+that it is in fact the same element, you can assign the elements an id.
+Elements without `id` are considered to be the same element, if they contain
+an element with `id` at same depth.
+Diff process will keep such elements and update their attributes and children if necessary.
+
+``` html
+<!-- target -->
+<div id="root">
+    <div class="bar">
+        <div id="nested">Hello</div>
+    </div>
+    <div>Old</div>
+</div>
+<!-- response -->
+<div id="root">
+    <div>Before</div>
+    <div class="foo" data-attr="42">
+        <div>Lorem ipsum</div>
+        <div id="nested">Hello, world</div>
+    </div>
+    <div>New</div>
+</div>
+<!-- diff -->
+<div id="root">
+    +<div>Before</div>
+    <div
+-       class="bar"
++       class="foo"
++       data-attr="42"
+    >
++       <div>Lorem ipsum</div>
+        <div
+            id="nested"
+        >
++           Hello, world
+        </div>
+    </div>
+-   <div>Old</div>
++   <div>New</div>
+</div>
+```
+
+In this example element
+
+##### How diff works
+
+By default, nodes are matched by their HTML.
+To tell the diff process that an element should be treated as the same element,
+even when its content changes, give it an `id`.
+Elements with an `id` can be preserved even when they are nested inside elements without an `id`.
+The diff process keeps the identified element and updates its attributes and children as needed.
+
+
 
 #### remove
 
